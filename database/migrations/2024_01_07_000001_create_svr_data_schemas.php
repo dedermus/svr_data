@@ -16,7 +16,7 @@ return new class extends Migration {
         $this->enumExists();
 
         DB::statement('CREATE SCHEMA IF NOT EXISTS data');
-        DB::statement("COMMENT ON SCHEMA system IS 'Основная схема'");
+        DB::statement("COMMENT ON SCHEMA data IS 'Основная схема'");
     }
 
     /**
