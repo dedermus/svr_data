@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
-use App\Traits\PostgresGrammar;
+use Svr\Core\Traits\PostgresGrammar;
 
 return new class extends Migration
 {
@@ -181,10 +181,10 @@ return new class extends Migration
                 $table->addColumn('system.system_status', 'animal_repair_status')->nullable(false)->default('disabled')
                     ->comment('Флаг починки животного'
                 );
-                $table->timestamp('animal_created_at')->nullable(false)->default(DB::raw('CURRENT_TIMESTAMP'))
+                $table->timestamp('created_at')->nullable(false)->default(DB::raw('CURRENT_TIMESTAMP'))
                     ->comment('дата создания животного'
                 );
-                $table->timestamp('update_at')->nullable(false)->default(DB::raw('CURRENT_TIMESTAMP'))
+                $table->timestamp('updated_at')->nullable(false)->default(DB::raw('CURRENT_TIMESTAMP'))
                     ->comment('дата обновления животного'
                 );
             });
