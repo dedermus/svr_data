@@ -9,6 +9,7 @@ use OpenAdminCore\Admin\Auth\Database\Permission;
 use OpenAdminCore\Admin\Auth\Database\Menu;
 use OpenAdminCore\Admin\Extension;
 
+use Svr\Core\Controllers\UsersController;
 use Svr\Data\Controllers\AnimalsController;
 use Svr\Data\Controllers\ApplicationsController;
 use Svr\Data\Controllers\CompaniesController;
@@ -46,6 +47,9 @@ class DataManager extends Extension
             $router->resource('data/svr_companies', CompaniesController::class);
             $router->resource('data/svr_companies_objects', CompaniesObjectsController::class);
             $router->resource('data/svr_companies_locations', CompaniesLocationsController::class);
+
+            $router->post('/admin/api_users/users_list', [UsersController::class, 'api_users_list']);
+            $router->post('/admin/api_company_locations/company_locations_list', [CompaniesLocationsController::class, 'company_locations_list']);
         });
     }
 
