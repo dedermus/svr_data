@@ -3,6 +3,9 @@
 namespace Svr\Data\Controllers;
 
 
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Request;
+use Svr\Core\Models\SystemUsers;
 use Svr\Data\Actions\CompanyData;
 use Svr\Data\Models\DataCompaniesLocations;
 
@@ -313,5 +316,42 @@ class CompaniesLocationsController extends AdminController
         });
 
         return $form;
+    }
+
+    public function company_locations_list()
+    {
+        $request = Request::instance();
+        $return_list	= [];
+        $search_string	= $request->request->get('query');
+
+        if(!empty($search_string))
+        {
+            $result = SystemUsers::where('user_last', 'ilike', '%'.$search_string.'%')->limit(10)->get(['user_id', 'user_first', 'user_middle', 'user_last']);
+
+            $result = DB::table('data.data_companies_locations')
+                ->join('data.data_companies', 'data.data_companies_locations.company_id', '=', 'data.data_companies.company_id')
+                ->join('directories.countries_regions', 'directories.countries_regions.region_id', '=', 'data.data_companies_locations.region_id')
+                ->join('directories.countries_regions_districts', 'directories.countries_regions_districts.district_id', '=', 'data.data_companies_locations.district_id')
+                ->where('company_name_short', 'ilike', '%'.$search_string.'%')
+                ->limit(10)
+                ->get(['company_location_id', 'company_name_short', 'region_name', 'district_name'])->toArray();
+
+            if($result && count($result) > 0)
+            {
+                foreach($result as $company_location)
+                {
+                    $company_location = (array)$company_location;
+                    $return_list[]	= ['company_location_id' => $company_location['company_location_id'],
+                        'company_location_name' => $company_location['company_name_short'].' | '
+                            .$company_location['region_name'].' | '.$company_location['district_name']];
+                }
+
+                return $return_list;
+            }else{
+                return [];
+            }
+        }else{
+            return [];
+        }
     }
 }

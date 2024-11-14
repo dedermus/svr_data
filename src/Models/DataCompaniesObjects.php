@@ -4,6 +4,8 @@ namespace Svr\Data\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class DataCompaniesObjects extends Model
 {
@@ -127,95 +129,85 @@ class DataCompaniesObjects extends Model
 
     /**
      * Создать запись
-     *
-     * @param $request
+     * @param Request $request
      *
      * @return void
      */
-    public function companyObjectCreate($request): void
+    public function companyObjectCreate(Request $request): void
     {
-        $this->rules($request);
-        $this->fill($request->all());
-        $this->save();
+        $this->validateRequest($request);
+        $this->fill($request->all())->save();
     }
 
     /**
      * Обновить запись
-     * @param $request
+     * @param Request $request
      *
      * @return void
      */
-    public function companyObjectUpdate($request): void
+    public function companyObjectUpdate(Request $request): void
     {
-        // валидация
-        $this->rules($request);
-        // получаем массив полей и значений и з формы
+        $this->validateRequest($request);
         $data = $request->all();
-        if (!isset($data[$this->primaryKey])) return;
-        // получаем id
-        $id = $data[$this->primaryKey];
-        // готовим сущность для обновления
-        $modules_data = $this->find($id);
-        // обновляем запись
-        $modules_data->update($data);
+        $id = $data[$this->primaryKey] ?? null;
+
+        if ($id) {
+            $setting = $this->find($id);
+            if ($setting) {
+                $setting->update($data);
+            }
+        }
     }
 
     /**
-     * Валидация входных данных
-     * @param $request
-     *
-     * @return void
+     * Валидация запроса
+     * @param Request $request
      */
-    private function rules($request): void
+    private function validateRequest(Request $request)
     {
-        // получаем поля со значениями
-        $data = $request->all();
+        $rules = $this->getValidationRules($request);
+        $messages = $this->getValidationMessages();
+        $request->validate($rules, $messages);
+    }
 
-        // получаем значение первичного ключа
-        $id = (isset($data[$this->primaryKey])) ? $data[$this->primaryKey] : null;
+    /**
+     * Получить правила валидации
+     * @param Request $request
+     *
+     * @return string[]
+     */
+    private function getValidationRules(Request $request): array
+    {
+        $id = $request->input($this->primaryKey);
 
-        // id - Первичный ключ
-        if (!is_null($id)) {
-            $request->validate(
-                [$this->primaryKey => 'required|exists:.' . $this->getTable() . ',' . $this->primaryKey],
-                [$this->primaryKey => trans('svr-core-lang::validation.required')],
-            );
-        }
+        return [
+            $this->primaryKey => [
+                $request->isMethod('put') ? 'required' : '',
+                Rule::exists('.'.$this->getTable(), $this->primaryKey),
+            ],
+            'company_id' => 'required|exists:.data.data_companies,company_id',
+            'company_object_guid_self' => 'required|string|max:128',
+            'company_object_guid_horriot' => 'required|string|max:128',
+            'company_object_approval_number' => 'required|string|max:64',
+            'company_object_address_view' => 'required|string|max:64',
+            'company_object_is_favorite' => 'required|string|max:5',
+        ];
+    }
 
-        // company_id - идентификатор компании
-        $request->validate(
-            ['company_id' => 'required|exists:.data.data_companies,company_id'],
-            ['company_id' => trans('svr-core-lang::validation')],
-        );
-
-        // company_object_guid_self - гуид СВР объекта
-        $request->validate(
-            ['company_object_guid_self' => 'required|string|max:128'],
-            ['company_object_guid_self' => trans('svr-core-lang::validation')],
-        );
-
-        // company_object_guid_horriot - гуид Хорриот объекта
-        $request->validate(
-            ['company_object_guid_horriot' => 'required|string|max:128'],
-            ['company_object_guid_horriot' => trans('svr-core-lang::validation')],
-        );
-
-        // company_object_approval_number - номер ПО
-        $request->validate(
-            ['company_object_approval_number' => 'required|string|max:64'],
-            ['company_object_approval_number' => trans('svr-core-lang::validation')],
-        );
-
-        // company_object_address_view - адрес ПО
-        $request->validate(
-            ['company_object_address_view' => 'required|string|max:64'],
-            ['company_object_address_view' => trans('svr-core-lang::validation')],
-        );
-
-        // company_object_is_favorite - флаг избранного ПО
-        $request->validate(
-            ['company_object_is_favorite' => 'required|string|max:5'],
-            ['company_object_is_favorite' => trans('svr-core-lang::validation')],
-        );
+    /**
+     * Получить сообщения об ошибках валидации
+     * @return array
+     */
+    private function getValidationMessages(): array
+    {
+        return [
+            $this->primaryKey => trans('svr-core-lang::validation.required'),
+            'company_id' => trans('svr-core-lang::validation'),
+            'company_object_guid_self' => trans('svr-core-lang::validation'),
+            'company_object_guid_horriot' => trans('svr-core-lang::validation'),
+            'company_object_approval_number' => trans('svr-core-lang::validation'),
+            'company_object_address_view' => trans('svr-core-lang::validation'),
+            'company_object_is_favorite' => trans('svr-core-lang::validation'),
+        ];
     }
 }

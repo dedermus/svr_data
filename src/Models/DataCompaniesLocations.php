@@ -2,6 +2,7 @@
 
 namespace Svr\Data\Models;
 
+use Illuminate\Http\Request;
 use Svr\Directories\Models\DirectoryCountriesRegion;
 use Svr\Directories\Models\DirectoryCountriesRegionsDistrict;
 
@@ -11,6 +12,8 @@ use Illuminate\Validation\Rule;
 
 use Svr\Core\Enums\SystemStatusDeleteEnum;
 use Svr\Core\Enums\SystemStatusEnum;
+
+use Illuminate\Support\Facades\DB;
 
 class DataCompaniesLocations extends Model
 {
@@ -138,6 +141,18 @@ class DataCompaniesLocations extends Model
         return $this->hasOne(DirectoryCountriesRegionsDistrict::class, 'district_id', 'district_id');
     }
 
+    public static function companyLocationData($company_location_id)
+    {
+        $r = DB::table('data.data_companies_locations')
+            ->join('data.data_companies', 'data.data_companies_locations.company_id', '=', 'data.data_companies.company_id')
+            ->join('directories.countries_regions', 'directories.countries_regions.region_id', '=', 'data.data_companies_locations.region_id')
+            ->join('directories.countries_regions_districts', 'directories.countries_regions_districts.district_id', '=', 'data.data_companies_locations.district_id')
+            ->where('company_location_id', $company_location_id)
+            ->first();
+        return (array)$r;
+
+    }
+
     /**
      * Создать запись
      *
@@ -147,9 +162,8 @@ class DataCompaniesLocations extends Model
      */
     public function companyLocationCreate($request): void
     {
-        $this->rules($request);
-        $this->fill($request->all());
-        $this->save();
+        $this->validateRequest($request);
+        $this->fill($request->all())->save();
     }
 
     /**
@@ -160,69 +174,65 @@ class DataCompaniesLocations extends Model
      */
     public function companyLocationUpdate($request): void
     {
-        // валидация
-        $this->rules($request);
-        // получаем массив полей и значений и з формы
+        $this->validateRequest($request);
         $data = $request->all();
-        if (!isset($data[$this->primaryKey])) return;
-        // получаем id
-        $id = $data[$this->primaryKey];
-        // готовим сущность для обновления
-        $modules_data = $this->find($id);
-        // обновляем запись
-        $modules_data->update($data);
+        $id = $data[$this->primaryKey] ?? null;
+
+        if ($id) {
+            $setting = $this->find($id);
+            if ($setting) {
+                $setting->update($data);
+            }
+        }
     }
 
     /**
-     * Валидация входных данных
-     * @param $request
-     *
-     * @return void
+     * Валидация запроса
+     * @param Request $request
      */
-    private function rules($request): void
+    private function validateRequest(Request $request)
     {
-        // получаем поля со значениями
-        $data = $request->all();
+        $rules = $this->getValidationRules($request);
+        $messages = $this->getValidationMessages();
+        $request->validate($rules, $messages);
+    }
 
-        // получаем значение первичного ключа
-        $id = (isset($data[$this->primaryKey])) ? $data[$this->primaryKey] : null;
+    /**
+     * Получить правила валидации
+     * @param Request $request
+     *
+     * @return string[]
+     */
+    private function getValidationRules(Request $request): array
+    {
+        $id = $request->input($this->primaryKey);
 
-        // id - Первичный ключ
-        if (!is_null($id)) {
-            $request->validate(
-                [$this->primaryKey => 'required|exists:.' . $this->getTable() . ',' . $this->primaryKey],
-                [$this->primaryKey => trans('svr-core-lang::validation.required')],
-            );
-        }
+        return [
+            $this->primaryKey => [
+                $request->isMethod('put') ? 'required' : '',
+                Rule::exists('.'.$this->getTable(), $this->primaryKey),
+            ],
+            'company_id' => 'required|exists:.data.data_companies,company_id',
+            'region_id' => 'required|exists:.directories.countries_regions,region_id',
+            'district_id' => 'required|exists:.directories.countries_regions_districts,district_id',
+            'location_status' => ['required', Rule::in(SystemStatusEnum::get_option_list())],
+            'location_status_delete' => ['required', Rule::in(SystemStatusDeleteEnum::get_option_list())],
+        ];
+    }
 
-        // company_id - идентификатор компании
-        $request->validate(
-            ['company_id' => 'required|exists:.data.data_companies,company_id'],
-            ['company_id' => trans('svr-core-lang::validation')],
-        );
-
-        // region_id - идентификатор области
-        $request->validate(
-            ['region_id' => 'required|exists:.directories.countries_regions,region_id'],
-            ['region_id' => trans('svr-core-lang::validation')],
-        );
-
-        // district_id - идентификатор района
-        $request->validate(
-            ['district_id' => 'required|exists:.directories.countries_regions_districts,district_id'],
-            ['district_id' => trans('svr-core-lang::validation')],
-        );
-
-        // company_status - Статус компании
-        $request->validate(
-            ['location_status' => ['required', Rule::in(SystemStatusEnum::get_option_list())]],
-            ['location_status' => trans('svr-core-lang::validation')],
-        );
-
-        // company_status_horriot - Статус компании Хорриот
-        $request->validate(
-            ['location_status_delete' => ['required', Rule::in(SystemStatusDeleteEnum::get_option_list())]],
-            ['location_status_delete' => trans('svr-core-lang::validation')],
-        );
+    /**
+     * Получить сообщения об ошибках валидации
+     * @return array
+     */
+    private function getValidationMessages(): array
+    {
+        return [
+            $this->primaryKey => trans('svr-core-lang::validation.required'),
+            'company_id' => trans('svr-core-lang::validation'),
+            'region_id' => trans('svr-core-lang::validation'),
+            'district_id' => trans('svr-core-lang::validation'),
+            'location_status' => trans('svr-core-lang::validation'),
+            'location_status_delete' => trans('svr-core-lang::validation'),
+        ];
     }
 }

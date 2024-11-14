@@ -6,6 +6,9 @@ namespace Svr\Data\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Svr\Core\Enums\ApplicationStatusEnum;
 use Svr\Core\Models\SystemUsers;
 
 class DataApplications extends Model
@@ -116,8 +119,90 @@ class DataApplications extends Model
 		return $this->belongsTo(SystemUsers::class, 'doctor_id', 'user_id');
 	}
 
-//	public function company()
-//	{
-////		$this->belongsTo(DataCompanies::class, 'company_id', 'company_id');
-//	}
+    /**
+     * Создать запись
+     *
+     * @param $request
+     *
+     * @return void
+     */
+    public function applicationCreate($request): void
+    {
+        $this->validateRequest($request);
+        $this->fill($request->all())->save();
+    }
+
+    /**
+     * Обновить запись
+     * @param $request
+     *
+     * @return void
+     */
+    public function applicationUpdate($request): void
+    {
+        $this->validateRequest($request);
+        $data = $request->all();
+        $id = $data[$this->primaryKey] ?? null;
+
+        if ($id) {
+            $setting = $this->find($id);
+            if ($setting) {
+                $setting->update($data);
+            }
+        }
+    }
+
+    /**
+     * Валидация запроса
+     * @param Request $request
+     */
+    private function validateRequest(Request $request)
+    {
+        $rules = $this->getValidationRules($request);
+        $messages = $this->getValidationMessages();
+        $request->validate($rules, $messages);
+    }
+
+    /**
+     * Получить правила валидации
+     * @param Request $request
+     *
+     * @return string[]
+     */
+    private function getValidationRules(Request $request): array
+    {
+        $id = $request->input($this->primaryKey);
+
+        return [
+            $this->primaryKey => [
+                $request->isMethod('put') ? 'required' : '',
+                Rule::exists('.'.$this->getTable(), $this->primaryKey),
+            ],
+            'company_location_id' => 'required|int|exists:.data.data_companies_locations,company_location_id',
+            'user_id' => 'required|int|exists:.system.system_users,user_id',
+            'doctor_id' => 'int|exists:.system.system_users,user_id',
+            'application_date_create' => 'required|date',
+            'application_date_horriot' => 'date',
+            'application_date_complete' => 'date',
+            'application_status' => ['required', Rule::enum(ApplicationStatusEnum::class)],
+        ];
+    }
+
+    /**
+     * Получить сообщения об ошибках валидации
+     * @return array
+     */
+    private function getValidationMessages(): array
+    {
+        return [
+            $this->primaryKey => trans('svr-core-lang::validation.required'),
+            'company_location_id' => trans('svr-core-lang::validation'),
+            'user_id' => trans('svr-core-lang::validation'),
+            'doctor_id' => trans('svr-core-lang::validation'),
+            'application_date_create' => trans('svr-core-lang::validation'),
+            'application_date_horriot' => trans('svr-core-lang::validation'),
+            'application_date_complete' => trans('svr-core-lang::validation'),
+            'application_status' => trans('svr-core-lang::validation'),
+        ];
+    }
 }

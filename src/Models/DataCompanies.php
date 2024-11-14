@@ -5,6 +5,7 @@ namespace Svr\Data\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 use Svr\Core\Enums\SystemStatusDeleteEnum;
@@ -138,9 +139,8 @@ class DataCompanies extends Model
      */
     public function companyCreate($request): void
     {
-        $this->rules($request);
-        $this->fill($request->all());
-        $this->save();
+        $this->validateRequest($request);
+        $this->fill($request->all())->save();
     }
 
     /**
@@ -151,105 +151,77 @@ class DataCompanies extends Model
      */
     public function companyUpdate($request): void
     {
-        // валидация
-        $this->rules($request);
-        // получаем массив полей и значений и з формы
+        $this->validateRequest($request);
         $data = $request->all();
-        if (!isset($data[$this->primaryKey])) return;
-        // получаем id
-        $id = $data[$this->primaryKey];
-        // готовим сущность для обновления
-        $modules_data = $this->find($id);
-        // обновляем запись
-        $modules_data->update($data);
+        $id = $data[$this->primaryKey] ?? null;
+
+        if ($id) {
+            $setting = $this->find($id);
+            if ($setting) {
+                $setting->update($data);
+            }
+        }
     }
 
     /**
-     * Валидация входных данных
-     * @param $request
-     *
-     * @return void
+     * Валидация запроса
+     * @param Request $request
      */
-    private function rules($request): void
+    private function validateRequest(Request $request)
     {
-        // получаем поля со значениями
-        $data = $request->all();
+        $rules = $this->getValidationRules($request);
+        $messages = $this->getValidationMessages();
+        $request->validate($rules, $messages);
+    }
 
-        // получаем значение первичного ключа
-        $id = (isset($data[$this->primaryKey])) ? $data[$this->primaryKey] : null;
+    /**
+     * Получить правила валидации
+     * @param Request $request
+     *
+     * @return string[]
+     */
+    private function getValidationRules(Request $request): array
+    {
+        $id = $request->input($this->primaryKey);
 
-        // id - Первичный ключ
-        if (!is_null($id)) {
-            $request->validate(
-                [$this->primaryKey => 'required|exists:.' . $this->getTable() . ',' . $this->primaryKey],
-                [$this->primaryKey => trans('svr-core-lang::validation.required')],
-            );
-        }
+        return [
+            $this->primaryKey => [
+                $request->isMethod('put') ? 'required' : '',
+                Rule::exists('.'.$this->getTable(), $this->primaryKey),
+            ],
+            'company_base_index' => 'string|max:7',
+            'company_guid_vetis' => 'string|max:128',
+            'company_guid' => 'string|max:36',
+            'company_name_short' => 'string|max:100',
+            'company_name_full' => 'string|max:255',
+            'company_address' => 'string|max:255',
+            'company_inn' => 'string|max:12',
+            'company_kpp' => 'string|max:12',
+            'company_status' => ['required', Rule::in(SystemStatusEnum::get_option_list())],
+            'company_status_horriot' => ['required', Rule::in(SystemStatusEnum::get_option_list())],
+            'company_status_delete' => ['required', Rule::in(SystemStatusDeleteEnum::get_option_list())],
+        ];
+    }
 
-        // company_base_index - Базовый индекс
-        $request->validate(
-            ['company_base_index' => 'string|max:7'],
-            ['company_base_index' => trans('svr-core-lang::validation')],
-        );
-
-        // company_guid_vetis - Гуид в Хорриоте
-        $request->validate(
-            ['company_guid_vetis' => 'string|max:128'],
-            ['company_guid_vetis' => trans('svr-core-lang::validation')],
-        );
-
-        // company_guid - Гуид СВР
-        $request->validate(
-            ['company_guid' => 'string|max:36'],
-            ['company_guid' => trans('svr-core-lang::validation')],
-        );
-
-        // company_name_short - Короткое название организации
-        $request->validate(
-            ['company_name_short' => 'string|max:100'],
-            ['company_name_short' => trans('svr-core-lang::validation')],
-        );
-
-        // company_name_full - Полное название организации
-        $request->validate(
-            ['company_name_full' => 'string|max:255'],
-            ['company_name_full' => trans('svr-core-lang::validation')],
-        );
-
-        // company_address - Адрес
-        $request->validate(
-            ['company_address' => 'string|max:255'],
-            ['company_address' => trans('svr-core-lang::validation')],
-        );
-
-        // company_inn - ИНН
-        $request->validate(
-            ['company_inn' => 'string|max:12'],
-            ['company_inn' => trans('svr-core-lang::validation')],
-        );
-
-        // company_kpp - КПП
-        $request->validate(
-            ['company_kpp' => 'string|max:12'],
-            ['company_kpp' => trans('svr-core-lang::validation')],
-        );
-
-        // company_status - Статус компании
-        $request->validate(
-            ['company_status' => ['required', Rule::in(SystemStatusEnum::get_option_list())]],
-            ['company_status' => trans('svr-core-lang::validation')],
-        );
-
-        // company_status_horriot - Статус компании Хорриот
-        $request->validate(
-            ['company_status_horriot' => ['required', Rule::in(SystemStatusEnum::get_option_list())]],
-            ['company_status_horriot' => trans('svr-core-lang::validation')],
-        );
-
-        // company_status_delete - Статус удаления компании
-        $request->validate(
-            ['company_status_delete' => ['required', Rule::in(SystemStatusDeleteEnum::get_option_list())]],
-            ['company_status_delete' => trans('svr-core-lang::validation')],
-        );
+    /**
+     * Получить сообщения об ошибках валидации
+     * @return array
+     */
+    private function getValidationMessages(): array
+    {
+        return [
+            $this->primaryKey => trans('svr-core-lang::validation.required'),
+            'company_base_index.string' => trans('svr-core-lang::validation'),
+            'company_guid_vetis.string' => trans('svr-core-lang::validation'),
+            'company_guid.string' => trans('svr-core-lang::validation'),
+            'company_name_short.string' => trans('svr-core-lang::validation'),
+            'company_name_full.string' => trans('svr-core-lang::validation'),
+            'company_address.string' => trans('svr-core-lang::validation'),
+            'company_inn.string' => trans('svr-core-lang::validation'),
+            'company_kpp.string' => trans('svr-core-lang::validation'),
+            'company_status.required' => trans('svr-core-lang::validation'),
+            'company_status_horriot.required' => trans('svr-core-lang::validation'),
+            'company_status_delete.required' => trans('svr-core-lang::validation'),
+        ];
     }
 }

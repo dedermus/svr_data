@@ -4,6 +4,10 @@ namespace Svr\Data\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Svr\Core\Enums\ApplicationAnimalStatusEnum;
+use Svr\Core\Enums\HerriotErrorTypesEnum;
 
 class DataApplicationsAnimals extends Model
 {
@@ -120,4 +124,105 @@ class DataApplicationsAnimals extends Model
 //			'update_at'								=> 'timestamp'
 		];
 	}
+
+    /**
+     * Создать запись
+     *
+     * @param $request
+     *
+     * @return void
+     */
+    public function applicationAnimalCreate($request): void
+    {
+        $this->validateRequest($request);
+        $this->fill($request->all())->save();
+    }
+
+    /**
+     * Обновить запись
+     * @param $request
+     *
+     * @return void
+     */
+    public function applicationAnimalUpdate($request): void
+    {
+        $this->validateRequest($request);
+        $data = $request->all();
+        $id = $data[$this->primaryKey] ?? null;
+
+        if ($id) {
+            $setting = $this->find($id);
+            if ($setting) {
+                $setting->update($data);
+            }
+        }
+    }
+
+    /**
+     * Валидация запроса
+     * @param Request $request
+     */
+    private function validateRequest(Request $request)
+    {
+        $rules = $this->getValidationRules($request);
+        $messages = $this->getValidationMessages();
+        $request->validate($rules, $messages);
+    }
+
+    /**
+     * Получить правила валидации
+     * @param Request $request
+     *
+     * @return string[]
+     */
+    private function getValidationRules(Request $request): array
+    {
+        $id = $request->input($this->primaryKey);
+
+        return [
+            $this->primaryKey => [
+                $request->isMethod('put') ? 'required' : '',
+                Rule::exists('.'.$this->getTable(), $this->primaryKey),
+            ],
+            'animal_id' => 'required|int|exists:.data.data_animals,animal_id',
+            'application_animal_date_add' => 'required|date',
+            'application_animal_date_sent' => 'date',
+            'application_animal_date_horriot' => 'date',
+            'application_animal_date_response' => 'date',
+            'application_animal_status' => ['required', Rule::enum(ApplicationAnimalStatusEnum::class)],
+            'application_animal_date_last_update' => 'required|date',
+            'application_response_herriot_error_type' => ['required', Rule::enum(HerriotErrorTypesEnum::class)],
+            'application_response_herriot_error_code' => 'string|max:64',
+            'application_response_application_herriot_error_type' => ['required', Rule::enum(HerriotErrorTypesEnum::class)],
+            'application_response_application_herriot_error_code' => 'string|max:64',
+            'application_herriot_application_id' => 'string|max:64',
+            'application_herriot_send_text_error' => 'string|max:1000',
+            'application_herriot_check_text_error' => 'string|max:1000',
+        ];
+    }
+
+    /**
+     * Получить сообщения об ошибках валидации
+     * @return array
+     */
+    private function getValidationMessages(): array
+    {
+        return [
+            $this->primaryKey => trans('svr-core-lang::validation.required'),
+            'animal_id' => trans('svr-core-lang::validation'),
+            'application_animal_date_add' => trans('svr-core-lang::validation'),
+            'application_animal_date_sent' => trans('svr-core-lang::validation'),
+            'application_animal_date_horriot' => trans('svr-core-lang::validation'),
+            'application_animal_date_response' => trans('svr-core-lang::validation'),
+            'application_animal_status' => trans('svr-core-lang::validation'),
+            'application_animal_date_last_update' => trans('svr-core-lang::validation'),
+            'application_response_herriot_error_type' => trans('svr-core-lang::validation'),
+            'application_response_herriot_error_code' => trans('svr-core-lang::validation'),
+            'application_response_application_herriot_error_type' => trans('svr-core-lang::validation'),
+            'application_response_application_herriot_error_code' => trans('svr-core-lang::validation'),
+            'application_herriot_application_id' => trans('svr-core-lang::validation'),
+            'application_herriot_send_text_error' => trans('svr-core-lang::validation'),
+            'application_herriot_check_text_error' => trans('svr-core-lang::validation'),
+        ];
+    }
 }

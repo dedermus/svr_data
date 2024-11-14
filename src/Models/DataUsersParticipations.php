@@ -4,6 +4,10 @@ namespace Svr\Data\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Svr\Core\Enums\SystemParticipationsTypesEnum;
+use Svr\Core\Enums\SystemStatusEnum;
 
 class DataUsersParticipations extends Model
 {
@@ -106,4 +110,87 @@ class DataUsersParticipations extends Model
 //			'participation_created_at'				=> 'timestamp',
 		];
 	}
+
+    /**
+     * Создать запись
+     *
+     * @param $request
+     *
+     * @return void
+     */
+    public function userParticipationCreate($request): void
+    {
+        $this->validateRequest($request);
+        $this->fill($request->all())->save();
+    }
+
+    /**
+     * Обновить запись
+     * @param $request
+     *
+     * @return void
+     */
+    public function userParticipationUpdate($request): void
+    {
+        $this->validateRequest($request);
+        $data = $request->all();
+        $id = $data[$this->primaryKey] ?? null;
+
+        if ($id) {
+            $setting = $this->find($id);
+            if ($setting) {
+                $setting->update($data);
+            }
+        }
+    }
+
+    /**
+     * Валидация запроса
+     * @param Request $request
+     */
+    private function validateRequest(Request $request)
+    {
+        $rules = $this->getValidationRules($request);
+        $messages = $this->getValidationMessages();
+        $request->validate($rules, $messages);
+    }
+
+    /**
+     * Получить правила валидации
+     * @param Request $request
+     *
+     * @return string[]
+     */
+    private function getValidationRules(Request $request): array
+    {
+        $id = $request->input($this->primaryKey);
+
+        return [
+            $this->primaryKey => [
+                $request->isMethod('put') ? 'required' : '',
+                Rule::exists('.'.$this->getTable(), $this->primaryKey),
+            ],
+            'user_id' => 'required|int|exists:.system.system_users,user_id',
+            'participation_item_type' => ['required', Rule::enum(SystemParticipationsTypesEnum::class)],
+            'participation_item_id' => 'int',
+            'role_id' => 'required|int|exists:.system.system_roles,role_id',
+            'participation_status' => ['required', Rule::enum(SystemStatusEnum::class)],
+        ];
+    }
+
+    /**
+     * Получить сообщения об ошибках валидации
+     * @return array
+     */
+    private function getValidationMessages(): array
+    {
+        return [
+            $this->primaryKey => trans('svr-core-lang::validation.required'),
+            'user_id' => trans('svr-core-lang::validation'),
+            'participation_item_type' => trans('svr-core-lang::validation'),
+            'participation_item_id' => trans('svr-core-lang::validation'),
+            'role_id' => trans('svr-core-lang::validation'),
+            'participation_status' => trans('svr-core-lang::validation'),
+        ];
+    }
 }

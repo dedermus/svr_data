@@ -16,6 +16,7 @@ use OpenAdminCore\Admin\Form;
 use OpenAdminCore\Admin\Grid;
 use OpenAdminCore\Admin\Show;
 use OpenAdminCore\Admin\Layout\Content;
+use Svr\Data\Models\DataCompaniesLocations;
 
 
 class ApplicationsController extends AdminController
@@ -236,10 +237,21 @@ class ApplicationsController extends AdminController
             ->readonly(true)
             ->rules('required')
             ->help(__('svr-data-lang::data.application.application_id'));
-        $form->text('company_location_id', __('svr-data-lang::data.application.company_location_id'))
+        /*$form->text('company_location_id', __('svr-data-lang::data.application.company_location_id'))
             ->required()
             ->rules('required')
-            ->help(__('svr-data-lang::data.application.company_location_id'));
+            ->help(__('svr-data-lang::data.application.company_location_id'));*/
+        $form->select('company_location_id', __('svr-data-lang::data.application.company_location_id'))
+            ->required()
+            ->rules('required')
+            ->help(__('svr-data-lang::data.application.user_id'))
+            ->options(function(){
+                $company_location = DataCompaniesLocations::companyLocationData($this->toArray()['company_location_id']);
+
+                return [$company_location['company_location_id'] => $company_location['company_name_short'].' | '
+                    .$company_location['region_name'].' | '.$company_location['district_name']];
+            })
+            ->ajax('/admin/api_company_locations/company_locations_list', 'company_location_id', 'company_location_name');
         $form->select('user_id', __('svr-data-lang::data.application.user_name'))
             ->required()
             ->rules('required')
@@ -274,6 +286,21 @@ class ApplicationsController extends AdminController
 
         $form->hidden('created_at', __('created_at'));
         $form->hidden('updated_at', __('updated_at'));
+
+        // обработка формы
+        $form->saving(function (Form $form)
+        {
+            // создается текущая страница формы.
+            if ($form->isCreating())
+            {
+                (new DataApplications)->applicationCreate(request());
+            } else
+                // обновляется текущая страница формы.
+                if ($form->isEditing())
+                {
+                    (new DataApplications)->applicationUpdate(request());
+                }
+        });
 
         return $form;
     }
