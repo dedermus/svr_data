@@ -29,13 +29,6 @@ class DataApplicationsAnimals extends Model
 
 
 	/**
-	 * Флаг наличия автообновляемых полей
-	 * @var string
-	 */
-//	public $timestamps								= false;
-
-
-	/**
 	 * Поле даты создания строки
 	 * @var string
 	 */
@@ -47,13 +40,6 @@ class DataApplicationsAnimals extends Model
 	 * @var string
 	 */
 	const UPDATED_AT								= 'updated_at';
-
-
-	/**
-	 * На случай, если потребуется указать специфичное подключение для таблицы
-	 * @var string
-	 */
-//	protected $connection							= 'mysql';
 
 
 	/**
@@ -70,7 +56,6 @@ class DataApplicationsAnimals extends Model
 	 * @var array
 	 */
 	protected $fillable								= [
-		'application_animal_id',					//* ID животного в заявке */
 		'application_id',							//* id заявки */
 		'animal_id',								//* id животного */
 		'application_animal_date_add',				//* дата добавления */
@@ -83,7 +68,6 @@ class DataApplicationsAnimals extends Model
 		'application_response_herriot',				//* данные ответа отправки на регистрацию */
 		'application_request_application_herriot',	//* данные запроса проверки статуса регистрации */
 		'application_response_application_herriot',	//* данные ответа проверки статуса регистрации */
-
 		'application_response_herriot_error_type',	//* Тип ошибки при отправке в Хорриот */
 		'application_response_herriot_error_code',	//* Код ошибки при отправке в Хорриот */
 		'application_response_application_herriot_error_type',	//* Тип ошибки при ответе из Хорриот */
@@ -92,7 +76,6 @@ class DataApplicationsAnimals extends Model
 		'application_animal_date_sent',				//* Дата нажатия кнопки отправки животного на регистрацию */
 		'application_herriot_send_text_error',		//* Текст ошибки при отправке в Хорриот */
 		'application_herriot_check_text_error',		//* Текст ошибки при проверке статуса регистрации в Хорриот */
-
 		'updated_at',								//* дата последнего изменения строки записи */
 		'created_at',								//* дата создания строки записи */
 	];
@@ -114,17 +97,6 @@ class DataApplicationsAnimals extends Model
 	protected $hidden								= [];
 
 
-	/**
-	 * Преобразование полей при чтении/записи
-	 * @return array
-	 */
-	protected function casts(): array
-	{
-		return [
-//			'update_at'								=> 'timestamp'
-		];
-	}
-
     /**
      * Создать запись
      *
@@ -137,6 +109,7 @@ class DataApplicationsAnimals extends Model
         $this->validateRequest($request);
         $this->fill($request->all())->save();
     }
+
 
     /**
      * Обновить запись
@@ -158,6 +131,7 @@ class DataApplicationsAnimals extends Model
         }
     }
 
+
     /**
      * Валидация запроса
      * @param Request $request
@@ -168,6 +142,7 @@ class DataApplicationsAnimals extends Model
         $messages = $this->getValidationMessages();
         $request->validate($rules, $messages);
     }
+
 
     /**
      * Получить правила валидации
@@ -200,6 +175,7 @@ class DataApplicationsAnimals extends Model
             'application_herriot_check_text_error' => 'string|max:1000',
         ];
     }
+
 
     /**
      * Получить сообщения об ошибках валидации

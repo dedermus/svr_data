@@ -4,11 +4,9 @@ namespace Svr\Data\Controllers;
 
 use Svr\Core\Enums\ApplicationStatusEnum;
 use Svr\Core\Models\SystemUsers;
-
 use Svr\Data\Actions\ApplicationAnimals;
 use Svr\Data\Models\DataApplications;
 use Svr\Data\Models\DataCompanies;
-
 use OpenAdminCore\Admin\Facades\Admin;
 use OpenAdminCore\Admin\Controllers\AdminController;
 use OpenAdminCore\Admin\Grid\Displayers\Actions\DropdownActions;
@@ -35,6 +33,7 @@ class ApplicationsController extends AdminController
         });
     }
 
+
     /**
      * Create interface.
      *
@@ -49,6 +48,7 @@ class ApplicationsController extends AdminController
         });
     }
 
+
     /**
      * Edit interface.
      *
@@ -59,13 +59,12 @@ class ApplicationsController extends AdminController
      */
     public function edit($id, Content $content)
     {
-        //dd($this->form()->edit($id));
-
         return $content
             ->title(trans('svr-data-lang::data.application.title'))
             ->description(trans('svr-data-lang::data.application.edit'))
             ->row($this->form()->edit($id));
     }
+
 
     /**
      * Edit interface.
@@ -83,6 +82,7 @@ class ApplicationsController extends AdminController
             ->body($this->detail($id));
     }
 
+
     /**
      * Edit interface.
      *
@@ -99,12 +99,14 @@ class ApplicationsController extends AdminController
             ->body($this->detail($id));
     }
 
+
     /**
      * Title for current resource.
      *
      * @var string
      */
     protected $title = 'Applications';
+
 
     /**
      * Make a grid builder.
@@ -155,12 +157,8 @@ class ApplicationsController extends AdminController
         $grid->column('application_date_horriot', __('svr-data-lang::data.application.application_date_horriot'))->sortable();
         $grid->column('application_date_complete', __('svr-data-lang::data.application.application_date_complete'))->sortable();
         $grid->column('application_status', __('svr-data-lang::data.application.application_status'))->sortable();
-//		$grid->column('application_created_at', __('svr-data-lang::data.application.application_created_at'))->sortable();
-//		$grid->column('update_at', __('svr-data-lang::data.application.update_at'))->sortable();
 
         $grid->actions(function($actions){
-//			$actions->disableView();
-//			$actions->disableEdit();
             $actions->add(new ApplicationAnimals());
         });
         $grid->fixColumns(-1);
@@ -185,6 +183,7 @@ class ApplicationsController extends AdminController
         return $grid;
     }
 
+
     /**
      * Make a show builder.
      *
@@ -197,9 +196,6 @@ class ApplicationsController extends AdminController
         $show = new Show(DataApplications::findOrFail($id));
 
         $show->field('application_id', __('svr-data-lang::data.application.application_id'));
-//		$show->field('company_location_id', __('svr-data-lang::data.application.company_location_id'));
-//		$show->field('user_id', __('svr-data-lang::data.application.user_id'));
-//		$show->field('doctor_id', __('svr-data-lang::data.application.doctor_id'));
         $show->field('user', __('svr-data-lang::data.application.user'))->as(function($user)
         {
             return $user->user_last.' '.$user->user_first.' '.$user->user_middle.' [user_id: '.$user->user_id.']';
@@ -223,6 +219,7 @@ class ApplicationsController extends AdminController
         return $show;
     }
 
+
     /**
      * Make a form builder.
      *
@@ -237,10 +234,6 @@ class ApplicationsController extends AdminController
             ->readonly(true)
             ->rules('required')
             ->help(__('svr-data-lang::data.application.application_id'));
-        /*$form->text('company_location_id', __('svr-data-lang::data.application.company_location_id'))
-            ->required()
-            ->rules('required')
-            ->help(__('svr-data-lang::data.application.company_location_id'));*/
         $form->select('company_location_id', __('svr-data-lang::data.application.company_location_id'))
             ->required()
             ->rules('required')
@@ -287,15 +280,12 @@ class ApplicationsController extends AdminController
         $form->hidden('created_at', __('created_at'));
         $form->hidden('updated_at', __('updated_at'));
 
-        // обработка формы
         $form->saving(function (Form $form)
         {
-            // создается текущая страница формы.
             if ($form->isCreating())
             {
                 (new DataApplications)->applicationCreate(request());
             } else
-                // обновляется текущая страница формы.
                 if ($form->isEditing())
                 {
                     (new DataApplications)->applicationUpdate(request());

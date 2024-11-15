@@ -14,7 +14,6 @@ use OpenAdminCore\Admin\Grid;
 use OpenAdminCore\Admin\Show;
 use OpenAdminCore\Admin\Layout\Content;
 use OpenAdminCore\Admin\Widgets\Table;
-
 use Svr\Directories\Models\DirectoryAnimalsBreeds;
 use Svr\Directories\Models\DirectoryKeepingTypes;
 use Svr\Directories\Models\DirectoryKeepingPurposes;
@@ -39,6 +38,7 @@ class AnimalsController extends AdminController
 		});
 	}
 
+
 	/**
 	 * Create interface.
 	 *
@@ -52,6 +52,7 @@ class AnimalsController extends AdminController
 			$content->body($this->form());
 		});
 	}
+
 
 	/**
 	 * Edit interface.
@@ -69,6 +70,7 @@ class AnimalsController extends AdminController
 			->row($this->form()->edit($id));
 	}
 
+
 	/**
 	 * Edit interface.
 	 *
@@ -85,12 +87,14 @@ class AnimalsController extends AdminController
 			->body($this->detail($id));
 	}
 
+
 	/**
 	 * Title for current resource.
 	 *
 	 * @var string
 	 */
 	protected $title = 'Animals';
+
 
 	/**
 	 * Make a grid builder.
@@ -218,18 +222,10 @@ class AnimalsController extends AdminController
 
 		$grid->disableCreateButton();
 		$grid->disableExport();
-//		$grid->fixHeader();
-//		$grid->setActionClass(DropdownActions::class);
-//		$grid->fixColumns(-1);
 
 		return $grid;
 	}
 
-
-//	public function store($data)
-//	{
-//		dd($data);
-//	}
 
 	/**
 	 * Make a show builder.
@@ -241,9 +237,9 @@ class AnimalsController extends AdminController
 	protected function detail($id)
 	{
 		$show = new Show(DataAnimals::findOrFail($id));
-//		$show->field('animal_id', __('svr-data-lang::data.animal.animal_id'));
 		return $show;
 	}
+
 
 	/**
 	 * Make a form builder.

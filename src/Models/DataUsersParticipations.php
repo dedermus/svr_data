@@ -29,13 +29,6 @@ class DataUsersParticipations extends Model
 
 
 	/**
-	 * Флаг наличия автообновляемых полей
-	 * @var string
-	 */
-//	public $timestamps								= false;
-
-
-	/**
 	 * Поле даты создания строки
 	 * @var string
 	 */
@@ -47,13 +40,6 @@ class DataUsersParticipations extends Model
 	 * @var string
 	 */
 	const UPDATED_AT								= 'updated_at';
-
-
-	/**
-	 * На случай, если потребуется указать специфичное подключение для таблицы
-	 * @var string
-	 */
-//	protected $connection							= 'mysql';
 
 
 	/**
@@ -70,7 +56,6 @@ class DataUsersParticipations extends Model
 	 * @var array
 	 */
 	protected $fillable								= [
-		'participation_id',							//* Инкремент
         'user_id',									//* ID пользователя в таблице SYSTEM.SYSTEM_USERS
 		'participation_item_type',					//* Тип привязки (компания/регион/район)
 		'participation_item_id',					//* ID привязки (company_location_id/region_id/district_id)
@@ -99,18 +84,6 @@ class DataUsersParticipations extends Model
 	];
 
 
-	/**
-	 * Преобразование полей при чтении/записи
-	 * @return array
-	 */
-	protected function casts(): array
-	{
-		return [
-//			'update_at'								=> 'timestamp',
-//			'participation_created_at'				=> 'timestamp',
-		];
-	}
-
     /**
      * Создать запись
      *
@@ -123,6 +96,7 @@ class DataUsersParticipations extends Model
         $this->validateRequest($request);
         $this->fill($request->all())->save();
     }
+
 
     /**
      * Обновить запись
@@ -144,6 +118,7 @@ class DataUsersParticipations extends Model
         }
     }
 
+
     /**
      * Валидация запроса
      * @param Request $request
@@ -154,6 +129,7 @@ class DataUsersParticipations extends Model
         $messages = $this->getValidationMessages();
         $request->validate($rules, $messages);
     }
+
 
     /**
      * Получить правила валидации
@@ -177,6 +153,7 @@ class DataUsersParticipations extends Model
             'participation_status' => ['required', Rule::enum(SystemStatusEnum::class)],
         ];
     }
+
 
     /**
      * Получить сообщения об ошибках валидации

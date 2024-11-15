@@ -30,13 +30,6 @@ class DataAnimalsCodes extends Model
 
 
 	/**
-	 * Флаг наличия автообновляемых полей
-	 * @var string
-	 */
-//	public $timestamps								= false;
-
-
-	/**
 	 * Поле даты создания строки
 	 * @var string
 	 */
@@ -48,13 +41,6 @@ class DataAnimalsCodes extends Model
 	 * @var string
 	 */
 	const UPDATED_AT								= 'updated_at';
-
-
-	/**
-	 * На случай, если потребуется указать специфичное подключение для таблицы
-	 * @var string
-	 */
-//	protected $connection							= 'mysql';
 
 
 	/**
@@ -71,7 +57,6 @@ class DataAnimalsCodes extends Model
 	 * @var array
 	 */
 	protected $fillable								= [
-		'code_id',									//* ID кода (автоинкремент) */
 		'animal_id',								//* ID животного */
 		'code_type_id',								//* вид номера */
 		'code_value',								//* значение */
@@ -108,21 +93,13 @@ class DataAnimalsCodes extends Model
 
 
 	/**
-	 * Преобразование полей при чтении/записи
-	 * @return array
+	 * Реляция типов средств маркирования
 	 */
-	protected function casts(): array
-	{
-		return [
-//			'update_at'								=> 'timestamp',
-//			'code_created_at'						=> 'timestamp',
-		];
-	}
-
 	public function mark_type()
 	{
 		return $this->hasMany(DirectoryMarkTypes::class, 'mark_type_id', 'code_type_id');
 	}
+
 
     /**
      * Создать запись
@@ -136,6 +113,7 @@ class DataAnimalsCodes extends Model
         $this->validateRequest($request);
         $this->fill($request->all())->save();
     }
+
 
     /**
      * Обновить запись
@@ -157,6 +135,7 @@ class DataAnimalsCodes extends Model
         }
     }
 
+
     /**
      * Валидация запроса
      * @param Request $request
@@ -167,6 +146,7 @@ class DataAnimalsCodes extends Model
         $messages = $this->getValidationMessages();
         $request->validate($rules, $messages);
     }
+
 
     /**
      * Получить правила валидации
@@ -196,6 +176,7 @@ class DataAnimalsCodes extends Model
             'code_status_delete' => ['required', Rule::in(SystemStatusDeleteEnum::get_option_list())],
         ];
     }
+
 
     /**
      * Получить сообщения об ошибках валидации

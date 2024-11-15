@@ -27,13 +27,6 @@ class DataCompaniesObjects extends Model
 
 
 	/**
-	 * Флаг наличия автообновляемых полей
-	 * @var string
-	 */
-//	public $timestamps								= false;
-
-
-	/**
 	 * Поле даты создания строки
 	 * @var string
 	 */
@@ -45,13 +38,6 @@ class DataCompaniesObjects extends Model
 	 * @var string
 	 */
 	const UPDATED_AT								= 'updated_at';
-
-
-	/**
-	 * На случай, если потребуется указать специфичное подключение для таблицы
-	 * @var string
-	 */
-//	protected $connection							= 'mysql';
 
 
 	/**
@@ -68,7 +54,6 @@ class DataCompaniesObjects extends Model
 	 * @var array
 	 */
 	protected $fillable								= [
-		'company_object_id',						//* Инкремент
 		'company_id',								//* ID компании
 		'company_object_guid_self',					//* GUID объекта
 		'company_object_guid_horriot',				//* GUID объекта в хорриот
@@ -93,28 +78,24 @@ class DataCompaniesObjects extends Model
 	 * Массив системных скрытых полей
 	 * @var array
 	 */
-	protected $hidden								= [
-
-	];
+	protected $hidden								= [];
 
 
 	/**
-	 * Преобразование полей при чтении/записи
-	 * @return array
+	 * Реляция хозяйства
 	 */
-	protected function casts(): array
-	{
-		return [
-//			'update_at'								=> 'timestamp',
-//			'company_object_created_at'				=> 'timestamp',
-		];
-	}
-
     public function company()
     {
         return $this->hasOne(DataCompanies::class, 'company_id', 'company_id');
     }
 
+
+	/**
+	 * Список объектов хозяйства
+	 *
+	 * @param $company_id
+	 * @return array
+	 */
     public static function companyObjectsGetByCompanyId($company_id)
     {
         if (DataCompanies::find($company_id))
@@ -124,8 +105,8 @@ class DataCompaniesObjects extends Model
         }else {
             return [];
         }
-
     }
+
 
     /**
      * Создать запись
@@ -138,6 +119,7 @@ class DataCompaniesObjects extends Model
         $this->validateRequest($request);
         $this->fill($request->all())->save();
     }
+
 
     /**
      * Обновить запись
@@ -159,6 +141,7 @@ class DataCompaniesObjects extends Model
         }
     }
 
+
     /**
      * Валидация запроса
      * @param Request $request
@@ -169,6 +152,7 @@ class DataCompaniesObjects extends Model
         $messages = $this->getValidationMessages();
         $request->validate($rules, $messages);
     }
+
 
     /**
      * Получить правила валидации
@@ -193,6 +177,7 @@ class DataCompaniesObjects extends Model
             'company_object_is_favorite' => 'required|string|max:5',
         ];
     }
+
 
     /**
      * Получить сообщения об ошибках валидации

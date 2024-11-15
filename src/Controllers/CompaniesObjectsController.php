@@ -34,6 +34,7 @@ class CompaniesObjectsController extends AdminController
         $this->all_columns_obj = Schema::getColumns($this->model_obj->getTable());          // Все столбцы
     }
 
+
     /**
      * Index interface.
      *
@@ -48,6 +49,7 @@ class CompaniesObjectsController extends AdminController
             $content->body($this->grid());
         });
     }
+
 
     /**
      * Create interface.
@@ -64,6 +66,7 @@ class CompaniesObjectsController extends AdminController
         });
     }
 
+
     /**
      * Edit interface.
      *
@@ -79,6 +82,7 @@ class CompaniesObjectsController extends AdminController
             ->description(__('admin.edit'))
             ->row($this->form()->edit($id));
     }
+
 
     /**
      * Show interface.
@@ -101,6 +105,7 @@ class CompaniesObjectsController extends AdminController
             }')
             ->body($this->detail($id));
     }
+
 
     /**
      * Make a grid builder.
@@ -169,6 +174,7 @@ class CompaniesObjectsController extends AdminController
         return $grid;
     }
 
+
     /**
      * Make a show builder.
      *
@@ -206,6 +212,7 @@ class CompaniesObjectsController extends AdminController
 
         return $show;
     }
+
 
     /**
      * Make a form builder.
@@ -267,6 +274,7 @@ class CompaniesObjectsController extends AdminController
         return $form;
     }
 
+
     public function companyObjects()
     {
         $company_objects = [];
@@ -282,6 +290,4 @@ class CompaniesObjectsController extends AdminController
         }
         return $company_objects;
     }
-
-
 }

@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-
 use Svr\Core\Enums\SystemStatusDeleteEnum;
 use Svr\Core\Enums\SystemStatusEnum;
 
@@ -31,13 +30,6 @@ class DataCompanies extends Model
 
 
 	/**
-	 * Флаг наличия автообновляемых полей
-	 * @var string
-	 */
-//	public $timestamps								= false;
-
-
-	/**
 	 * Поле даты создания строки
 	 * @var string
 	 */
@@ -49,13 +41,6 @@ class DataCompanies extends Model
 	 * @var string
 	 */
 	const UPDATED_AT								= 'updated_at';
-
-
-	/**
-	 * На случай, если потребуется указать специфичное подключение для таблицы
-	 * @var string
-	 */
-//	protected $connection							= 'mysql';
 
 
 	/**
@@ -72,7 +57,6 @@ class DataCompanies extends Model
 	 * @var array
 	 */
 	protected $fillable								= [
-		'company_id',								//* id компании */
 		'company_base_index',						//* базовый индекс компании
 		'company_guid_vetis',						//* Уникальный номер поднадзорного объекта, который есть в ВЕТИС
 		'company_guid',								//* GUID СВР
@@ -103,32 +87,26 @@ class DataCompanies extends Model
 	 * Массив системных скрытых полей
 	 * @var array
 	 */
-	protected $hidden								= [
-
-	];
+	protected $hidden								= [];
 
 
 	/**
-	 * Преобразование полей при чтении/записи
-	 * @return array
+	 * Реляция поднадзорные объекты
 	 */
-	protected function casts(): array
-	{
-		return [
-//			'update_at'								=> 'timestamp',
-//			'company_created_at'					=> 'timestamp',
-		];
-	}
-
     public function objects()
     {
         return $this->hasMany(DataCompaniesObjects::class, 'company_id');
     }
 
+
+	/**
+	 * Реляция локации компаний
+	 */
     public function locations()
     {
         return $this->hasMany(DataCompaniesLocations::class, 'company_id');
     }
+
 
     /**
      * Создать запись
@@ -142,6 +120,7 @@ class DataCompanies extends Model
         $this->validateRequest($request);
         $this->fill($request->all())->save();
     }
+
 
     /**
      * Обновить запись
@@ -163,6 +142,7 @@ class DataCompanies extends Model
         }
     }
 
+
     /**
      * Валидация запроса
      * @param Request $request
@@ -173,6 +153,7 @@ class DataCompanies extends Model
         $messages = $this->getValidationMessages();
         $request->validate($rules, $messages);
     }
+
 
     /**
      * Получить правила валидации
@@ -202,6 +183,7 @@ class DataCompanies extends Model
             'company_status_delete' => ['required', Rule::in(SystemStatusDeleteEnum::get_option_list())],
         ];
     }
+
 
     /**
      * Получить сообщения об ошибках валидации

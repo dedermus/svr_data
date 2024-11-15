@@ -41,6 +41,7 @@ class CompaniesLocationsController extends AdminController
         $this->all_columns_obj = Schema::getColumns($this->model_obj->getTable());          // Все столбцы
     }
 
+
     /**
      * Index interface.
      *
@@ -55,6 +56,7 @@ class CompaniesLocationsController extends AdminController
             $content->body($this->grid());
         });
     }
+
 
     /**
      * Create interface.
@@ -71,6 +73,7 @@ class CompaniesLocationsController extends AdminController
         });
     }
 
+
     /**
      * Edit interface.
      *
@@ -86,6 +89,7 @@ class CompaniesLocationsController extends AdminController
             ->description(__('admin.edit'))
             ->row($this->form()->edit($id));
     }
+
 
     /**
      * Show interface.
@@ -108,6 +112,7 @@ class CompaniesLocationsController extends AdminController
             }')
             ->body($this->detail($id));
     }
+
 
     /**
      * Make a grid builder.
@@ -197,6 +202,7 @@ class CompaniesLocationsController extends AdminController
         return $grid;
     }
 
+
     /**
      * Make a show builder.
      *
@@ -250,6 +256,7 @@ class CompaniesLocationsController extends AdminController
         return $show;
     }
 
+
     /**
      * Make a form builder.
      *
@@ -274,15 +281,6 @@ class CompaniesLocationsController extends AdminController
                 return DirectoryCountriesRegionsDistrict::where('region_id', $this->toArray()['region_id'])->pluck('district_name', 'district_id');
             })
             ->help(trans(strtolower($this->trans . 'district_id')));
-
-        /*$form->number('region_id', 'region_id')
-            ->help(__($this->trans . 'region_id'))
-            ->required()
-            ->rules('integer,required', ['integer' => __('validation.integer'), 'required' => __('validation.required')]);
-
-        $form->number('district_id', 'district_id')
-            ->help(__($this->trans . 'district_id'))
-            ->rules('integer', ['integer' => __('validation.integer')]);*/
 
         $form->select('location_status', __('location_status'))
             ->options(SystemStatusEnum::get_option_list())
@@ -317,6 +315,7 @@ class CompaniesLocationsController extends AdminController
 
         return $form;
     }
+
 
     public function company_locations_list()
     {

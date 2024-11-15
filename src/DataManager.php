@@ -8,7 +8,6 @@ use OpenAdminCore\Admin\Admin;
 use OpenAdminCore\Admin\Auth\Database\Permission;
 use OpenAdminCore\Admin\Auth\Database\Menu;
 use OpenAdminCore\Admin\Extension;
-
 use Svr\Core\Controllers\UsersController;
 use Svr\Data\Controllers\AnimalsController;
 use Svr\Data\Controllers\ApplicationsController;

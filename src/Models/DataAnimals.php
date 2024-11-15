@@ -8,13 +8,11 @@ use Svr\Directories\Models\DirectoryKeepingPurposes;
 use Svr\Directories\Models\DirectoryCountries;
 use Svr\Directories\Models\DirectoryOutBasises;
 use Svr\Directories\Models\DirectoryOutTypes;
-
 use Svr\Core\Enums\SystemBreedingValueEnum;
 use Svr\Core\Enums\SystemSexEnum;
 use Svr\Core\Enums\SystemStatusEnum;
 use Svr\Core\Enums\SystemStatusDeleteEnum;
 use Svr\Core\Traits\GetEnums;
-
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -44,13 +42,6 @@ class DataAnimals extends Model
 
 
 	/**
-	 * Флаг наличия автообновляемых полей
-	 * @var string
-	 */
-//	public $timestamps								= false;
-
-
-	/**
 	 * Поле даты создания строки
 	 * @var string
 	 */
@@ -62,13 +53,6 @@ class DataAnimals extends Model
 	 * @var string
 	 */
 	const UPDATED_AT								= 'updated_at';
-
-
-	/**
-	 * На случай, если потребуется указать специфичное подключение для таблицы
-	 * @var string
-	 */
-//	protected $connection							= 'mysql';
 
 
 	/**
@@ -142,8 +126,8 @@ class DataAnimals extends Model
 		'animal_status',							//* статус животного */
 		'animal_status_delete',						//* статус удаления животного */
 		'animal_repair_status',						//* Флаг починки животного */
-		'created_at',						//* дата создания животного в СВР */
-        'updated_at'									//* дата последнего изменения строки записи */
+		'created_at',								//* дата создания животного в СВР */
+        'updated_at'								//* дата последнего изменения строки записи */
 	];
 
 
@@ -166,18 +150,8 @@ class DataAnimals extends Model
 
 
 	/**
-	 * Преобразование полей при чтении/записи
-	 * @return array
+	 * Обновление данных из запроса
 	 */
-	protected function casts(): array
-	{
-		return [
-//			'update_at'								=> 'timestamp',
-//			'animal_created_at'						=> 'timestamp',
-		];
-	}
-
-
 	public function animalUpdate($animal_id, $request)
 	{
 		if((int)$animal_id < 1)
@@ -203,6 +177,9 @@ class DataAnimals extends Model
 	}
 
 
+	/**
+	 * Непосредственное обновление в базе
+	 */
 	public function animalUpdateRaw($animal_id, $data)
 	{
 		$animal_data					= $this->find($animal_id);
@@ -216,9 +193,11 @@ class DataAnimals extends Model
 	}
 
 
+	/**
+	 * Правила проверки входящих данных
+	 */
 	private function rules($request):void
 	{
-		// получаем поля со значениями
 		$data							= $request->all();
 		$data_rules						= [];
 		$fields_rules					= [
@@ -275,111 +254,198 @@ class DataAnimals extends Model
 	}
 
 
+	/**
+	 * Реляция айдишников животных
+	 */
 	public function animal_codes()
 	{
 		return $this->hasMany(DataAnimalsCodes::class, 'animal_id', 'animal_id');
 	}
 
+
+	/**
+	 * Реляция пород животных
+	 */
 	public function breed()
 	{
 		return $this->belongsTo(DirectoryAnimalsBreeds::class, 'breed_id', 'breed_id');
 	}
 
+
+	/**
+	 * Реляция пород животных (мать)
+	 */
 	public function animal_mother_breed()
 	{
 		return $this->belongsTo(DirectoryAnimalsBreeds::class, 'animal_mother_breed_id', 'breed_id');
 	}
 
+
+	/**
+	 * Реляция пород животных (батяня)
+	 */
 	public function animal_father_breed()
 	{
 		return $this->belongsTo(DirectoryAnimalsBreeds::class, 'animal_father_breed_id', 'breed_id');
 	}
 
+
+	/**
+	 * Реляция кодов животных (чип)
+	 */
 	public function animal_code_chip()
 	{
 		return $this->belongsTo(DataAnimalsCodes::class, 'animal_code_chip_id', 'code_id');
 	}
 
+
+	/**
+	 * Реляция кодов животных (левый номер)
+	 */
 	public function animal_code_left()
 	{
 		return $this->belongsTo(DataAnimalsCodes::class, 'animal_code_left_id', 'code_id');
 	}
 
+
+	/**
+	 * Реляция кодов животных (правый номер)
+	 */
 	public function animal_code_right()
 	{
 		return $this->belongsTo(DataAnimalsCodes::class, 'animal_code_right_id', 'code_id');
 	}
 
+
+	/**
+	 * Реляция кодов животных (УНСМ)
+	 */
 	public function animal_code_rshn()
 	{
 		return $this->belongsTo(DataAnimalsCodes::class, 'animal_code_rshn_id', 'code_id');
 	}
 
+
+	/**
+	 * Реляция кодов животных (инвентарный номер)
+	 */
 	public function animal_code_inv()
 	{
 		return $this->belongsTo(DataAnimalsCodes::class, 'animal_code_inv_id', 'code_id');
 	}
 
+
+	/**
+	 * Реляция кодов животных (номер в оборудовании)
+	 */
 	public function animal_code_device()
 	{
 		return $this->belongsTo(DataAnimalsCodes::class, 'animal_code_device_id', 'code_id');
 	}
 
+
+	/**
+	 * Реляция кодов животных (тату)
+	 */
 	public function animal_code_tattoo()
 	{
 		return $this->belongsTo(DataAnimalsCodes::class, 'animal_code_tattoo_id', 'code_id');
 	}
 
+
+	/**
+	 * Реляция кодов животных (импортный код)
+	 */
 	public function animal_code_import()
 	{
 		return $this->belongsTo(DataAnimalsCodes::class, 'animal_code_import_id', 'code_id');
 	}
 
+
+	/**
+	 * Реляция кодов животных (Кличка)
+	 */
 	public function animal_code_name()
 	{
 		return $this->belongsTo(DataAnimalsCodes::class, 'animal_code_name_id', 'code_id');
 	}
 
+
+	/**
+	 * Реляция тип содержания
+	 */
 	public function animal_type_of_keeping()
 	{
 		return $this->belongsTo(DirectoryKeepingTypes::class, 'animal_type_of_keeping_id', 'keeping_type_id');
 	}
 
+
+	/**
+	 * Реляция цель содержания
+	 */
 	public function animal_purpose_of_keeping()
 	{
 		return $this->belongsTo(DirectoryKeepingPurposes::class, 'animal_purpose_of_keeping_id', 'keeping_purpose_id');
 	}
 
+
+	/**
+	 * Реляция страна ввоза
+	 */
 	public function animal_country_nameport()
 	{
 		return $this->belongsTo(DirectoryCountries::class, 'animal_country_nameport_id', 'country_id');
 	}
 
+
+	/**
+	 * Реляция основание выбытия
+	 */
 	public function animal_out_basis()
 	{
 		return $this->belongsTo(DirectoryOutBasises::class, 'animal_out_basis_id', 'out_basis_id');
 	}
 
+
+	/**
+	 * Реляция причина выбытия
+	 */
 	public function animal_out_type()
 	{
 		return $this->belongsTo(DirectoryOutTypes::class, 'animal_out_type_id', 'out_type_id');
 	}
 
+
+	/**
+	 * Реляция объект содержания
+	 */
 	public function animal_object_of_keeping()
 	{
 		return $this->belongsTo(DataCompaniesObjects::class, 'animal_object_of_keeping_id', 'company_object_id');
 	}
 
+
+	/**
+	 * Реляция место рождения
+	 */
 	public function animal_object_of_birth()
 	{
 		return $this->belongsTo(DataCompaniesObjects::class, 'animal_object_of_birth_id', 'company_object_id');
 	}
 
+
+	/**
+	 * Реляция место содержания
+	 */
 	public function animal_place_of_keeping()
 	{
 		return $this->belongsTo(DataCompanies::class, 'animal_place_of_keeping_id', 'company_id');
 	}
 
+
+	/**
+	 * Реляция место рождения
+	 */
 	public function animal_place_of_birth()
 	{
 		return $this->belongsTo(DataCompanies::class, 'animal_place_of_birth_id', 'company_id');

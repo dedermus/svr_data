@@ -6,9 +6,6 @@ use Illuminate\Support\ServiceProvider;
 
 class DataServiceProvider extends ServiceProvider
 {
-    /**
-     * {@inheritdoc}
-     */
     public function boot()
     {
         $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'svr-data-lang');
@@ -21,5 +18,4 @@ class DataServiceProvider extends ServiceProvider
 
         DataManager::boot();
     }
-
 }

@@ -5,9 +5,7 @@ namespace Svr\Data\Controllers;
 
 use Svr\Data\Actions\CompanyLocationsList;
 use Svr\Data\Actions\CompanyObjectsList;
-
 use Svr\Data\Models\DataCompanies;
-
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\MessageBag;
@@ -33,11 +31,12 @@ class CompaniesController extends AdminController
     public function __construct()
     {
         $this->model = DataCompanies::class;
-        $this->model_obj = new $this->model;                                                // Модель
-        $this->trans = 'svr-data-lang::data.';                                                          // Переводы
-        $this->title = trans($this->trans . 'companies');                              // Заголовок
-        $this->all_columns_obj = Schema::getColumns($this->model_obj->getTable());          // Все столбцы
+        $this->model_obj = new $this->model;
+        $this->trans = 'svr-data-lang::data.';
+        $this->title = trans($this->trans . 'companies');
+        $this->all_columns_obj = Schema::getColumns($this->model_obj->getTable());
     }
+
 
     /**
      * Index interface.
@@ -54,6 +53,7 @@ class CompaniesController extends AdminController
         });
     }
 
+
     /**
      * Create interface.
      *
@@ -68,6 +68,7 @@ class CompaniesController extends AdminController
             $content->body($this->form());
         });
     }
+
 
     /**
      * Edit interface.
@@ -85,6 +86,7 @@ class CompaniesController extends AdminController
             ->row($this->form($id)->edit($id));
     }
 
+
     /**
      * Show interface.
      *
@@ -98,14 +100,13 @@ class CompaniesController extends AdminController
         return $content
             ->title($this->title)
             ->description(trans('admin.show'))
-
-            // Оформление подсказок (xx_help)
             ->css('.row .help-block {
                 font-size: .9rem;
                 color: #72777b
             }')
             ->body($this->detail($id));
     }
+
 
     /**
      * Make a grid builder.
@@ -127,7 +128,6 @@ class CompaniesController extends AdminController
             $actions->add(new CompanyLocationsList());
         });
 
-        // Настройки фильтров
         $grid->filter(function (Grid\Filter $filter) {
             $filter->disableIdFilter();
             $filter->equal('company_id', 'company_id');
@@ -195,12 +195,9 @@ class CompaniesController extends AdminController
             return new Table(['company_location_id', 'region_id', 'district_id', 'region_name', 'district_name'], $locations->toArray());
         });
 
-        /*$grid->column('link_company_objects', __($this->trans.'link_company_objects'))->display(function () {
-            return "<a href='svr_companies_objects?company_id=".$this->company_id."' target='_blank'>Открыть список</a>";
-        });*/
-
         return $grid;
     }
+
 
     /**
      * Make a show builder.
@@ -235,6 +232,7 @@ class CompaniesController extends AdminController
 
         return $show;
     }
+
 
     /**
      * Make a form builder.
@@ -272,19 +270,6 @@ class CompaniesController extends AdminController
 
         $form->text('company_kpp', __('company_kpp'))
             ->help(trans(strtolower($this->trans . 'company_kpp')));
-
-        /*$form->multipleSelect('company_objects', __('company_objects'))
-            ->options(function () {
-                $returned_data = [];
-                $company_objects = DataCompaniesObjects::where('company_id', $this->toArray()['company_id'])->get();
-                foreach ($company_objects as $company_object)
-                {
-                    $returned_data[$company_object['company_object_id']] = $company_object['company_object_approval_number'];
-                }
-                return $returned_data;})
-            ->ajax('/admin/svr_companies_objects_exp/companyObjects', 'company_object_id', 'company_object_approval_number')
-            ->value(DataCompaniesObjects::companyObjectsGetByCompanyId($id))
-            ->help(__($this->trans.'companies_objects'));*/
 
         $form->select('company_status', __('company_status'))
             ->options(SystemStatusEnum::get_option_list())

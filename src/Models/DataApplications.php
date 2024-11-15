@@ -5,7 +5,6 @@ namespace Svr\Data\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Svr\Core\Enums\ApplicationStatusEnum;
@@ -58,7 +57,6 @@ class DataApplications extends Model
 	 * @var array
 	 */
 	protected $fillable								= [
-		'application_id',							//* ID заявки (автоинкремент) */
 		'company_location_id',						//* id компании в районе-регионе */
 		'user_id',									//* id пользователя */
 		'doctor_id',								//* id пользователя отправившего заявку */
@@ -81,43 +79,31 @@ class DataApplications extends Model
 
 
 	/**
-	 * Массив системных скрытых полей
-	 * @var array
+	 * Реляция компаний-локаций
 	 */
-	protected $hidden								= [
-//		'application_created_at',
-	];
-
-
-	/**
-	 * Преобразование полей при чтении/записи
-	 * @return array
-	 */
-	protected function casts(): array
-	{
-		return [
-//			'update_at'								=> 'timestamp',
-//			'application_created_at'				=> 'timestamp',
-		];
-	}
-
-
 	public function company_location()
 	{
 		return $this->belongsTo(DataCompaniesLocations::class, 'company_location_id', 'company_location_id');
 	}
 
 
+	/**
+	 * Реляция пользователей
+	 */
 	public function user()
 	{
 		return $this->belongsTo(SystemUsers::class, 'user_id', 'user_id');
 	}
 
 
+	/**
+	 * Реляция пользователей (доктор)
+	 */
 	public function doctor()
 	{
 		return $this->belongsTo(SystemUsers::class, 'doctor_id', 'user_id');
 	}
+
 
     /**
      * Создать запись
@@ -131,6 +117,7 @@ class DataApplications extends Model
         $this->validateRequest($request);
         $this->fill($request->all())->save();
     }
+
 
     /**
      * Обновить запись
@@ -152,6 +139,7 @@ class DataApplications extends Model
         }
     }
 
+
     /**
      * Валидация запроса
      * @param Request $request
@@ -162,6 +150,7 @@ class DataApplications extends Model
         $messages = $this->getValidationMessages();
         $request->validate($rules, $messages);
     }
+
 
     /**
      * Получить правила валидации
@@ -187,6 +176,7 @@ class DataApplications extends Model
             'application_status' => ['required', Rule::enum(ApplicationStatusEnum::class)],
         ];
     }
+
 
     /**
      * Получить сообщения об ошибках валидации
