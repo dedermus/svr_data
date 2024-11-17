@@ -25,5 +25,6 @@ class DataSeeder extends Seeder
         (new Seeders\DataAnimalsCodesSeeder())->run();
         (new Seeders\DataApplicationsSeeder())->run();
         (new Seeders\DataApplicationsAnimalsSeeder())->run();
+        (new Seeders\DataUsersParticipationsSeeder())->run();
     }
 }
