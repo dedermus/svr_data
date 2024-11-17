@@ -8,7 +8,7 @@ use Svr\Data\Seeders;
 
 class DataSeeder extends Seeder
 {
-    public function run()
+    public function run(): void
     {
         DB::table('data.data_animals_codes')->truncate();
         DB::table('data.data_animals')->truncate();

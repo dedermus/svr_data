@@ -73,6 +73,13 @@ return new class extends Migration
         {
             $table->foreign('company_id')->references('company_id')->on('data.data_companies')->cascadeOnUpdate()->noActionOnDelete();
         });
+
+        Schema::table('data.data_users_participations', function (Blueprint $table)
+        {
+            $table->foreign('user_id')->references('user_id')->on('system.system_users')->cascadeOnUpdate()->noActionOnDelete();
+            $table->foreign('role_id')->references('role_id')->on('system.system_roles')->cascadeOnUpdate()->noActionOnDelete();
+
+        });
     }
 
     /**
