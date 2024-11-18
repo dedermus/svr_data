@@ -265,10 +265,12 @@ class CompaniesLocationsController extends AdminController
     protected function form(): Form
     {
         $form = new Form($this->model_obj);
-        $form->display('company_location_id', 'company_location_id')
+        $form->text('company_location_id', 'company_location_id')
+            ->readonly(true)
             ->help(__($this->trans . 'company_location_id'));
 
-        $form->display('company_id','company_id')
+        $form->text('company_id','company_id')
+            ->readonly(true)
             ->help(__($this->trans . 'company_id'));
 
         $form->select('region_id', 'region')
@@ -317,6 +319,11 @@ class CompaniesLocationsController extends AdminController
     }
 
 
+    /**
+     * Возвращает список локаций компаний поисковым запросом.
+     *
+     * @return array Список локаций компаний с их идентификаторами и названиями.
+     */
     public function company_locations_list()
     {
         $request = Request::instance();

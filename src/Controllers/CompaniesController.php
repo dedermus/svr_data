@@ -243,9 +243,12 @@ class CompaniesController extends AdminController
     protected function form($id = false): Form
     {
         $form = new Form($this->model_obj);
-
-        $form->display('company_id', __('company_id'))
-            ->help(trans(strtolower($this->trans . 'company_id')));
+        
+        $form->text('company_id', __('company_id'))
+            ->required()
+            ->readonly(true)
+            ->rules('required')
+            ->help(__('svr-data-lang::data.company_id'));
 
         $form->text('company_base_index', __('company_base_index'))
             ->help(trans(strtolower($this->trans . 'company_base_index')));
@@ -306,11 +309,7 @@ class CompaniesController extends AdminController
                 // обновляется текущая страница формы.
                 if ($form->isEditing())
                 {
-                    $success = new MessageBag([
-                        'title'   => 'Saved',
-                        'message' => 'Sweet this is saved',
-                    ]);
-                    return back()->with(compact('success'));
+                    $this->model_obj->companyUpdate(request());
                 }
         });
 

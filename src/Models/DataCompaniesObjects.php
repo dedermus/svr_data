@@ -173,8 +173,8 @@ class DataCompaniesObjects extends Model
             'company_object_guid_self' => 'required|string|max:128',
             'company_object_guid_horriot' => 'required|string|max:128',
             'company_object_approval_number' => 'required|string|max:64',
-            'company_object_address_view' => 'required|string|max:64',
-            'company_object_is_favorite' => 'required|string|max:5',
+            'company_object_address_view' => 'required|string|max:512',
+            'company_object_is_favorite' => 'required|boolean',
         ];
     }
 

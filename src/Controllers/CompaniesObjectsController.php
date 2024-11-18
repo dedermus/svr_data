@@ -222,10 +222,12 @@ class CompaniesObjectsController extends AdminController
     protected function form(): Form
     {
         $form = new Form($this->model_obj);
-        $form->display('company_object_id', 'company_object_id')
+        $form->text('company_object_id', 'company_object_id')
+            ->readonly(true)
             ->help(__($this->trans . 'company_object_id'));
 
-        $form->display('company_id','company_id')
+        $form->text('company_id','company_id')
+            ->readonly(true)
             ->help(__($this->trans . 'company_id'));
 
         $form->text('company_object_guid_self', 'company_object_guid_self')
@@ -275,6 +277,11 @@ class CompaniesObjectsController extends AdminController
     }
 
 
+    /**
+     * Получает список объектов компании на основе поискового запроса.
+     *
+     * @return array Список объектов компании, соответствующих поисковому запросу.
+     */
     public function companyObjects()
     {
         $company_objects = [];

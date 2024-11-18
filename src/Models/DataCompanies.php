@@ -163,21 +163,19 @@ class DataCompanies extends Model
      */
     private function getValidationRules(Request $request): array
     {
-        $id = $request->input($this->primaryKey);
-
         return [
             $this->primaryKey => [
                 $request->isMethod('put') ? 'required' : '',
                 Rule::exists('.'.$this->getTable(), $this->primaryKey),
             ],
-            'company_base_index' => 'string|max:7',
-            'company_guid_vetis' => 'string|max:128',
-            'company_guid' => 'string|max:36',
-            'company_name_short' => 'string|max:100',
-            'company_name_full' => 'string|max:255',
-            'company_address' => 'string|max:255',
-            'company_inn' => 'string|max:12',
-            'company_kpp' => 'string|max:12',
+            'company_base_index' => 'min:0|max:7',
+            'company_guid_vetis' => 'min:0|max:2',
+            'company_guid' => 'min:0|max:36',
+            'company_name_short' => 'min:0|max:100',
+            'company_name_full' => 'min:0|max:255',
+            'company_address' => 'min:0|max:255',
+            'company_inn' => 'min:0|max:12',
+            'company_kpp' => 'min:0|max:12',
             'company_status' => ['required', Rule::in(SystemStatusEnum::get_option_list())],
             'company_status_horriot' => ['required', Rule::in(SystemStatusEnum::get_option_list())],
             'company_status_delete' => ['required', Rule::in(SystemStatusDeleteEnum::get_option_list())],
@@ -193,17 +191,17 @@ class DataCompanies extends Model
     {
         return [
             $this->primaryKey => trans('svr-core-lang::validation.required'),
-            'company_base_index.string' => trans('svr-core-lang::validation'),
-            'company_guid_vetis.string' => trans('svr-core-lang::validation'),
-            'company_guid.string' => trans('svr-core-lang::validation'),
-            'company_name_short.string' => trans('svr-core-lang::validation'),
-            'company_name_full.string' => trans('svr-core-lang::validation'),
-            'company_address.string' => trans('svr-core-lang::validation'),
-            'company_inn.string' => trans('svr-core-lang::validation'),
-            'company_kpp.string' => trans('svr-core-lang::validation'),
-            'company_status.required' => trans('svr-core-lang::validation'),
-            'company_status_horriot.required' => trans('svr-core-lang::validation'),
-            'company_status_delete.required' => trans('svr-core-lang::validation'),
+            'company_base_index' => trans('svr-core-lang::validation'),
+            'company_guid_vetis' => trans('svr-core-lang::validation'),
+            'company_guid' => trans('svr-core-lang::validation'),
+            'company_name_short' => trans('svr-core-lang::validation'),
+            'company_name_full' => trans('svr-core-lang::validation'),
+            'company_address' => trans('svr-core-lang::validation'),
+            'company_inn' => trans('svr-core-lang::validation'),
+            'company_kpp' => trans('svr-core-lang::validation'),
+            'company_status' => trans('svr-core-lang::validation'),
+            'company_status_horriot' => trans('svr-core-lang::validation'),
+            'company_status_delete' => trans('svr-core-lang::validation'),
         ];
     }
 }
