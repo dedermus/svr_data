@@ -9995,7 +9995,8 @@ class DataUsersParticipationsSeeder extends Seeder
                 "created_at" => "2024-05-22 14:15:36.745969",
                 "updated_at" => "2024-05-22 14:15:36.745969"
             ],
-            [
+            ]);
+        DB::table('data.data_users_participations')->insert([    [
                 "participation_id" => "1003",
                 "user_id" => "986",
                 "participation_item_type" => "company",
@@ -19995,6 +19996,8 @@ class DataUsersParticipationsSeeder extends Seeder
                 "created_at" => "2024-05-22 14:19:38.30617",
                 "updated_at" => "2024-05-22 14:19:38.30617"
             ],
+            ]);
+        DB::table('data.data_users_participations')->insert([
             [
                 "participation_id" => "2006",
                 "user_id" => "1989",
@@ -28835,6 +28838,7 @@ class DataUsersParticipationsSeeder extends Seeder
                 "created_at" => "2024-05-22 14:23:10.28035",
                 "updated_at" => "2024-05-22 14:23:10.28035"
             ],
+
             [
                 "participation_id" => "2892",
                 "user_id" => "2875",
@@ -29995,6 +29999,8 @@ class DataUsersParticipationsSeeder extends Seeder
                 "created_at" => "2024-05-22 14:23:37.984654",
                 "updated_at" => "2024-05-22 14:23:37.984654"
             ],
+            ]);
+        DB::table('data.data_users_participations')->insert([
             [
                 "participation_id" => "3008",
                 "user_id" => "2991",
@@ -32995,6 +33001,8 @@ class DataUsersParticipationsSeeder extends Seeder
                 "created_at" => "2024-05-22 14:24:49.954941",
                 "updated_at" => "2024-05-22 14:24:49.954941"
             ],
+            ]);
+        DB::table('data.data_users_participations')->insert([
             [
                 "participation_id" => "3308",
                 "user_id" => "3291",
@@ -33105,6 +33113,8 @@ class DataUsersParticipationsSeeder extends Seeder
                 "created_at" => "2024-05-22 14:24:52.586147",
                 "updated_at" => "2024-05-22 14:24:52.586147"
             ],
+            ]);
+        DB::table('data.data_users_participations')->insert([
             [
                 "participation_id" => "3319",
                 "user_id" => "3302",
@@ -34419,6 +34429,7 @@ class DataUsersParticipationsSeeder extends Seeder
                 "participation_id" => "3450",
                 "user_id" => "3",
                 "participation_item_type" => "admin",
+                "participation_item_id" => null,
                 "role_id" => "1",
                 "participation_status" => "enabled",
                 "created_at" => "2024-05-22 15:54:51.61946",
@@ -34428,6 +34439,7 @@ class DataUsersParticipationsSeeder extends Seeder
                 "participation_id" => "3453",
                 "user_id" => "3433",
                 "participation_item_type" => "admin",
+                "participation_item_id" => null,
                 "role_id" => "1",
                 "participation_status" => "enabled",
                 "created_at" => "2024-05-23 09:28:45.825185",
@@ -34457,6 +34469,7 @@ class DataUsersParticipationsSeeder extends Seeder
                 "participation_id" => "3456",
                 "user_id" => "7",
                 "participation_item_type" => "admin",
+                "participation_item_id" => null,
                 "role_id" => "1",
                 "participation_status" => "enabled",
                 "created_at" => "2024-05-23 11:41:09.283231",
@@ -34556,6 +34569,7 @@ class DataUsersParticipationsSeeder extends Seeder
                 "participation_id" => "3466",
                 "user_id" => "6",
                 "participation_item_type" => "admin",
+                "participation_item_id" => null,
                 "role_id" => "1",
                 "participation_status" => "enabled",
                 "created_at" => "2024-05-29 08:19:32.458316",
@@ -35555,6 +35569,7 @@ class DataUsersParticipationsSeeder extends Seeder
                 "participation_id" => "3572",
                 "user_id" => "3488",
                 "participation_item_type" => "admin",
+                "participation_item_id" => null,
                 "role_id" => "1",
                 "participation_status" => "enabled",
                 "created_at" => "2024-06-06 13:19:37.840084",
@@ -35624,6 +35639,7 @@ class DataUsersParticipationsSeeder extends Seeder
                 "participation_id" => "3581",
                 "user_id" => "3550",
                 "participation_item_type" => "admin",
+                "participation_item_id" => null,
                 "role_id" => "1",
                 "participation_status" => "enabled",
                 "created_at" => "2024-06-11 16:30:30.683918",
@@ -35773,6 +35789,7 @@ class DataUsersParticipationsSeeder extends Seeder
                 "participation_id" => "3597",
                 "user_id" => "3557",
                 "participation_item_type" => "admin",
+                "participation_item_id" => null,
                 "role_id" => "1",
                 "participation_status" => "enabled",
                 "created_at" => "2024-06-19 15:29:19.612732",
@@ -36012,6 +36029,7 @@ class DataUsersParticipationsSeeder extends Seeder
                 "participation_id" => "3635",
                 "user_id" => "1",
                 "participation_item_type" => "admin",
+                "participation_item_id" => null,
                 "role_id" => "1",
                 "participation_status" => "enabled",
                 "created_at" => "2024-07-09 15:26:39.119481",
@@ -36061,6 +36079,7 @@ class DataUsersParticipationsSeeder extends Seeder
                 "participation_id" => "3642",
                 "user_id" => "5",
                 "participation_item_type" => "admin",
+                "participation_item_id" => null,
                 "role_id" => "1",
                 "participation_status" => "enabled",
                 "created_at" => "2024-07-11 12:24:09.038746",
