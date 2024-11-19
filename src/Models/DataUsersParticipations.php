@@ -5,9 +5,15 @@ namespace Svr\Data\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Svr\Core\Enums\SystemParticipationsTypesEnum;
 use Svr\Core\Enums\SystemStatusEnum;
+use Svr\Core\Models\SystemRoles;
+use Svr\Directories\Models\DirectoryCountries;
+use Svr\Directories\Models\DirectoryCountriesRegion;
+use Svr\Directories\Models\DirectoryCountriesRegionsDistrict;
+use Symfony\Component\VarDumper\Cloner\Data;
 
 class DataUsersParticipations extends Model
 {
@@ -82,7 +88,6 @@ class DataUsersParticipations extends Model
 	protected $hidden								= [
 		'created_at',
 	];
-
 
     /**
      * Создать запись
@@ -169,5 +174,106 @@ class DataUsersParticipations extends Model
             'role_id' => trans('svr-core-lang::validation'),
             'participation_status' => trans('svr-core-lang::validation'),
         ];
+    }
+
+    /**
+     * Пролучение коллекции привязок компаний к пользователю
+     * @param $user_id - пользователь или массив пользователей
+     *
+     * @return \Illuminate\Support\Collection
+     */
+    public static function userCompaniesLocationsList($user_id)
+    {
+        $user_id = is_array($user_id) ? $user_id : [$user_id];
+
+        $items_list = DB::table((new DataUsersParticipations())->table.' as up')
+            ->select('up.*',
+    						'cl.company_location_id',
+    						'c.company_id',
+    						'c.company_name_short',
+    						'c.company_name_full',
+    						'c.company_status',
+    						'country.country_name',
+    						'country.country_id',
+    						'cr.region_name',
+    						'cr.region_id',
+    						'crd.district_name',
+    						'crd.district_id',
+    						'r.role_id',
+    						'r.role_name_long',
+    						'r.role_name_short',
+    						'r.role_slug',
+    						'r.role_status' )
+            ->leftjoin((new DataCompaniesLocations())->getTable().' AS cl', 'cl.company_location_id', '=', 'up.participation_item_id')
+            ->leftjoin((new DataCompanies())->getTable().' AS c', 'c.company_id', '=', 'cl.company_id')
+            ->leftjoin((new DirectoryCountriesRegion())->getTable().' AS cr', 'cr.region_id', '=', 'cl.region_id')
+            ->leftjoin((new DirectoryCountries())->getTable().' AS country', 'country.country_id', '=', 'cr.country_id')
+            ->leftjoin((new DirectoryCountriesRegionsDistrict())->getTable().' AS crd', 'crd.district_id', '=', 'cl.district_id')
+            ->leftjoin((new SystemRoles())->getTable().' AS r', 'r.role_id', '=', 'up.role_id')
+            ->where([
+                ['up.participation_item_type', '=', 'company'],
+                ['c.company_status', '=', 'enabled'],
+                ['r.role_status', '=', 'enabled'],
+                ['up.participation_status', '=', 'enabled'],
+            ])
+            ->whereIn('up.user_id', $user_id)
+            ->get();
+        return $items_list;
+    }
+
+    /**
+     * Короткий список по компании
+     * @param $userCompaniesLocations - коллекция привязок компаний к пользователю
+     *
+     * @return array
+     */
+    public static function userCompaniesLocationsShort($userCompaniesLocations)
+    {
+        $listKey = ['company_location_id'];
+        $result = [];
+        foreach ($userCompaniesLocations as $item) {
+            $filteredItem = array_intersect_key((array)$item, array_flip($listKey));
+            $result[] = reset($filteredItem); // Извлекаем первое значение из массива
+        }
+        return $result;
+    }
+
+    /**
+     * Полный список полей по компании
+     * @param $userCompaniesLocations - коллекция привязок компаний к пользователю
+     *
+     * @return array
+     */
+    public static function userCompaniesLocationsLong($userCompaniesLocations)
+    {
+        $listKey = [
+            'company_location_id',
+            'company_id',
+            'company_name_short',
+            'company_name_full',
+            'country_name',
+            'country_id',
+            'region_name',
+            'region_id',
+            'district_name',
+            'district_id',
+            'active',
+        ];
+        $result = [];
+
+
+        foreach ($userCompaniesLocations as $item) {
+            // Преобразуем объект в массив для фильтрации
+            $filteredItem = array_intersect_key((array)$item, array_flip($listKey));
+
+            // Используем -> для доступа к свойству объекта
+            $participationId = $item->participation_id ?? null;
+
+            if ($participationId !== null) {
+                $result[$participationId] = $filteredItem; // Используем participation_id как ключ
+            }
+        }
+
+        return $result;
     }
 }
