@@ -151,7 +151,7 @@ class AnimalsController extends AdminController
 		$grid->animal_country_nameport_id(__('svr-data-lang::data.animal.animal_country_nameport'))
 			->select(DirectoryCountries::All(['country_id', 'country_name'])->pluck('country_name', 'country_id')->toArray());
 		$grid->column('animal_description', __('svr-data-lang::data.animal.animal_description'))->sortable()->textarea();
-		$grid->column('animal_photo', __('svr-data-lang::data.animal.animal_photo'))->sortable();
+		$grid->column('animal_photo', __('svr-data-lang::data.animal.animal_photo'));
 		$grid->column('animal_out_date', __('svr-data-lang::data.animal.animal_out_date'))->sortable()->date();
 		$grid->column('animal_out_reason', __('svr-data-lang::data.animal.animal_out_reason'))->sortable()->text();
 		$grid->column('animal_out_rashod', __('svr-data-lang::data.animal.animal_out_rashod'))->sortable()->text();

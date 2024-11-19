@@ -164,7 +164,7 @@ class CompaniesController extends AdminController
                     ->help($trans),
 
                 // Отображение остальных колонок
-                default => $grid->column($value_name, $value_label)->help($trans),
+                default => $grid->column($value_name, $value_label)->help($trans)->sortable(),
             };
         }
 
@@ -248,55 +248,55 @@ class CompaniesController extends AdminController
             ->required()
             ->readonly(true)
             ->rules('required')
-            ->help(__('svr-data-lang::data.company_id'))->sortable();
+            ->help(__('svr-data-lang::data.company_id'));
 
         $form->text('company_base_index', __('company_base_index'))
-            ->help(trans(strtolower($this->trans . 'company_base_index')))->sortable();
+            ->help(trans(strtolower($this->trans . 'company_base_index')));
 
         $form->text('company_guid_vetis', __('company_guid_vetis'))
-            ->help(trans(strtolower($this->trans . 'company_guid_vetis')))->sortable();
+            ->help(trans(strtolower($this->trans . 'company_guid_vetis')));
 
         $form->text('company_guid', __('company_guid'))
-            ->help(trans(strtolower($this->trans . 'company_guid')))->sortable();
+            ->help(trans(strtolower($this->trans . 'company_guid')));
 
         $form->text('company_name_short', __('company_name_short'))
-            ->help(trans(strtolower($this->trans . 'company_name_short')))->sortable();
+            ->help(trans(strtolower($this->trans . 'company_name_short')));
 
         $form->text('company_name_full', __('company_name_full'))
-            ->help(trans(strtolower($this->trans . 'company_name_full')))->sortable();
+            ->help(trans(strtolower($this->trans . 'company_name_full')));
 
         $form->text('company_address', __('company_address'))
-            ->help(trans(strtolower($this->trans . 'company_address')))->sortable();
+            ->help(trans(strtolower($this->trans . 'company_address')));
 
         $form->text('company_inn', __('company_inn'))
-            ->help(trans(strtolower($this->trans . 'company_inn')))->sortable();
+            ->help(trans(strtolower($this->trans . 'company_inn')));
 
         $form->text('company_kpp', __('company_kpp'))
-            ->help(trans(strtolower($this->trans . 'company_kpp')))->sortable();
+            ->help(trans(strtolower($this->trans . 'company_kpp')));
 
         $form->select('company_status', __('company_status'))
             ->options(SystemStatusEnum::get_option_list())
             ->help(trans(strtolower($this->trans . 'company_status')))
-            ->default('enabled')->sortable();
+            ->default('enabled');
 
         $form->select('company_status_horriot', __('company_status_horriot'))
             ->options(SystemStatusEnum::get_option_list())
             ->help(trans(strtolower($this->trans . 'company_status_horriot')))
-            ->default('enabled')->sortable();
+            ->default('enabled');
 
         $form->select('company_status_delete', __('company_status_delete'))
             ->options(SystemStatusDeleteEnum::get_option_list())
             ->help(trans(strtolower($this->trans . 'company_status_delete')))
-            ->default('active')->sortable();
+            ->default('active');
 
         $form->display('company_date_update_objects', 'company_date_update_objects')
-            ->help(trans('svr.updated_at'))->sortable();
+            ->help(trans('svr.updated_at'));
 
         $form->display('created_at', 'created_at')
-            ->help(trans('svr.created_at'))->sortable();
+            ->help(trans('svr.created_at'));
 
         $form->display('updated_at', 'updated_at')
-            ->help(trans('svr.updated_at'))->sortable();
+            ->help(trans('svr.updated_at'));
 
         // обработка формы
         $form->saving(function (Form $form)
