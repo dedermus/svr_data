@@ -156,17 +156,17 @@ class CompaniesObjectsController extends AdminController
                     $grid->column($value_name, $value_label)
                     ->display(function ($value) {return Carbon::parse($value);})
                     ->xx_datetime()
-                    ->help($trans);
+                    ->help($trans)->sortable();
                 break;
                 case 'company_id':
-                    $grid->column($value_name, $value_label)->help($trans);
+                    $grid->column($value_name, $value_label)->help($trans)->sortable();
                     $grid->column('company', 'company_name_short')->display(function ($company) {
                         return $company['company_name_short'];
                     })->help(__($this->trans.'company_name_short'));
                 break;
                 // Отображение остальных колонок
                 default:
-                    $grid->column($value_name, $value_label)->help($trans);
+                    $grid->column($value_name, $value_label)->help($trans)->sortable();
                 break;
             };
         }

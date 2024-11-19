@@ -134,7 +134,7 @@ class ApplicationsController extends AdminController
                 return '-';
             }
 
-        })->sortable();
+        });
         $grid->column('user', __('svr-data-lang::data.application.user'))->display(function($user)
         {
             if($user && is_array($user))
@@ -143,7 +143,7 @@ class ApplicationsController extends AdminController
             }else {
                 return '-';
             }
-        })->sortable();
+        });
         $grid->column('doctor', __('svr-data-lang::data.application.doctor'))->display(function($user)
         {
             if($user && is_array($user))
@@ -152,7 +152,7 @@ class ApplicationsController extends AdminController
             }else {
                 return '-';
             }
-        })->sortable();
+        });
         $grid->column('application_date_create', __('svr-data-lang::data.application.application_date_create'))->sortable();
         $grid->column('application_date_horriot', __('svr-data-lang::data.application.application_date_horriot'))->sortable();
         $grid->column('application_date_complete', __('svr-data-lang::data.application.application_date_complete'))->sortable();

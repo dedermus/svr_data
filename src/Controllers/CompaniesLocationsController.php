@@ -168,19 +168,19 @@ class CompaniesLocationsController extends AdminController
                     $grid->column($value_name, 'ID')->sortable();
                 break;
                 case 'company_id':
-                    $grid->column($value_name, $value_label)->help($trans);
+                    $grid->column($value_name, $value_label)->help($trans)->sortable();
                     $grid->column('company', 'company_name_short')->display(function ($company) {
                         return $company['company_name_short'];
                     })->help(__($this->trans.'company_name_short'));
                     break;
                 case 'region_id':
-                    $grid->column($value_name, $value_label)->help($trans);
+                    $grid->column($value_name, $value_label)->help($trans)->sortable();
                     $grid->column('region', 'region_name')->display(function ($region) {
                         return $region['region_name'];
                     })->help(__('directories.region_name'));
                 break;
                 case 'district_id':
-                    $grid->column($value_name, $value_label)->help($trans);
+                    $grid->column($value_name, $value_label)->help($trans)->sortable();
                     $grid->column('district', 'district_name')->display(function ($district) {
                         return $district['district_name'] ?? null;
                     })->help(__('directories.district_name'));
@@ -190,11 +190,11 @@ class CompaniesLocationsController extends AdminController
                     $grid->column($value_name, $value_label)
                     ->display(function ($value) {return Carbon::parse($value);})
                     ->xx_datetime()
-                    ->help($trans);
+                    ->help($trans)->sortable();
                 break;
                 // Отображение остальных колонок
                 default:
-                    $grid->column($value_name, $value_label)->help($trans);
+                    $grid->column($value_name, $value_label)->help($trans)->sortable();
                 break;
             };
         }

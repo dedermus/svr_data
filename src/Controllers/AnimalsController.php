@@ -116,14 +116,14 @@ class AnimalsController extends AdminController
 		$grid->column('animal_nanimal', __('svr-data-lang::data.animal.animal_nanimal'))->sortable()->text();
 		$grid->column('animal_nanimal_time', __('svr-data-lang::data.animal.animal_nanimal_time'))->sortable()->text();
 		$grid->column('animal_code_chip.code_value', __('svr-data-lang::data.animal.animal_code_chip'));
-		$grid->column('animal_code_left.code_value', __('svr-data-lang::data.animal.animal_code_left'))->sortable();
-		$grid->column('animal_code_right.code_value', __('svr-data-lang::data.animal.animal_code_right'))->sortable();
-		$grid->column('animal_code_rshn.code_value', __('svr-data-lang::data.animal.animal_code_rshn'))->sortable();
-		$grid->column('animal_code_inv.code_value', __('svr-data-lang::data.animal.animal_code_inv'))->sortable();
-		$grid->column('animal_code_device.code_value', __('svr-data-lang::data.animal.animal_code_device'))->sortable();
-		$grid->column('animal_code_tattoo.code_value', __('svr-data-lang::data.animal.animal_code_tattoo'))->sortable();
-		$grid->column('animal_code_import.code_value', __('svr-data-lang::data.animal.animal_code_import'))->sortable();
-		$grid->column('animal_code_name.code_value', __('svr-data-lang::data.animal.animal_code_name'))->sortable();
+		$grid->column('animal_code_left.code_value', __('svr-data-lang::data.animal.animal_code_left'));
+		$grid->column('animal_code_right.code_value', __('svr-data-lang::data.animal.animal_code_right'));
+		$grid->column('animal_code_rshn.code_value', __('svr-data-lang::data.animal.animal_code_rshn'));
+		$grid->column('animal_code_inv.code_value', __('svr-data-lang::data.animal.animal_code_inv'));
+		$grid->column('animal_code_device.code_value', __('svr-data-lang::data.animal.animal_code_device'));
+		$grid->column('animal_code_tattoo.code_value', __('svr-data-lang::data.animal.animal_code_tattoo'));
+		$grid->column('animal_code_import.code_value', __('svr-data-lang::data.animal.animal_code_import'));
+		$grid->column('animal_code_name.code_value', __('svr-data-lang::data.animal.animal_code_name'));
 //		$grid->column('animal_code_inv_value', __('svr-data-lang::data.animal.animal_code_inv_value'))->sortable();
 //		$grid->column('animal_code_rshn_value', __('svr-data-lang::data.animal.animal_code_rshn_value'))->sortable();
 		$grid->column('animal_date_create_record', __('svr-data-lang::data.animal.animal_date_create_record'))->sortable()->date();
@@ -132,24 +132,24 @@ class AnimalsController extends AdminController
 		$grid->column('animal_date_income', __('svr-data-lang::data.animal.animal_date_income'))->sortable()->date();
 //		$grid->column('animal_sex_id', __('svr-data-lang::data.animal.animal_sex_id'))->sortable();
 		$grid->column('animal_sex', __('svr-data-lang::data.animal.animal_sex'))->sortable()->select(SystemSexEnum::get_option_list());
-		$grid->column('animal_breeding_value', __('svr-data-lang::data.animal.animal_breeding_value'))->sortable()->select(SystemBreedingValueEnum::get_option_list());
+		$grid->column('animal_breeding_value', __('svr-data-lang::data.animal.animal_breeding_value'))->select(SystemBreedingValueEnum::get_option_list());
 		$grid->column('animal_colour', __('svr-data-lang::data.animal.animal_colour'))->sortable()->text();
-		$grid->column('animal_place_of_keeping.company_name_short', __('svr-data-lang::data.animal.animal_place_of_keeping'))->sortable();
+		$grid->column('animal_place_of_keeping.company_name_short', __('svr-data-lang::data.animal.animal_place_of_keeping'));
 		$grid->column('animal_object_of_keeping', __('svr-data-lang::data.animal.animal_object_of_keeping'))->display(function($animal_object_of_birth_data)
 		{
 			if($animal_object_of_birth_data)
 			{
 				return $animal_object_of_birth_data['company_object_address_view'].' ['.(int)$animal_object_of_birth_data['company_object_is_favorite'].']';
 			}
-		})->sortable();
-		$grid->column('animal_place_of_birth.company_name_short', __('svr-data-lang::data.animal.animal_place_of_birth'))->sortable();
-		$grid->column('animal_object_of_birth.company_object_address_view', __('svr-data-lang::data.animal.animal_object_of_birth'))->sortable();
+		});
+		$grid->column('animal_place_of_birth.company_name_short', __('svr-data-lang::data.animal.animal_place_of_birth'));
+		$grid->column('animal_object_of_birth.company_object_address_view', __('svr-data-lang::data.animal.animal_object_of_birth'));
 		$grid->animal_type_of_keeping_id(__('svr-data-lang::data.animal.animal_type_of_keeping_id'))
-			->select(DirectoryKeepingTypes::All(['keeping_type_name', 'keeping_type_id'])->pluck('keeping_type_name', 'keeping_type_id')->toArray())->sortable();
+			->select(DirectoryKeepingTypes::All(['keeping_type_name', 'keeping_type_id'])->pluck('keeping_type_name', 'keeping_type_id')->toArray());
 		$grid->animal_purpose_of_keeping_id(__('svr-data-lang::data.animal.animal_purpose_of_keeping_id'))
-			->select(DirectoryKeepingPurposes::All(['keeping_purpose_name', 'keeping_purpose_id'])->pluck('keeping_purpose_name', 'keeping_purpose_id')->toArray())->sortable();
+			->select(DirectoryKeepingPurposes::All(['keeping_purpose_name', 'keeping_purpose_id'])->pluck('keeping_purpose_name', 'keeping_purpose_id')->toArray());
 		$grid->animal_country_nameport_id(__('svr-data-lang::data.animal.animal_country_nameport'))
-			->select(DirectoryCountries::All(['country_id', 'country_name'])->pluck('country_name', 'country_id')->toArray())->sortable();
+			->select(DirectoryCountries::All(['country_id', 'country_name'])->pluck('country_name', 'country_id')->toArray());
 		$grid->column('animal_description', __('svr-data-lang::data.animal.animal_description'))->sortable()->textarea();
 		$grid->column('animal_photo', __('svr-data-lang::data.animal.animal_photo'))->sortable();
 		$grid->column('animal_out_date', __('svr-data-lang::data.animal.animal_out_date'))->sortable()->date();
