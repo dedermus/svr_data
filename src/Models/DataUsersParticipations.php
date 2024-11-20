@@ -222,6 +222,77 @@ class DataUsersParticipations extends Model
     }
 
     /**
+     * Пролучение коллекции привязок регионов к пользователю
+     * @param $user_id - пользователь или массив пользователей
+     *
+     * @return \Illuminate\Support\Collection
+     */
+    public static function userRegionsList($user_id)
+    {
+        $user_id = is_array($user_id) ? $user_id : [$user_id];
+
+        $items_list = DB::table((new DataUsersParticipations())->table.' as up')
+            ->select('up.*',
+                'country.country_name',
+                'country.country_id',
+                'cr.region_name',
+                'cr.region_id',
+                'r.role_id',
+                'r.role_name_long',
+                'r.role_name_short',
+                'r.role_slug',
+                'r.role_status' )
+            ->leftjoin((new DirectoryCountriesRegion())->getTable().' AS cr', 'cr.region_id', '=', 'up.participation_item_id')
+            ->leftjoin((new DirectoryCountries())->getTable().' AS country', 'country.country_id', '=', 'cr.country_id')
+            ->leftjoin((new SystemRoles())->getTable().' AS r', 'r.role_id', '=', 'up.role_id')
+            ->where([
+                ['up.participation_item_type', '=', 'region'],                
+                ['r.role_status', '=', 'enabled'],
+                ['up.participation_status', '=', 'enabled'],
+            ])
+            ->whereIn('up.user_id', $user_id)
+            ->get();
+        return $items_list;
+    }
+
+    /**
+     * Пролучение коллекции привязок Районов к пользователю
+     * @param $user_id - пользователь или массив пользователей
+     *
+     * @return \Illuminate\Support\Collection
+     */
+    public static function userDistrictsList($user_id)
+    {
+        $user_id = is_array($user_id) ? $user_id : [$user_id];
+
+        $items_list = DB::table((new DataUsersParticipations())->table.' as up')
+            ->select('up.*',                
+                'country.country_name',
+                'country.country_id',
+                'cr.region_name',
+                'cr.region_id',
+                'crd.district_name',
+                'crd.district_id',
+                'r.role_id',
+                'r.role_name_long',
+                'r.role_name_short',
+                'r.role_slug',
+                'r.role_status' )
+            ->leftjoin((new DirectoryCountriesRegionsDistrict())->getTable().' AS crd', 'crd.district_id', '=', 'up.participation_item_id')
+            ->leftjoin((new DirectoryCountriesRegion())->getTable().' AS cr', 'cr.region_id', '=', 'crd.region_id')
+            ->leftjoin((new DirectoryCountries())->getTable().' AS country', 'country.country_id', '=', 'cr.country_id')
+            ->leftjoin((new SystemRoles())->getTable().' AS r', 'r.role_id', '=', 'up.role_id')
+            ->where([
+                ['up.participation_item_type', '=', 'district'],
+                ['r.role_status', '=', 'enabled'],
+                ['up.participation_status', '=', 'enabled'],
+            ])
+            ->whereIn('up.user_id', $user_id)
+            ->get();
+        return $items_list;
+    }
+
+    /**
      * Короткий список по компании
      * @param $userCompaniesLocations - коллекция привязок компаний к пользователю
      *
@@ -275,5 +346,61 @@ class DataUsersParticipations extends Model
         }
 
         return $result;
+    }
+
+    /**
+     * Получает данные о участии пользователя на основе предоставленного идентификатора участия.
+     *
+     * @param int $participation_id Идентификатор участия для получения данных.
+     * @return \Illuminate\Support\Collection Коллекция данных о участии пользователя.
+     */
+    /*public static function userParticipationData($participation_id)
+    {
+        return DB::table((new DataUsersParticipations())->table)
+            ->where('participation_id', '=', $participation_id)
+            ->get();
+    }*/
+
+    /**
+     * Получает информацию о привзке пользователя на основе предоставленных данных об участии.
+     *
+     * @param array $participation_id идентификатор
+     * @return array Информация о привязке пользователя с 'company_location_id', 'region_id' и 'district_id' и 'role_id'.
+     */
+    public static function userParticipationInfo($participation_id)
+    {
+        $participation_info = [
+            'company_location_id'   => false,
+            'region_id'             => false,
+            'district_id'           => false,
+            'role_id'               => false
+        ];
+
+        if ((int)$participation_id < 1)
+        {
+            return $participation_info;
+        }
+
+        $participation_data = DataUsersParticipations::find($participation_id)->toArray();
+
+        if (!$participation_data || !is_array($participation_data) || !isset($participation_data['participation_item_type']))
+        {
+            return $participation_info;
+        }
+
+        $participation_info['role_id'] = $participation_data['role_id'];
+
+        switch($participation_data['participation_item_type']){
+            case 'company':
+                $participation_info['company_location_id'] = $participation_data['participation_item_id'];
+                break;
+            case 'region':
+                $participation_info['region_id'] = $participation_data['participation_item_id'];
+                break;
+            case 'district':
+                $participation_info['district_id'] = $participation_data['participation_item_id'];
+                break;
+        }
+        return $participation_info;
     }
 }
