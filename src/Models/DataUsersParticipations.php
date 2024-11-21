@@ -5,9 +5,11 @@ namespace Svr\Data\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Svr\Core\Enums\SystemParticipationsTypesEnum;
+use Svr\Core\Enums\SystemStatusConfirmEnum;
 use Svr\Core\Enums\SystemStatusEnum;
 use Svr\Core\Models\SystemRoles;
 use Svr\Directories\Models\DirectoryCountries;
@@ -178,13 +180,13 @@ class DataUsersParticipations extends Model
 
     /**
      * Пролучение коллекции привязок компаний к пользователю
-     * @param $user_id - пользователь или массив пользователей
+     * @param $user_ids - id пользователя или массив id пользователей
      *
      * @return \Illuminate\Support\Collection
      */
-    public static function userCompaniesLocationsList($user_id)
+    public static function userCompaniesLocationsList($user_ids): Collection
     {
-        $user_id = is_array($user_id) ? $user_id : [$user_id];
+        $user_ids = is_array($user_ids) ? $user_ids : [$user_ids];
 
         $items_list = DB::table((new DataUsersParticipations())->table.' as up')
             ->select('up.*',
@@ -211,12 +213,12 @@ class DataUsersParticipations extends Model
             ->leftjoin((new DirectoryCountriesRegionsDistrict())->getTable().' AS crd', 'crd.district_id', '=', 'cl.district_id')
             ->leftjoin((new SystemRoles())->getTable().' AS r', 'r.role_id', '=', 'up.role_id')
             ->where([
-                ['up.participation_item_type', '=', 'company'],
-                ['c.company_status', '=', 'enabled'],
-                ['r.role_status', '=', 'enabled'],
-                ['up.participation_status', '=', 'enabled'],
+                ['up.participation_item_type', '=', SystemParticipationsTypesEnum::COMPANY->value], // ['company'],
+                ['c.company_status', '=', SystemStatusEnum::ENABLED->value], // ['enabled'],
+                ['r.role_status', '=', SystemStatusEnum::ENABLED->value], // ['enabled'],
+                ['up.participation_status', '=', SystemStatusEnum::ENABLED->value], // ['enabled'],
             ])
-            ->whereIn('up.user_id', $user_id)
+            ->whereIn('up.user_id', $user_ids)
             ->get();
         return $items_list;
     }
@@ -227,7 +229,7 @@ class DataUsersParticipations extends Model
      *
      * @return \Illuminate\Support\Collection
      */
-    public static function userRegionsList($user_id)
+    public static function userRegionsList($user_id): Collection
     {
         $user_id = is_array($user_id) ? $user_id : [$user_id];
 
@@ -246,9 +248,9 @@ class DataUsersParticipations extends Model
             ->leftjoin((new DirectoryCountries())->getTable().' AS country', 'country.country_id', '=', 'cr.country_id')
             ->leftjoin((new SystemRoles())->getTable().' AS r', 'r.role_id', '=', 'up.role_id')
             ->where([
-                ['up.participation_item_type', '=', 'region'],                
-                ['r.role_status', '=', 'enabled'],
-                ['up.participation_status', '=', 'enabled'],
+                ['up.participation_item_type', '=', SystemParticipationsTypesEnum::REGION->value], // 'region'],
+                ['r.role_status', '=', SystemStatusEnum::ENABLED->value], // 'enabled'],
+                ['up.participation_status', '=', SystemStatusEnum::ENABLED->value], // 'enabled'],
             ])
             ->whereIn('up.user_id', $user_id)
             ->get();
@@ -261,12 +263,12 @@ class DataUsersParticipations extends Model
      *
      * @return \Illuminate\Support\Collection
      */
-    public static function userDistrictsList($user_id)
+    public static function userDistrictsList($user_id): Collection
     {
         $user_id = is_array($user_id) ? $user_id : [$user_id];
 
         $items_list = DB::table((new DataUsersParticipations())->table.' as up')
-            ->select('up.*',                
+            ->select('up.*',
                 'country.country_name',
                 'country.country_id',
                 'cr.region_name',
@@ -283,9 +285,9 @@ class DataUsersParticipations extends Model
             ->leftjoin((new DirectoryCountries())->getTable().' AS country', 'country.country_id', '=', 'cr.country_id')
             ->leftjoin((new SystemRoles())->getTable().' AS r', 'r.role_id', '=', 'up.role_id')
             ->where([
-                ['up.participation_item_type', '=', 'district'],
-                ['r.role_status', '=', 'enabled'],
-                ['up.participation_status', '=', 'enabled'],
+                ['up.participation_item_type', '=', SystemParticipationsTypesEnum::DISTRICT->value], // 'region'],
+                ['r.role_status', '=', SystemStatusEnum::ENABLED->value], // 'enabled'],
+                ['up.participation_status', '=', SystemStatusEnum::ENABLED->value], // 'enabled'],
             ])
             ->whereIn('up.user_id', $user_id)
             ->get();
@@ -298,7 +300,7 @@ class DataUsersParticipations extends Model
      *
      * @return array
      */
-    public static function userCompaniesLocationsShort($userCompaniesLocations)
+    public static function userCompaniesLocationsShort($userCompaniesLocations): array
     {
         $listKey = ['company_location_id'];
         $result = [];
@@ -315,7 +317,7 @@ class DataUsersParticipations extends Model
      *
      * @return array
      */
-    public static function userCompaniesLocationsLong($userCompaniesLocations)
+    public static function userCompaniesLocationsLong($userCompaniesLocations): array
     {
         $listKey = [
             'company_location_id',
@@ -364,10 +366,10 @@ class DataUsersParticipations extends Model
     /**
      * Получает информацию о привзке пользователя на основе предоставленных данных об участии.
      *
-     * @param array $participation_id идентификатор
+     * @param int $participation_id идентификатор
      * @return array Информация о привязке пользователя с 'company_location_id', 'region_id' и 'district_id' и 'role_id'.
      */
-    public static function userParticipationInfo($participation_id)
+    public static function userParticipationInfo(int $participation_id): array
     {
         $participation_info = [
             'company_location_id'   => false,
@@ -391,13 +393,13 @@ class DataUsersParticipations extends Model
         $participation_info['role_id'] = $participation_data['role_id'];
 
         switch($participation_data['participation_item_type']){
-            case 'company':
+            case SystemParticipationsTypesEnum::COMPANY->value:
                 $participation_info['company_location_id'] = $participation_data['participation_item_id'];
                 break;
-            case 'region':
+            case SystemParticipationsTypesEnum::REGION->value:
                 $participation_info['region_id'] = $participation_data['participation_item_id'];
                 break;
-            case 'district':
+            case SystemParticipationsTypesEnum::DISTRICT->value:
                 $participation_info['district_id'] = $participation_data['participation_item_id'];
                 break;
         }
