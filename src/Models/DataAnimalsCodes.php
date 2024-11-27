@@ -6,12 +6,19 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Svr\Core\Enums\SystemStatusDeleteEnum;
+use Svr\Core\Traits\GetTableName;
+use Svr\Directories\Models\DirectoryMarkStatuses;
+use Svr\Directories\Models\DirectoryMarkToolTypes;
 use Svr\Directories\Models\DirectoryMarkTypes;
+use Svr\Directories\Models\DirectoryToolsLocations;
 
 class DataAnimalsCodes extends Model
 {
+    use GetTableName;
     use HasFactory;
 
 
@@ -198,5 +205,34 @@ class DataAnimalsCodes extends Model
             'code_tool_photo' => trans('svr-core-lang::validation'),
             'code_status_delete' => trans('svr-core-lang::validation'),
         ];
+    }
+
+    /**
+     * Получаем данные о средствах маркирования животного
+     * @param $animal_id
+     * @return Collection
+     */
+    public static function animal_mark_data($animal_id): Collection
+    {
+        return DB::table(self::getTableName() . ' AS t_animal_codes')
+            ->leftJoin(DirectoryMarkTypes::getTableName() .' AS t_mark_type', 't_mark_type.mark_type_id', '=', 't_animal_codes.code_type_id')
+            ->leftJoin(DirectoryMarkStatuses::getTableName() . ' AS t_mark_status', 't_mark_status.mark_status_id', '=','t_animal_codes.code_status_id')
+            ->leftJoin(DirectoryMarkToolTypes::getTableName() . ' AS t_mark_tool_type', 't_mark_tool_type.mark_tool_type_id', '=','t_animal_codes.code_tool_type_id')
+            ->leftJoin(DirectoryToolsLocations::getTableName() . ' AS t_mark_location', 't_mark_location.tool_location_id', '=', 't_animal_codes.code_tool_location_id')
+            ->select('t_animal_codes.*',
+						't_mark_type.mark_type_name',
+						't_mark_type.mark_type_id',
+						't_mark_type.mark_type_value_horriot',
+						't_mark_status.mark_status_name',
+						't_mark_status.mark_status_id',
+						't_mark_status.mark_status_value_horriot',
+						't_mark_tool_type.mark_tool_type_name',
+						't_mark_tool_type.mark_tool_type_id',
+						't_mark_tool_type.mark_tool_type_value_horriot',
+						't_mark_location.tool_location_name',
+						't_mark_location.tool_location_id',
+						't_mark_location.tool_location_guid_horriot')
+            ->where('t_animal_codes.animal_id', '=', $animal_id)
+            ->get();
     }
 }
