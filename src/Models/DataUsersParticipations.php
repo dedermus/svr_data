@@ -9,18 +9,19 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Svr\Core\Enums\SystemParticipationsTypesEnum;
-use Svr\Core\Enums\SystemStatusConfirmEnum;
 use Svr\Core\Enums\SystemStatusEnum;
 use Svr\Core\Models\SystemRoles;
+use Svr\Core\Traits\GetTableName;
+use Svr\Core\Traits\GetValidationRules;
 use Svr\Directories\Models\DirectoryCountries;
 use Svr\Directories\Models\DirectoryCountriesRegion;
 use Svr\Directories\Models\DirectoryCountriesRegionsDistrict;
-use Symfony\Component\VarDumper\Cloner\Data;
 
 class DataUsersParticipations extends Model
 {
     use HasFactory;
-
+    use GetValidationRules;
+    use GetTableName;
 
 	/**
 	 * Точное название таблицы с учетом схемы
@@ -28,13 +29,11 @@ class DataUsersParticipations extends Model
 	 */
 	protected $table								= 'data.data_users_participations';
 
-
 	/**
 	 * Первичный ключ таблицы (автоинкремент)
 	 * @var string
 	 */
 	protected $primaryKey							= 'participation_id';
-
 
 	/**
 	 * Поле даты создания строки
@@ -42,13 +41,11 @@ class DataUsersParticipations extends Model
 	 */
 	const CREATED_AT								= 'created_at';
 
-
 	/**
 	 * Поле даты обновления строки
 	 * @var string
 	 */
 	const UPDATED_AT								= 'updated_at';
-
 
 	/**
 	 * Значения полей по умолчанию
@@ -58,21 +55,19 @@ class DataUsersParticipations extends Model
 		'participation_status'							=> 'enabled',
 	];
 
-
 	/**
 	 * Поля, которые можно менять сразу массивом
 	 * @var array
 	 */
 	protected $fillable								= [
-        'user_id',									//* ID пользователя в таблице SYSTEM.SYSTEM_USERS
-		'participation_item_type',					//* Тип привязки (компания/регион/район)
-		'participation_item_id',					//* ID привязки (company_location_id/region_id/district_id)
-		'role_id',									//* ID роли в таблице SYSTEM.SYSTEM_ROLES
-		'participation_status',						//* Статус связки
-		'created_at',					            //* Дата и время создания
-		'updated_at',								//* дата последнего изменения строки записи */
+        'user_id',									// ID пользователя в таблице SYSTEM.SYSTEM_USERS
+		'participation_item_type',					// Тип привязки (компания/регион/район)
+		'participation_item_id',					// ID привязки (company_location_id/region_id/district_id)
+		'role_id',									// ID роли в таблице SYSTEM.SYSTEM_ROLES
+		'participation_status',						// Статус связки
+		'created_at',					            // Дата и время создания
+		'updated_at',								// дата последнего изменения строки записи */
 	];
-
 
 	/**
 	 * Поля, которые нельзя менять сразу массивом
@@ -81,7 +76,6 @@ class DataUsersParticipations extends Model
 	protected $guarded								= [
 		'participation_id',
 	];
-
 
 	/**
 	 * Массив системных скрытых полей
@@ -104,7 +98,6 @@ class DataUsersParticipations extends Model
         $this->fill($request->all())->save();
     }
 
-
     /**
      * Обновить запись
      * @param $request
@@ -125,18 +118,16 @@ class DataUsersParticipations extends Model
         }
     }
 
-
     /**
      * Валидация запроса
      * @param Request $request
      */
-    private function validateRequest(Request $request)
+    private function validateRequest(Request $request): void
     {
         $rules = $this->getValidationRules($request);
         $messages = $this->getValidationMessages();
         $request->validate($rules, $messages);
     }
-
 
     /**
      * Получить правила валидации
@@ -146,8 +137,6 @@ class DataUsersParticipations extends Model
      */
     private function getValidationRules(Request $request): array
     {
-        $id = $request->input($this->primaryKey);
-
         return [
             $this->primaryKey => [
                 $request->isMethod('put') ? 'required' : '',
@@ -160,7 +149,6 @@ class DataUsersParticipations extends Model
             'participation_status' => ['required', Rule::enum(SystemStatusEnum::class)],
         ];
     }
-
 
     /**
      * Получить сообщения об ошибках валидации
@@ -188,7 +176,7 @@ class DataUsersParticipations extends Model
     {
         $user_ids = is_array($user_ids) ? $user_ids : [$user_ids];
 
-        $items_list = DB::table((new DataUsersParticipations())->table.' as up')
+        return DB::table((new DataUsersParticipations())->table.' as up')
             ->select('up.*',
     						'cl.company_location_id',
     						'c.company_id',
@@ -220,11 +208,10 @@ class DataUsersParticipations extends Model
             ])
             ->whereIn('up.user_id', $user_ids)
             ->get();
-        return $items_list;
     }
 
     /**
-     * Пролучение коллекции привязок регионов к пользователю
+     * Получение коллекции привязок регионов к пользователю
      * @param $user_id - пользователь или массив пользователей
      *
      * @return \Illuminate\Support\Collection
@@ -233,7 +220,7 @@ class DataUsersParticipations extends Model
     {
         $user_id = is_array($user_id) ? $user_id : [$user_id];
 
-        $items_list = DB::table((new DataUsersParticipations())->table.' as up')
+        return DB::table((new DataUsersParticipations())->table.' as up')
             ->select('up.*',
                 'country.country_name',
                 'country.country_id',
@@ -254,11 +241,10 @@ class DataUsersParticipations extends Model
             ])
             ->whereIn('up.user_id', $user_id)
             ->get();
-        return $items_list;
     }
 
     /**
-     * Пролучение коллекции привязок Районов к пользователю
+     * Получение коллекции привязок Районов к пользователю
      * @param $user_id - пользователь или массив пользователей
      *
      * @return \Illuminate\Support\Collection
@@ -267,7 +253,7 @@ class DataUsersParticipations extends Model
     {
         $user_id = is_array($user_id) ? $user_id : [$user_id];
 
-        $items_list = DB::table((new DataUsersParticipations())->table.' as up')
+        return DB::table((new DataUsersParticipations())->table.' as up')
             ->select('up.*',
                 'country.country_name',
                 'country.country_id',
@@ -291,7 +277,6 @@ class DataUsersParticipations extends Model
             ])
             ->whereIn('up.user_id', $user_id)
             ->get();
-        return $items_list;
     }
 
     /**
@@ -333,7 +318,6 @@ class DataUsersParticipations extends Model
             'active',
         ];
         $result = [];
-
 
         foreach ($userCompaniesLocations as $item) {
             // Преобразуем объект в массив для фильтрации
@@ -404,5 +388,20 @@ class DataUsersParticipations extends Model
                 break;
         }
         return $participation_info;
+    }
+
+    /**
+     * Получить общее количество компаний пользователя
+     * @param $user_id
+     *
+     * @return int
+     */
+    public static function getUsersCompaniesCount($user_id): int
+    {
+        return DB::table(DataUsersParticipations::getTableName())
+            ->where([
+            ['user_id', '=', $user_id],
+            ['participation_item_type', '=', SystemParticipationsTypesEnum::COMPANY->value]
+        ])->get()->count();
     }
 }
