@@ -5,10 +5,12 @@ namespace Svr\Data\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Collection;
+use Svr\Core\Traits\GetDictionary;
 
 
 class SvrApiAnimalsDataBaseResource extends JsonResource
 {
+    use GetDictionary;
 
     /**
      * Transform the resource collection into an array.
@@ -24,7 +26,7 @@ class SvrApiAnimalsDataBaseResource extends JsonResource
             'animal_sex' 			=> strtolower($this->resource['animal_sex']),
             'animal_date_birth' 	=> $this->resource['animal_date_birth'],
             'animal_breed' 			=> $this->resource['animal_breed_id'],
-            'animal_breeding_value' => $this->resource['animal_breeding_value'],
+            'animal_breeding_value' => self::DictionaryBreedingValue()[$this->resource['animal_breeding_value']]['breeding_value_name'],
             'animal_mast' 			=> $this->resource['animal_colour'],
             'animal_keeping_company'=> $this->resource['animal_keeping_company_id'],
             'animal_keeping_object' => $this->resource['animal_object_of_keeping_id'],
