@@ -5,14 +5,23 @@ namespace Svr\Data\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Svr\Core\Enums\ApplicationStatusEnum;
+use Svr\Core\Models\SystemRoles;
 use Svr\Core\Models\SystemUsers;
+use Svr\Core\Models\SystemUsersToken;
+use Svr\Core\Traits\GetTableName;
+use Svr\Core\Traits\GetValidationRules;
+use Svr\Directories\Models\DirectoryCountriesRegion;
+use Svr\Directories\Models\DirectoryCountriesRegionsDistrict;
 
 class DataApplications extends Model
 {
+	use GetTableName;
     use HasFactory;
+	use GetValidationRules;
 
 
 	/**
@@ -141,18 +150,6 @@ class DataApplications extends Model
 
 
     /**
-     * Валидация запроса
-     * @param Request $request
-     */
-    private function validateRequest(Request $request)
-    {
-        $rules = $this->getValidationRules($request);
-        $messages = $this->getValidationMessages();
-        $request->validate($rules, $messages);
-    }
-
-
-    /**
      * Получить правила валидации
      * @param Request $request
      *
@@ -195,4 +192,63 @@ class DataApplications extends Model
             'application_status' => trans('svr-core-lang::validation'),
         ];
     }
+
+
+	public static function applicationData($application_id)
+	{
+		$application_data	= DB::table(DataApplications::GetTableName().' as a')
+			->select(
+				'a.*',
+				'user.user_id',
+				'user.user_last',
+				'user.user_first',
+				'user.user_middle',
+				'user.user_avatar',
+				'user.user_status',
+				'user.user_date_created',
+				'user.user_date_block',
+				'user.user_phone',
+				'user.user_email',
+				'doctor.user_herriot_login',
+				'doctor.user_herriot_password',
+				'doctor.user_herriot_web_login',
+				'doctor.user_herriot_apikey',
+				'doctor.user_herriot_issuerid',
+				'doctor.user_herriot_serviceid',
+				'c.company_name_short',
+				'r.region_name',
+				'rd.district_name'
+			)
+			->leftJoin(systemUsers::GetTableName().' as user', 'a.user_id', '=', 'user.user_id')
+			->leftJoin(systemUsers::GetTableName().' as doctor', 'a.doctor_id', '=', 'doctor.user_id')
+			->leftJoin(DataCompaniesLocations::GetTableName().' as cl', 'a.company_location_id', '=', 'cl.company_location_id')
+			->leftJoin(DataCompanies::GetTableName().' as c', 'cl.company_id', '=', 'c.company_id')
+			->leftJoin(DirectoryCountriesRegion::GetTableName().' as r', 'cl.region_id', '=', 'r.region_id')
+			->leftJoin(DirectoryCountriesRegionsDistrict::GetTableName().' as rd', 'cl.district_id', '=', 'rd.district_id')
+			->where('application_id', $application_id)
+			->whereRaw(DataApplications::appicationsFilterRestrictions())
+			->first();
+
+		return $application_data;
+	}
+
+
+	public static function appicationsFilterRestrictions()
+	{
+		$user_token_data	= auth()->user();
+		$user_role_data		= SystemRoles::find($user_token_data['role_id'])->toArray();
+
+		switch ($user_role_data['role_slug'])
+		{
+			case 'doctor_company':
+				return 'a.company_location_id = '.(int)$user_token_data['company_location_id'];
+			break;
+			case 'doctor_region':
+				return 'cl.region_id = '.(int)$user_token_data['region_region_id'];
+			break;
+			case 'doctor_district':
+				return 'cl.district_id = '.(int)$user_token_data['district_district_id'];
+			break;
+		}
+	}
 }

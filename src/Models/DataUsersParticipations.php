@@ -12,6 +12,7 @@ use Svr\Core\Enums\SystemParticipationsTypesEnum;
 use Svr\Core\Enums\SystemStatusConfirmEnum;
 use Svr\Core\Enums\SystemStatusEnum;
 use Svr\Core\Models\SystemRoles;
+use Svr\Core\Traits\GetTableName;
 use Svr\Directories\Models\DirectoryCountries;
 use Svr\Directories\Models\DirectoryCountriesRegion;
 use Svr\Directories\Models\DirectoryCountriesRegionsDistrict;
@@ -19,6 +20,7 @@ use Symfony\Component\VarDumper\Cloner\Data;
 
 class DataUsersParticipations extends Model
 {
+	use GetTableName;
     use HasFactory;
 
 

@@ -8,10 +8,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Svr\Core\Enums\SystemStatusDeleteEnum;
+use Svr\Core\Traits\GetTableName;
 use Svr\Directories\Models\DirectoryMarkTypes;
 
 class DataAnimalsCodes extends Model
 {
+	use GetTableName;
     use HasFactory;
 
 

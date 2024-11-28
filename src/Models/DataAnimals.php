@@ -2,6 +2,7 @@
 
 namespace Svr\Data\Models;
 
+use Svr\Core\Traits\GetTableName;
 use Svr\Directories\Models\DirectoryAnimalsBreeds;
 use Svr\Directories\Models\DirectoryKeepingTypes;
 use Svr\Directories\Models\DirectoryKeepingPurposes;
@@ -20,6 +21,7 @@ use Illuminate\Validation\Rule;
 
 class DataAnimals extends Model
 {
+	use GetTableName;
 	use GetEnums;
     use HasFactory;
 

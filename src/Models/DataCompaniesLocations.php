@@ -3,6 +3,7 @@
 namespace Svr\Data\Models;
 
 use Illuminate\Http\Request;
+use Svr\Core\Traits\GetTableName;
 use Svr\Directories\Models\DirectoryCountriesRegion;
 use Svr\Directories\Models\DirectoryCountriesRegionsDistrict;
 
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 
 class DataCompaniesLocations extends Model
 {
+	use GetTableName;
     use HasFactory;
 
 

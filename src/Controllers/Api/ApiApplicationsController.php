@@ -16,6 +16,8 @@ use Svr\Core\Models\SystemUsersRoles;
 use Svr\Core\Models\SystemUsersToken;
 use Svr\Core\Resources\AuthInfoSystemUsersResource;
 
+use Svr\Data\Models\DataApplications;
+
 use Svr\Core\Resources\SvrApiResponseResource;
 
 use Svr\Data\Models\DataCompaniesLocations;
@@ -25,49 +27,36 @@ use Svr\Directories\Models\DirectoryCountriesRegionsDistrict;
 
 class ApiApplicationsController extends Controller
 {
-    /**
-     * Создание новой записи.
-     *
-     * @param \Illuminate\Http\Request $request
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function store(Request $request): JsonResponse
-    {
-        $model = new SystemUsers();
-        $record = $model->userCreate($request);
-        return response()->json($record, 201);
-    }
+	// TODO:: порешать что-то со статическими справочниками (где хранить, как доставать и т.п.)
+	public	$application_status						= array(
+		'created'		=> array(
+			'status_slug'		=> 'created',
+			'status_name'		=> 'Создано',
+		),
+		'prepared'		=> array(
+			'status_slug'		=> 'prepared',
+			'status_name'		=> 'Подготовлено'
+		),
+		'sent'		=> array(
+			'status_slug'		=> 'sent',
+			'status_name'		=> 'Отправлено'
+		),
+		'complete_full'		=> array(
+			'status_slug'		=> 'complete_full',
+			'status_name'		=> 'Завершено полностью'
+		),
+		'complete_partial'		=> array(
+			'status_slug'		=> 'complete_partial',
+			'status_name'		=> 'Завершено частично'
+		),
+		'finished'		=> array(
+			'status_slug'		=> 'finished',
+			'status_name'		=> 'Отработано'
+		)
+	);
 
-    /**
-     * Обновление существующей записи.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @param int                      $id
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function update(Request $request): JsonResponse
-    {
-        $record = new SystemUsers();
-        $request->setMethod('PUT');
-        $record->userUpdate($request);
-        return response()->json($record);
-    }
 
-    /**
-     * Получение списка записей с пагинацией.
-     *
-     * @param \Illuminate\Http\Request $request
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function index(Request $request): JsonResponse
-    {
-        $perPage = $request->query('per_page', 15); // Количество записей на странице по умолчанию
-        $records = SystemUsers::paginate($perPage);
-        return response()->json($records);
-    }
+
 
     /**
      * Получение информации о пользователе.
@@ -77,44 +66,38 @@ class ApiApplicationsController extends Controller
     public function applicationsData(Request $request): SvrApiResponseResource|JsonResponse
     {
         /** @var  $user - получим авторизированного пользователя */
-        $user = auth()->user();
-        //Получим токен текущего пользователья
-//        $token = $request->bearerToken();
-        //Получим данные о токене из базы
-//        $token_data = SystemUsersToken::where('token_value', '=', $token)->first()->toArray();
-        //запомнили participation_id
-//        $participation_id = $token_data['participation_id'];
-        //получили привязки пользователя
-//        $user_participation_info = DataUsersParticipations::userParticipationInfo($participation_id);
-        //собрали данные для передачи в ресурс
-        $data = collect([
-//            'user' => $user,
-            'user_id' => $user['user_id'],
-//            'user_participation_info' => $user_participation_info,
-//            'company_data' => DataCompaniesLocations::find($user_participation_info['company_location_id'])->company,
-//            'region_data' => DirectoryCountriesRegion::find($user_participation_info['region_id']),
-//            'district_data' => DirectoryCountriesRegionsDistrict::find($user_participation_info['district_id']),
-//            'role_data' => SystemRoles::find($user_participation_info['role_id']),
-//            'participation_id' => $participation_id,
-            'status' => true,
-            'message' => '',
-            'response_resource_data' => 'Svr\Core\Resources\SvrApiAuthInfoResource',
-            'response_resource_dictionary' => false,
-            'pagination' => [
-                'total_records' => 1,
-                'cur_page' => 1,
-                'per_page' => 1
+        $user				= auth()->user();
+		$model				= new DataApplications();
+		$filterKeys			= ['application_id'];
+		$rules				= $model->getFilterValidationRules($request, $filterKeys);
+		$messages			= $model->getFilterValidationMessages($filterKeys);
+
+		$request->validate($rules, $messages);
+
+		$credentials		= $request->only($filterKeys);
+		$application_data	= DataApplications::applicationData($credentials['application_id']);
+
+		if(is_null($application_data))
+		{
+			//TODO переписать на нормальный структурированный вид после того как сделаем нормальный конструктор вывода
+			return response()->json(['error' => 'Запрошенная заявка не найдена'], 404);
+		}
+
+        $data				= collect([
+			'application_data'				=> $application_data,
+			'application_status'			=> $this->application_status,
+            'user_id'						=> $user['user_id'],
+            'status'						=> true,
+            'message'						=> '',
+            'response_resource_data'		=> 'Svr\Data\Resources\SvrApiApplicationDataResource',
+            'response_resource_dictionary'	=> 'Svr\Data\Resources\SvrApiApplicationDataDictionaryResource',
+            'pagination'					=> [
+                'total_records'					=> 1,
+                'cur_page'						=> 1,
+                'per_page'						=> 1
             ],
         ]);
 
         return new SvrApiResponseResource($data);
     }
-
-
-    public function appicationsFilterRestrictions()
-    {
-
-    }
-
-
 }
