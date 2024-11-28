@@ -156,7 +156,7 @@ class DataCompaniesLocations extends Model
             ->join('data.data_companies', 'data.data_companies_locations.company_id', '=', 'data.data_companies.company_id')
             ->join('directories.countries_regions', 'directories.countries_regions.region_id', '=', 'data.data_companies_locations.region_id')
             ->join('directories.countries_regions_districts', 'directories.countries_regions_districts.district_id', '=', 'data.data_companies_locations.district_id')
-            ->whereIn('company_id', $company_ids)
+            ->whereIn('data.data_companies_locations.company_id', $company_ids)
             ->get()->toArray();
     }
 

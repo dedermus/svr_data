@@ -17,8 +17,12 @@ use Svr\Directories\Models\DirectoryCountries;
 use Svr\Directories\Models\DirectoryGenders;
 use Svr\Directories\Models\DirectoryKeepingPurposes;
 use Svr\Directories\Models\DirectoryKeepingTypes;
+use Svr\Directories\Models\DirectoryMarkStatuses;
+use Svr\Directories\Models\DirectoryMarkToolTypes;
+use Svr\Directories\Models\DirectoryMarkTypes;
 use Svr\Directories\Models\DirectoryOutBasises;
 use Svr\Directories\Models\DirectoryOutTypes;
+use Svr\Directories\Models\DirectoryToolsLocations;
 
 class ApiAnimalsController extends Controller
 {
@@ -35,6 +39,11 @@ class ApiAnimalsController extends Controller
         }
 
         $animal_data = DataAnimals::animal_data($valid_data['animal_id'], $valid_data['application_id'] ?? false);
+
+        if (empty($animal_data))
+        {
+            return response()->json(['message' => 'Животное не найдено', 'status' => false], 200);
+        }
 
         $mark_data = false;
         if (in_array('mark', $valid_data['data_sections'])) $mark_data = DataAnimalsCodes::animal_mark_data($valid_data['animal_id']);
@@ -87,9 +96,34 @@ class ApiAnimalsController extends Controller
         }
 
         $companies_objects_ids = array_filter([$animal_data['animal_object_of_keeping_id'], $animal_data['animal_object_of_birth_id']]);
-        if (count($companies_objects_ids) > 0)
-        {
+        if (count($companies_objects_ids) > 0) {
             $list_directories['companies_objects_list'] = DataCompaniesObjects::find($companies_objects_ids);
+        }
+
+        if ($mark_data)
+        {
+            $mark_types_ids = array_filter(array_column($mark_data, 'mark_type_id'));
+            if (count($mark_types_ids) > 0) {
+                $list_directories['mark_types_list'] = DirectoryMarkTypes::find($mark_types_ids);
+            }
+
+            $mark_statuses_ids = array_filter(array_column($mark_data,'mark_status_id'));
+            if (count($mark_statuses_ids) > 0)
+            {
+                $list_directories['mark_statuses_list'] = DirectoryMarkStatuses::find($mark_statuses_ids);
+            }
+
+            $mark_tool_types_ids = array_filter(array_column($mark_data, 'mark_tool_type_id'));
+            if (count($mark_tool_types_ids) > 0)
+            {
+                $list_directories['mark_tool_types_list'] = DirectoryMarkToolTypes::find($mark_tool_types_ids);
+            }
+
+            $mark_tools_locations_ids = array_filter(array_column($mark_data, 'tool_location_id'));
+            if (count($mark_tools_locations_ids) > 0)
+            {
+                $list_directories['mark_tools_locations_list'] = DirectoryToolsLocations::find($mark_tools_locations_ids);
+            }
         }
 
         $user = auth()->user();

@@ -13,6 +13,23 @@ use Svr\Core\Resources\SvrApiUserRolesListResource;
 
 class SvrApiAnimalsDataDictionaryResource extends JsonResource
 {
+    private array $mapping_resources = [
+        'countries_list' => 'Svr\Data\Resources\SvrApiCountriesListResource',
+        'species_list' => 'Svr\Data\Resources\SvrApiSpeciesListResource',
+        'breeds_list' => 'Svr\Data\Resources\SvrApiBreedsListResource',
+        'genders_list' => 'Svr\Data\Resources\SvrApiGendersListResource',
+        'companies_list' => 'Svr\Data\Resources\SvrApiCompaniesListResource',
+        'keeping_types_list' => 'Svr\Data\Resources\SvrApiKeepingTypesListResource',
+        'keeping_purposes_list' => 'Svr\Data\Resources\SvrApiKeepingPurposesListResource',
+        'out_types_list' => 'Svr\Data\Resources\SvrApiOutTypesListResource',
+        'out_basises_list' => 'Svr\Data\Resources\SvrApiOutBasisesListResource',
+        'companies_objects_list' => 'Svr\Data\Resources\SvrApiCompaniesObjectsListResource',
+        'mark_tools_locations_list' => 'Svr\Data\Resources\SvrApiToolsLocationsListResource',
+        'mark_tool_types_list' => 'Svr\Data\Resources\SvrApiToolTypesListResource',
+        'mark_statuses_list' => 'Svr\Data\Resources\SvrApiMarkStatusesListResource',
+        'mark_types_list' => 'Svr\Data\Resources\SvrApiMarkTypesListResource',
+    ];
+
     /**
      * Transform the resource collection into an array.
      *
@@ -22,45 +39,10 @@ class SvrApiAnimalsDataDictionaryResource extends JsonResource
     public function toArray(Request|Collection $request): array
     {
         $returned_data = [];
-        if (isset($this->resource['list_directories']['countries_list']))
+
+        foreach ($this->resource['list_directories'] as $dictionary_name => $dictionary_value_list)
         {
-            $returned_data['countries_list'] = new SvrApiCountriesListResource($this->resource['list_directories']['countries_list']);
-        }
-        if (isset($this->resource['list_directories']['species_list']))
-        {
-            $returned_data['species_list'] = new SvrApiSpeciesListResource($this->resource['list_directories']['species_list']);
-        }
-        if (isset($this->resource['list_directories']['breeds_list']))
-        {
-            $returned_data['breeds_list'] = new SvrApiBreedsListResource($this->resource['list_directories']['breeds_list']);
-        }
-        if (isset($this->resource['list_directories']['genders_list']))
-        {
-            $returned_data['genders_list'] = new SvrApiGendersListResource($this->resource['list_directories']['genders_list']);
-        }
-        if (isset($this->resource['list_directories']['companies_list']))
-        {
-            $returned_data['companies_list'] = new SvrApiCompaniesListResource($this->resource['list_directories']['companies_list']);
-        }
-        if (isset($this->resource['list_directories']['keeping_types_list']))
-        {
-            $returned_data['keeping_types_list'] = new SvrApiKeepingTypesListResource($this->resource['list_directories']['keeping_types_list']);
-        }
-        if (isset($this->resource['list_directories']['keeping_purposes_list']))
-        {
-            $returned_data['keeping_purposes_list'] = new SvrApiKeepingPurposesListResource($this->resource['list_directories']['keeping_purposes_list']);
-        }
-        if (isset($this->resource['list_directories']['out_types_list']))
-        {
-            $returned_data['out_types_list'] = new SvrApiOutTypesListResource($this->resource['list_directories']['out_types_list']);
-        }
-        if (isset($this->resource['list_directories']['out_basises_list']))
-        {
-            $returned_data['out_basises_list'] = new SvrApiOutBasisesListResource($this->resource['list_directories']['out_basises_list']);
-        }
-        if (isset($this->resource['list_directories']['companies_objects_list']))
-        {
-            $returned_data['companies_objects_list'] = new SvrApiCompaniesObjectsListResource($this->resource['list_directories']['companies_objects_list']);
+            $returned_data[$dictionary_name] = new $this->mapping_resources[$dictionary_name]($dictionary_value_list);
         }
 
         return $returned_data;

@@ -210,9 +210,9 @@ class DataAnimalsCodes extends Model
     /**
      * Получаем данные о средствах маркирования животного
      * @param $animal_id
-     * @return Collection
+     * @return mixed[]
      */
-    public static function animal_mark_data($animal_id): Collection
+    public static function animal_mark_data($animal_id): array
     {
         return DB::table(self::getTableName() . ' AS t_animal_codes')
             ->leftJoin(DirectoryMarkTypes::getTableName() .' AS t_mark_type', 't_mark_type.mark_type_id', '=', 't_animal_codes.code_type_id')
@@ -233,6 +233,6 @@ class DataAnimalsCodes extends Model
 						't_mark_location.tool_location_id',
 						't_mark_location.tool_location_guid_horriot')
             ->where('t_animal_codes.animal_id', '=', $animal_id)
-            ->get();
+            ->get()->toArray();
     }
 }

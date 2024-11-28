@@ -3,6 +3,7 @@
 namespace Svr\Data\Models;
 
 use Illuminate\Support\Facades\DB;
+use Svr\Core\Models\SystemRoles;
 use Svr\Core\Traits\GetTableName;
 use Svr\Directories\Models\DirectoryAnimalsBreeds;
 use Svr\Directories\Models\DirectoryAnimalsSpecies;
@@ -459,12 +460,12 @@ class DataAnimals extends Model
     /**
      * Данные по животным
      * @param $animal_id
-     * @param false $application_id
+     * @param $application_id
      * @return array
      */
     public static function animal_data($animal_id, $application_id = false): array
     {
-        $where = '';//self::create_filter_restrictions([]);
+        $where = self::create_filter_restrictions([]);
 
         if ($application_id !== false && count($application_id) > 0) {
             $application_left_join =
@@ -596,8 +597,11 @@ class DataAnimals extends Model
 
     private static function create_filter_restrictions($valid_data): string
     {
+        $user_token_data = auth()->user();
+        $user_role_data = SystemRoles::find($user_token_data['role_id'])->toArray();
+
         $where_view = '';
-        switch ($this->USER('role_slug'))
+        switch ($user_role_data['role_slug'])
         {
             case 'admin':
                 if (isset($valid_data['company_location_id']) && system_Filter::is_num($valid_data['company_location_id'])) {
@@ -611,13 +615,13 @@ class DataAnimals extends Model
                 }
                 break;
             case 'doctor_company':
-                $where_view .= ' AND t_animal.company_location_id = ' . (int)$this->USER('company_location_id');
+                $where_view .= ' AND t_animal.company_location_id = ' . (int)$user_token_data['company_location_id'];
                 break;
             case 'doctor_region':
-                $where_view .= ' AND t_animal_owner_company.region_id = ' . (int)$this->USER('region_region_id');
+                $where_view .= ' AND t_animal_owner_company.region_id = ' . (int)$user_token_data['region_region_id'];
                 break;
             case 'doctor_district':
-                $where_view .= ' AND t_animal_owner_company.district_id = ' . (int)$this->USER('district_district_id');
+                $where_view .= ' AND t_animal_owner_company.district_id = ' . (int)$user_token_data['district_district_id'];
                 break;
         }
         return $where_view;
