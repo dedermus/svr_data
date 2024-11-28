@@ -348,12 +348,12 @@ class DataUsersParticipations extends Model
     }*/
 
     /**
-     * Получает информацию о привзке пользователя на основе предоставленных данных об участии.
+     * Получает информацию о привязке пользователя на основе предоставленных данных об участии.
      *
-     * @param int $participation_id идентификатор
+     * @param $participation_id - идентификатор
      * @return array Информация о привязке пользователя с 'company_location_id', 'region_id' и 'district_id' и 'role_id'.
      */
-    public static function userParticipationInfo(int $participation_id): array
+    public static function userParticipationInfo($participation_id): array
     {
         $participation_info = [
             'company_location_id'   => false,
