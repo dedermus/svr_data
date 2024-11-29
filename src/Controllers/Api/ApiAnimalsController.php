@@ -2,18 +2,24 @@
 
 namespace Svr\Data\Controllers\Api;
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Validation\Rule;
+use Svr\Core\Enums\AnimalRegisterStatusEnum;
+use Svr\Core\Enums\ApplicationAnimalStatusEnum;
+use Svr\Core\Enums\SystemStatusEnum;
 use Svr\Core\Resources\SvrApiResponseResource;
 use Svr\Data\Models\DataAnimals;
 use Svr\Data\Models\DataAnimalsCodes;
-use Svr\Data\Models\DataCompanies;
+use Svr\Data\Models\DataApplications;
 use Svr\Data\Models\DataCompaniesLocations;
 use Svr\Data\Models\DataCompaniesObjects;
 use Svr\Directories\Models\DirectoryAnimalsBreeds;
 use Svr\Directories\Models\DirectoryAnimalsSpecies;
 use Svr\Directories\Models\DirectoryCountries;
+use Svr\Directories\Models\DirectoryCountriesRegion;
+use Svr\Directories\Models\DirectoryCountriesRegionsDistrict;
 use Svr\Directories\Models\DirectoryGenders;
 use Svr\Directories\Models\DirectoryKeepingPurposes;
 use Svr\Directories\Models\DirectoryKeepingTypes;
@@ -26,7 +32,12 @@ use Svr\Directories\Models\DirectoryToolsLocations;
 
 class ApiAnimalsController extends Controller
 {
-    public function animalsData(Request $request)
+    /**
+     * Информация по животному
+     * @param Request $request
+     * @return JsonResponse|SvrApiResponseResource
+     */
+    public function animalsData(Request $request): SvrApiResponseResource|JsonResponse
     {
         $valid_data = $request->validate([
             'animal_id' => ['required', 'integer', Rule::exists('Svr\Data\Models\DataAnimals', 'animal_id')],
@@ -146,5 +157,52 @@ class ApiAnimalsController extends Controller
         ]);
 
         return new SvrApiResponseResource($data);
+    }
+
+    /**
+     * Список животных
+     * @param Request $request
+     * @return void
+     */
+    public function animalsList(Request $request)
+    {
+        $valid_data = $request->validate(
+        [
+            'search' 				                        => ['string', 'max:255'],
+            'data_sections' 		                        => ['array', Rule::in(['main','gen','base','mark','genealogy','vib','registration','history','animals_id'])],
+            'company_location_id' 	                        => ['int', Rule::exists(DataCompaniesLocations::getTableName(), 'company_location_id')],
+            'company_region_id'		                        => ['int', Rule::exists(DirectoryCountriesRegion::getTableName(), 'region_id')],
+            'company_district_id'	                        => ['int', Rule::exists(DirectoryCountriesRegionsDistrict::getTableName(), 'district_id')],
+            'filter.register_status'                        => ['array', Rule::in(AnimalRegisterStatusEnum::get_option_list())],
+            'filter.animal_sex'                             => ['array', Rule::in(['male','female','MALE','FEMALE'])],
+            'filter.specie_id'                              => ['array', Rule::exists(DirectoryAnimalsSpecies::getTableName(), 'specie_id')],
+            'filter.animal_date_birth_min' 	                => ['date'],
+            'filter.animal_date_birth_max' 	                => ['date'],
+            'filter.breeds_id'                              => ['array', Rule::exists(DirectoryAnimalsBreeds::getTableName(), 'breed_id')],
+            'filter.application_id'                         => ['array', Rule::exists(DataApplications::getTableName(), 'application_id')],
+            'filter.animal_status'                          => ['array', Rule::in(SystemStatusEnum::get_option_list())],
+            'filter.animal_date_create_record_svr_min' 	    => ['date'],
+            'filter.animal_date_create_record_svr_max' 	    => ['date'],
+            'filter.animal_date_create_record_herriot_min'  => ['date'],
+            'filter.animal_date_create_record_herriot_max'  => ['date'],
+            'filter.application_animal_status'              => ['array', Rule::in(ApplicationAnimalStatusEnum::get_option_list())],
+            'filter.search_inv'                             => ['string', 'max:20'],
+            'filter.search_unsm'                            => ['string', 'max:11'],
+            'filter.search_horriot_number'                  => ['string', 'max:14'],
+        ]);
+
+        $user = auth()->user();
+
+        $dataAnimalsModel = new DataAnimals();
+        $animals_list = $dataAnimalsModel->animals_list($user['pagination_per_page'], $user['pagination_cur_page'], false, $valid_data['filter'], $valid_data);
+        $animals_count = $dataAnimalsModel->animals_count;
+
+        if ($animals_list === false)
+        {
+            return response()->json(['message' => 'Животные не найдены', 'status' => false], 200);
+        }
+
+
+
     }
 }
