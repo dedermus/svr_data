@@ -2,8 +2,12 @@
 
 namespace Svr\Data\Models;
 
+use Illuminate\Support\Facades\DB;
+use Svr\Core\Models\SystemRoles;
 use Svr\Core\Traits\GetTableName;
 use Svr\Directories\Models\DirectoryAnimalsBreeds;
+use Svr\Directories\Models\DirectoryAnimalsSpecies;
+use Svr\Directories\Models\DirectoryGenders;
 use Svr\Directories\Models\DirectoryKeepingTypes;
 use Svr\Directories\Models\DirectoryKeepingPurposes;
 use Svr\Directories\Models\DirectoryCountries;
@@ -21,7 +25,7 @@ use Illuminate\Validation\Rule;
 
 class DataAnimals extends Model
 {
-	use GetTableName;
+    use GetTableName;
 	use GetEnums;
     use HasFactory;
 
@@ -452,4 +456,207 @@ class DataAnimals extends Model
 	{
 		return $this->belongsTo(DataCompanies::class, 'animal_place_of_birth_id', 'company_id');
 	}
+
+    /**
+     * Данные по животным
+     * @param $animal_id
+     * @param $application_id
+     * @return array
+     */
+    public static function animal_data($animal_id, $application_id = false): array
+    {
+        $where = self::create_filter_restrictions([]);
+
+        if ($application_id !== false && count($application_id) > 0) {
+            $application_left_join =
+                ' LEFT JOIN ' .DataApplicationsAnimals::getTableName(). ' t_application_animal ON
+                    t_application_animal.animal_id = t_animal.animal_id AND
+                    t_application_animal.application_id IN (' . implode(',', $application_id) . ')';
+        }
+        else
+        {
+            $application_left_join =
+                ' LEFT JOIN
+                    (
+                        SELECT MAX(application_id) AS application_id, animal_id
+                        FROM ' .DataApplicationsAnimals::getTableName(). ' t_application_animal_temp GROUP BY animal_id
+                    ) t_application_animal_temp ON t_application_animal_temp.animal_id = t_animal.animal_id
+                LEFT JOIN ' .DataApplicationsAnimals::getTableName(). ' t_application_animal ON t_application_animal.animal_id = t_animal.animal_id
+                    AND t_application_animal.application_id = t_application_animal_temp.application_id';
+        }
+
+        $query = 'SELECT
+    				t_animal.*,
+    				t_application_animal.application_animal_status,
+    				t_application_animal.application_id,
+    				t_application_animal.application_animal_id,
+    				t_application_animal.application_animal_date_add,
+    				t_application_animal.application_animal_date_horriot,
+    				t_application_animal.application_animal_date_response,
+					t_application_animal.application_herriot_send_text_error,
+					t_application_animal.application_herriot_check_text_error,
+					t_animal_breed.breed_name as animal_breed_name,
+					t_animal_breed.breed_id as animal_breed_id,
+					t_animal_breed.breed_guid_horriot as animal_breed_guid_horriot,
+					t_animal_specie.specie_name as animal_specie_name,
+					t_animal_specie.specie_id as animal_specie_id,
+					t_animal_specie.specie_guid_horriot as animal_specie_guid_horriot,
+					t_animal_chip.code_value as animal_chip_value,
+					t_animal_chip.code_tool_type_id as animal_chip_tool_type,
+					t_animal_chip.code_tool_date_set as animal_chip_tool_date,
+					t_animal_left.code_value as animal_left_value,
+					t_animal_left.code_tool_type_id as animal_left_tool_type,
+					t_animal_left.code_tool_date_set as animal_left_tool_date,
+					t_animal_right.code_value as animal_right_value,
+					t_animal_right.code_tool_type_id as animal_right_tool_type,
+					t_animal_right.code_tool_date_set as animal_right_tool_date,
+					t_animal_rshn.code_value as animal_rshn_value,
+					t_animal_rshn.code_tool_type_id as animal_rshn_tool_type,
+					t_animal_rshn.code_tool_date_set as animal_rshn_tool_date,
+					t_animal_inv.code_value as animal_inv_value,
+					t_animal_inv.code_tool_type_id as animal_inv_tool_type,
+					t_animal_inv.code_tool_date_set as animal_inv_tool_date,
+					t_animal_device.code_value as animal_device_value,
+					t_animal_device.code_tool_type_id as animal_device_tool_type,
+					t_animal_device.code_tool_date_set as animal_device_tool_date,
+					t_animal_tattoo.code_value as animal_tattoo_value,
+					t_animal_tattoo.code_tool_type_id as animal_tattoo_tool_type,
+					t_animal_tattoo.code_tool_date_set as animal_tattoo_tool_date,
+					t_animal_import.code_value as animal_import_value,
+					t_animal_import.code_tool_type_id as animal_import_tool_type,
+					t_animal_import.code_tool_date_set as animal_import_tool_date,
+					t_animal_name.code_value as animal_name_value,
+					t_gender.gender_name as animal_gender_name,
+					t_gender.gender_id as animal_gender_id,
+					t_gender.gender_value_horriot as animal_gender_value_horriot,
+					t_animal_owner_company_info.company_name_short as animal_owner_company_name_short,
+					t_animal_owner_company_info.company_id as animal_owner_company_id,
+					t_animal_owner_company_info.company_guid_vetis as animal_owner_company_guid_vetis,
+					t_animal_owner_company.region_id as animal_owner_region_id,
+					t_animal_owner_company.district_id as animal_owner_district_id,
+					t_animal_keeping_company_info.company_name_short as animal_keeping_company_name_short,
+					t_animal_keeping_company_info.company_id as animal_keeping_company_id,
+					t_animal_keeping_company_info.company_guid_vetis as animal_keeping_company_guid_vetis,
+					t_animal_birth_company_info.company_name_short as animal_birth_company_name_short,
+					t_animal_birth_company_info.company_id as animal_birth_company_id,
+					t_animal_birth_company_info.company_guid_vetis as animal_birth_company_guid_vetis,
+					t_animal_keeping_type.keeping_type_name as animal_keeping_type_name,
+					t_animal_keeping_type.keeping_type_id as animal_keeping_type_id,
+					t_animal_keeping_type.keeping_type_guid_horriot as animal_keeping_type_guid_horriot,
+					t_animal_keeping_purpose.keeping_purpose_name as animal_keeping_purpose_name,
+					t_animal_keeping_purpose.keeping_purpose_id as animal_keeping_purpose_id,
+					t_animal_keeping_purpose.keeping_purpose_guid_horriot as animal_keeping_purpose_guid_horriot,
+					t_animal_country_import.country_name as animal_country_import_name,
+					t_animal_country_import.country_id as animal_country_import_id,
+					t_animal_out_type.out_type_name as animal_out_type_name,
+					t_animal_out_basis.out_basis_name as animal_out_basis_name,
+					t_mother_breed.breed_name as animal_mother_breed_name,
+					t_father_breed.breed_name as animal_father_breed_name,
+					t_birth_company_object.company_object_guid_horriot as birth_object_guid_horriot,
+					t_keeping_company_object.company_object_guid_horriot as keeping_object_guid_horriot
+    			FROM ' . DataAnimals::getTableName() . ' t_animal
+					LEFT JOIN ' . DirectoryAnimalsBreeds::getTableName() . ' 	t_animal_breed ON t_animal_breed.breed_id = t_animal.breed_id
+					LEFT JOIN ' . DirectoryAnimalsSpecies::getTableName() . ' 	t_animal_specie ON t_animal_specie.specie_id = t_animal_breed.specie_id
+					'.$application_left_join.'
+					LEFT JOIN ' . DataAnimalsCodes::getTableName() . ' 			t_animal_chip ON t_animal_chip.code_id = t_animal.animal_code_chip_id AND t_animal.animal_code_chip_id IS NOT NULL
+					LEFT JOIN ' . DataAnimalsCodes::getTableName() . ' 			t_animal_left ON t_animal_left.code_id = t_animal.animal_code_left_id AND t_animal.animal_code_left_id IS NOT NULL
+					LEFT JOIN ' . DataAnimalsCodes::getTableName() . ' 			t_animal_right ON t_animal_right.code_id = t_animal.animal_code_right_id AND t_animal.animal_code_right_id IS NOT NULL
+					LEFT JOIN ' . DataAnimalsCodes::getTableName() . ' 			t_animal_rshn ON t_animal_rshn.code_id = t_animal.animal_code_rshn_id AND t_animal.animal_code_rshn_id IS NOT NULL
+					LEFT JOIN ' . DataAnimalsCodes::getTableName() . ' 			t_animal_inv ON t_animal_inv.code_id = t_animal.animal_code_inv_id AND t_animal.animal_code_inv_id IS NOT NULL
+					LEFT JOIN ' . DataAnimalsCodes::getTableName() . ' 			t_animal_device ON t_animal_device.code_id = t_animal.animal_code_device_id AND t_animal.animal_code_device_id IS NOT NULL
+					LEFT JOIN ' . DataAnimalsCodes::getTableName() . ' 			t_animal_tattoo ON t_animal_tattoo.code_id = t_animal.animal_code_tattoo_id AND t_animal.animal_code_tattoo_id IS NOT NULL
+					LEFT JOIN ' . DataAnimalsCodes::getTableName() . ' 			t_animal_import ON t_animal_import.code_id = t_animal.animal_code_import_id AND t_animal.animal_code_import_id IS NOT NULL
+					LEFT JOIN ' . DataAnimalsCodes::getTableName() . ' 			t_animal_name ON t_animal_name.code_id = t_animal.animal_code_name_id AND t_animal.animal_code_name_id IS NOT NULL
+					LEFT JOIN ' . DirectoryGenders::getTableName() . ' 			t_gender ON t_gender.gender_id = t_animal.animal_sex_id
+					LEFT JOIN ' . DataCompaniesLocations::getTableName() . ' 		t_animal_owner_company ON t_animal_owner_company.company_location_id = t_animal.company_location_id
+					LEFT JOIN ' . DataCompanies::getTableName() . ' 				t_animal_owner_company_info ON t_animal_owner_company_info.company_id = t_animal_owner_company.company_id
+					LEFT JOIN ' . DataCompanies::getTableName() . ' 				t_animal_keeping_company_info ON t_animal_keeping_company_info.company_id = t_animal.animal_place_of_keeping_id
+					LEFT JOIN ' . DataCompanies::getTableName() . ' 				t_animal_birth_company_info ON t_animal_birth_company_info.company_id = t_animal.animal_place_of_birth_id
+					LEFT JOIN ' . DirectoryKeepingTypes::getTableName() . ' 		t_animal_keeping_type ON t_animal_keeping_type.keeping_type_id = t_animal.animal_type_of_keeping_id
+					LEFT JOIN ' . DirectoryKeepingPurposes::getTableName() . ' 	t_animal_keeping_purpose ON t_animal_keeping_purpose.keeping_purpose_id = t_animal.animal_purpose_of_keeping_id
+					LEFT JOIN ' . DirectoryCountries::getTableName() . ' 			t_animal_country_import ON t_animal_country_import.country_id = t_animal.animal_country_nameport_id
+					LEFT JOIN ' . DirectoryOutTypes::getTableName() . '			t_animal_out_type ON t_animal_out_type.out_type_id = t_animal.animal_out_type_id
+					LEFT JOIN ' . DirectoryOutBasises::getTableName() . '		t_animal_out_basis ON t_animal_out_basis.out_basis_id = t_animal.animal_out_basis_id
+					LEFT JOIN ' . DirectoryAnimalsBreeds::getTableName() . ' 	t_mother_breed ON t_mother_breed.breed_id = t_animal.animal_mother_breed_id
+					LEFT JOIN ' . DirectoryAnimalsBreeds::getTableName() . ' 	t_father_breed ON t_father_breed.breed_id = t_animal.animal_father_breed_id
+					LEFT JOIN ' . DataCompaniesObjects::getTablename() . ' 		t_birth_company_object ON t_birth_company_object.company_object_id = t_animal.animal_object_of_birth_id
+					LEFT JOIN ' . DataCompaniesObjects::getTablename() . ' 		t_keeping_company_object ON t_keeping_company_object.company_object_id = t_animal.animal_object_of_keeping_id
+				WHERE t_animal.animal_id = :animal_id '.$where.' LIMIT 1';
+
+        $animal_data = DB::select($query, ['animal_id' => $animal_id]);
+
+        if($animal_data)
+        {
+            $animal_data = (array)$animal_data[0];
+            $animal_data['animal_registration_available'] = self::animal_registration_available($animal_data);
+        }
+
+        return $animal_data;
+    }
+
+
+    private static function create_filter_restrictions($valid_data): string
+    {
+        $user_token_data = auth()->user();
+        $user_role_data = SystemRoles::find($user_token_data['role_id'])->toArray();
+
+        $where_view = '';
+        switch ($user_role_data['role_slug'])
+        {
+            case 'admin':
+                if (isset($valid_data['company_location_id']) && system_Filter::is_num($valid_data['company_location_id'])) {
+                    $where_view .= ' AND t_animal.company_location_id = ' . (int)$valid_data['company_location_id'];
+                }
+                if (isset($valid_data['company_region_id']) && system_Filter::is_num($valid_data['company_region_id'])) {
+                    $where_view .= ' AND t_animal_owner_company.region_id = ' . (int)$valid_data['company_region_id'];
+                }
+                if (isset($valid_data['company_district_id']) && system_Filter::is_num($valid_data['company_district_id'])) {
+                    $where_view .= ' AND t_animal_owner_company.district_id = ' . (int)$valid_data['company_district_id'];
+                }
+                break;
+            case 'doctor_company':
+                $where_view .= ' AND t_animal.company_location_id = ' . (int)$user_token_data['company_location_id'];
+                break;
+            case 'doctor_region':
+                $where_view .= ' AND t_animal_owner_company.region_id = ' . (int)$user_token_data['region_region_id'];
+                break;
+            case 'doctor_district':
+                $where_view .= ' AND t_animal_owner_company.district_id = ' . (int)$user_token_data['district_district_id'];
+                break;
+        }
+        return $where_view;
+    }
+
+    /**
+     * Проверяет, доступен ли данный животное для регистрации.
+     *
+     * @param array $animal_data Данные о животном.
+     * @return bool true если доступно, или false, если нет.
+     */
+    public static function animal_registration_available(array $animal_data): bool
+    {
+        if ($animal_data['animal_status'] == 'disabled' || $animal_data['animal_status_delete'] == 'deleted' || !empty($animal_data['animal_guid_horriot']) || $animal_data['keeping_object_guid_horriot'] == null)
+        {
+            return false;
+        }
+
+        if (!empty($animal_data['application_animal_status']))
+        {
+            if ($animal_data['application_animal_status'] != 'rejected') return false;
+        }
+
+        if (($animal_data['animal_chip_tool_type'] != NULL AND $animal_data['animal_chip_tool_date'] != NULL) OR
+            ($animal_data['animal_left_tool_type'] != NULL AND $animal_data['animal_left_tool_date'] != NULL) OR
+            ($animal_data['animal_right_tool_type'] != NULL AND $animal_data['animal_right_tool_date'] != NULL) OR
+            ($animal_data['animal_rshn_tool_type'] != NULL AND $animal_data['animal_rshn_tool_date'] != NULL) OR
+            ($animal_data['animal_inv_tool_type'] != NULL AND $animal_data['animal_inv_tool_date'] != NULL) OR
+            ($animal_data['animal_device_tool_type'] != NULL AND $animal_data['animal_device_tool_date'] != NULL) OR
+            ($animal_data['animal_tattoo_tool_type'] != NULL AND $animal_data['animal_tattoo_tool_date'] != NULL) OR
+            ($animal_data['animal_import_tool_type'] != NULL AND $animal_data['animal_import_tool_date'] != NULL))
+        {
+            return true;
+        }else{
+            return false;
+        }
+    }
 }

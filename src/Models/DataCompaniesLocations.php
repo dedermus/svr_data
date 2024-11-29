@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\DB;
 
 class DataCompaniesLocations extends Model
 {
-	use GetTableName;
+    use GetTableName;
     use HasFactory;
 
 
@@ -142,6 +142,22 @@ class DataCompaniesLocations extends Model
             ->where('company_location_id', $company_location_id)
             ->first();
         return (array)$company_location_data;
+    }
+
+    /**
+     * Данные локаций компании
+     *
+     * @param $company_ids
+     * @return array
+     */
+    public static function companyLocationDataByCompanyId($company_ids): array
+    {
+        return DB::table('data.data_companies_locations')
+            ->join('data.data_companies', 'data.data_companies_locations.company_id', '=', 'data.data_companies.company_id')
+            ->join('directories.countries_regions', 'directories.countries_regions.region_id', '=', 'data.data_companies_locations.region_id')
+            ->join('directories.countries_regions_districts', 'directories.countries_regions_districts.district_id', '=', 'data.data_companies_locations.district_id')
+            ->whereIn('data.data_companies_locations.company_id', $company_ids)
+            ->get()->toArray();
     }
 
 

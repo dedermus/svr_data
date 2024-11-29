@@ -13,7 +13,7 @@ use Svr\Core\Traits\GetTableName;
 
 class DataCompanies extends Model
 {
-	use GetTableName;
+    use GetTableName;
     use HasFactory;
 
 

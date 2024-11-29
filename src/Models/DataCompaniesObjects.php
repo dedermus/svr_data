@@ -10,7 +10,7 @@ use Svr\Core\Traits\GetTableName;
 
 class DataCompaniesObjects extends Model
 {
-	use GetTableName;
+    use GetTableName;
     use HasFactory;
 
 

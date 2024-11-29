@@ -1,0 +1,26 @@
+<?php
+
+namespace Svr\Data\Resources;
+
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Collection;
+
+
+class SvrApiAnimalsDataHistoryResource extends JsonResource
+{
+
+    /**
+     * Transform the resource collection into an array.
+     *
+     * @param Request|Collection $request
+     * @return array
+     */
+    public function toArray(Request|Collection $request): array
+    {
+        return [
+            'animal_id' => $this->resource['animal_id'],
+            //TODO У НАС ЭТОГО ВРОДЕ ЕЩЕ ПОКА ПОЧТИ НЕТ
+        ];
+    }
+}
