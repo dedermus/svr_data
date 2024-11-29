@@ -11,6 +11,8 @@ use Illuminate\Validation\Rule;
 use Svr\Core\Enums\SystemParticipationsTypesEnum;
 use Svr\Core\Enums\SystemStatusEnum;
 use Svr\Core\Models\SystemRoles;
+use Svr\Core\Models\SystemUsers;
+use Svr\Core\Models\SystemUsersToken;
 use Svr\Core\Traits\GetTableName;
 use Svr\Core\Traits\GetValidationRules;
 use Svr\Directories\Models\DirectoryCountries;
@@ -403,5 +405,27 @@ class DataUsersParticipations extends Model
             ['user_id', '=', $user_id],
             ['participation_item_type', '=', SystemParticipationsTypesEnum::COMPANY->value]
         ])->get()->count();
+    }
+
+    /**
+     * @param Request $request
+     * @param $user
+     *
+     * @return object|null
+     */
+    public static function setUsersParticipations(Request $request, $user): ?object
+    {
+        // - проверим возможность привязки пользователя
+        return DB::table(DataUsersParticipations::getTableName().' as dup')
+            ->select('dup.*')
+            ->leftjoin(SystemUsers::getTableName().' AS su', 'su.user_id', '=', 'dup.user_id')
+            ->leftjoin(SystemUsersToken::getTableName().' AS sut', 'sut.user_id', '=', 'sut.user_id')
+            ->where([
+                ['su.user_id', '=', $user['user_id']],
+                ['sut.token_value', '=', $user['token']],
+                ['dup.participation_item_id', '=', $request->query('participation_item_id')],
+                ['dup.participation_item_type', '=', $request->query('participation_type')]
+            ])
+            ->first();
     }
 }
