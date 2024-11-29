@@ -15,6 +15,9 @@ use Svr\Data\Models\DataAnimalsCodes;
 use Svr\Data\Models\DataApplications;
 use Svr\Data\Models\DataCompaniesLocations;
 use Svr\Data\Models\DataCompaniesObjects;
+use Svr\Data\Resources\SvrApiAnimalsDataDictionaryResource;
+use Svr\Data\Resources\SvrApiAnimalsDataResource;
+use Svr\Data\Resources\SvrApiAnimalsListResource;
 use Svr\Directories\Models\DirectoryAnimalsBreeds;
 use Svr\Directories\Models\DirectoryAnimalsSpecies;
 use Svr\Directories\Models\DirectoryCountries;
@@ -63,7 +66,7 @@ class ApiAnimalsController extends Controller
 
         $countries_ids = array_filter([$animal_data['animal_country_nameport_id']]);
         if (count($countries_ids) > 0) {
-            $list_directories['countries_list'] =  DirectoryCountries::find($countries_ids);
+            $list_directories['countries_list'] = DirectoryCountries::find($countries_ids);
         }
 
         $species_ids = array_filter([$animal_data['animal_specie_id']]);
@@ -147,8 +150,8 @@ class ApiAnimalsController extends Controller
             'list_directories' => $list_directories,
             'status' => true,
             'message' => '',
-            'response_resource_data' => 'Svr\Data\Resources\SvrApiAnimalsDataResource',
-            'response_resource_dictionary' => 'Svr\Data\Resources\SvrApiAnimalsDataDictionaryResource',
+            'response_resource_data' => SvrApiAnimalsDataResource::class,
+            'response_resource_dictionary' => SvrApiAnimalsDataDictionaryResource::class,
             'pagination' => [
                 'total_records' => 1,
                 'cur_page' => 1,
@@ -162,7 +165,7 @@ class ApiAnimalsController extends Controller
     /**
      * Список животных
      * @param Request $request
-     * @return void
+     * @return SvrApiResponseResource
      */
     public function animalsList(Request $request)
     {
@@ -173,6 +176,7 @@ class ApiAnimalsController extends Controller
             'company_location_id' 	                        => ['int', Rule::exists(DataCompaniesLocations::getTableName(), 'company_location_id')],
             'company_region_id'		                        => ['int', Rule::exists(DirectoryCountriesRegion::getTableName(), 'region_id')],
             'company_district_id'	                        => ['int', Rule::exists(DirectoryCountriesRegionsDistrict::getTableName(), 'district_id')],
+            'filter'                                        => ['array'],
             'filter.register_status'                        => ['array', Rule::in(AnimalRegisterStatusEnum::get_option_list())],
             'filter.animal_sex'                             => ['array', Rule::in(['male','female','MALE','FEMALE'])],
             'filter.specie_id'                              => ['array', Rule::exists(DirectoryAnimalsSpecies::getTableName(), 'specie_id')],
@@ -190,6 +194,7 @@ class ApiAnimalsController extends Controller
             'filter.search_unsm'                            => ['string', 'max:11'],
             'filter.search_horriot_number'                  => ['string', 'max:14'],
         ]);
+        if (!isset($valid_data['filter'])) $valid_data['filter'] = [];
 
         $user = auth()->user();
 
@@ -202,7 +207,114 @@ class ApiAnimalsController extends Controller
             return response()->json(['message' => 'Животные не найдены', 'status' => false], 200);
         }
 
+        if (!isset($valid_data['data_sections'])) {
+            $valid_data['data_sections'] = ['main'];
+        }
 
+        $list_directories = [];
 
+        $countries_ids = array_filter(array_column($animals_list, 'animal_country_nameport_id'));
+        if (count($countries_ids) > 0) {
+            $list_directories['countries_list'] = DirectoryCountries::find($countries_ids);;
+        }
+
+        $species_ids = array_filter(array_column($animals_list, 'animal_specie_id'));
+        if (count($species_ids) > 0) {
+            $list_directories['species_list'] = DirectoryAnimalsSpecies::find($species_ids);
+        }
+
+        $breeds_ids = array_filter(array_merge(array_column($animals_list, 'animal_breed_id'), array_column($animals_list, 'animal_father_breed_id'), array_column($animals_list, 'animal_mother_breed_id')));
+        if (count($breeds_ids) > 0) {
+            $list_directories['breeds_list'] = DirectoryAnimalsBreeds::find($breeds_ids);
+        }
+
+        $genders_ids = array_filter(array_column($animals_list, 'animal_gender_id'));
+        if (count($genders_ids) > 0) {
+            $list_directories['genders_list'] = DirectoryGenders::find($genders_ids);
+        }
+
+        $companies_ids = array_filter(array_merge(array_column($animals_list, 'animal_owner_company_id'), array_column($animals_list, 'animal_keeping_company_id'), array_column($animals_list, 'animal_birth_company_id')));
+        if (count($companies_ids) > 0) {
+            $list_directories['companies_list'] = DataCompaniesLocations::companyLocationDataByCompanyId($companies_ids);
+        }
+
+        $keeping_types_ids = array_filter(array_column($animals_list, 'animal_type_of_keeping_id'));
+        if (count($keeping_types_ids) > 0) {
+            $list_directories['keeping_types_list'] = DirectoryKeepingTypes::find($keeping_types_ids);
+        }
+
+        $keeping_purposes_ids = array_filter(array_column($animals_list, 'animal_keeping_purpose_id'));
+        if (count($keeping_purposes_ids) > 0) {
+            $list_directories['keeping_purposes_list'] = DirectoryKeepingPurposes::find($keeping_purposes_ids);
+        }
+
+        $out_types_ids = array_filter(array_column($animals_list, 'animal_out_type_id'));
+        if (count($out_types_ids) > 0) {
+            $list_directories['out_types_list'] = DirectoryOutTypes::find($out_types_ids);
+        }
+
+        $out_basises_ids = array_filter(array_column($animals_list, 'animal_out_basis_id'));
+        if (count($out_basises_ids) > 0) {
+            $list_directories['out_basises_list'] = DirectoryOutBasises::find($out_basises_ids);
+        }
+
+        $companies_objects_ids = array_filter(array_merge(array_column($animals_list, 'animal_object_of_keeping_id'), array_column($animals_list, 'animal_object_of_birth_id')));
+        if (count($companies_objects_ids) > 0)
+        {
+            $list_directories['companies_objects_list'] = DataCompaniesObjects::find($companies_objects_ids);
+        }
+
+        if (in_array('mark', $valid_data['data_sections']))
+        {
+            $all_mark_data = [];
+            foreach ($animals_list as &$animal)
+            {
+                $mark_data = DataAnimalsCodes::animal_mark_data($animal['animal_id']);
+                $animal['mark_data'] = $mark_data;
+                $all_mark_data[] = $mark_data;
+            }
+
+            $mark_types_ids = array_filter(array_column($all_mark_data, 'mark_type_id'));
+            if (count($mark_types_ids) > 0)
+            {
+                $list_directories['mark_types_list'] = DirectoryMarkTypes::find($mark_types_ids);
+            }
+
+            $mark_statuses_ids = array_filter(array_column($all_mark_data,'mark_status_id'));
+            if (count($mark_statuses_ids) > 0)
+            {
+                $list_directories['mark_statuses_list'] = DirectoryMarkStatuses::find($mark_statuses_ids);
+            }
+
+            $mark_tool_types_ids = array_filter(array_column($all_mark_data, 'mark_tool_type_id'));
+            if (count($mark_tool_types_ids) > 0)
+            {
+                $list_directories['mark_tool_types_list'] = DirectoryMarkToolTypes::find($mark_tool_types_ids);
+            }
+
+            $mark_tools_locations_ids = array_filter(array_column($all_mark_data, 'tool_location_id'));
+            if (count($mark_tools_locations_ids) > 0)
+            {
+                $list_directories['mark_tools_locations_list'] = DirectoryToolsLocations::find($mark_tools_locations_ids);
+            }
+        }
+
+        $data = collect([
+            'user_id' => $user['user_id'],
+            'animals_list' => $animals_list,
+            'data_sections' => $valid_data['data_sections'],
+            'list_directories' => $list_directories,
+            'status' => true,
+            'message' => '',
+            'response_resource_data' => SvrApiAnimalsListResource::class,
+            'response_resource_dictionary' => SvrApiAnimalsDataDictionaryResource::class,
+            'pagination' => [
+                'total_records' => 1,
+                'cur_page' => 1,
+                'per_page' => 1
+            ],
+        ]);
+
+        return new SvrApiResponseResource($data);
     }
 }

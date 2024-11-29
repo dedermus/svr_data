@@ -14,20 +14,20 @@ use Svr\Core\Resources\SvrApiUserRolesListResource;
 class SvrApiAnimalsDataDictionaryResource extends JsonResource
 {
     private array $mapping_resources = [
-        'countries_list' => 'Svr\Data\Resources\SvrApiCountriesListResource',
-        'species_list' => 'Svr\Data\Resources\SvrApiSpeciesListResource',
-        'breeds_list' => 'Svr\Data\Resources\SvrApiBreedsListResource',
-        'genders_list' => 'Svr\Data\Resources\SvrApiGendersListResource',
-        'companies_list' => 'Svr\Data\Resources\SvrApiCompaniesListResource',
-        'keeping_types_list' => 'Svr\Data\Resources\SvrApiKeepingTypesListResource',
-        'keeping_purposes_list' => 'Svr\Data\Resources\SvrApiKeepingPurposesListResource',
-        'out_types_list' => 'Svr\Data\Resources\SvrApiOutTypesListResource',
-        'out_basises_list' => 'Svr\Data\Resources\SvrApiOutBasisesListResource',
-        'companies_objects_list' => 'Svr\Data\Resources\SvrApiCompaniesObjectsListResource',
-        'mark_tools_locations_list' => 'Svr\Data\Resources\SvrApiToolsLocationsListResource',
-        'mark_tool_types_list' => 'Svr\Data\Resources\SvrApiToolTypesListResource',
-        'mark_statuses_list' => 'Svr\Data\Resources\SvrApiMarkStatusesListResource',
-        'mark_types_list' => 'Svr\Data\Resources\SvrApiMarkTypesListResource',
+        'countries_list' => SvrApiCountriesListResource::class,
+        'species_list' => SvrApiSpeciesListResource::class,
+        'breeds_list' => SvrApiBreedsListResource::class,
+        'genders_list' => SvrApiGendersListResource::class,
+        'companies_list' => SvrApiCompaniesListResource::class,
+        'keeping_types_list' => SvrApiKeepingTypesListResource::class,
+        'keeping_purposes_list' => SvrApiKeepingPurposesListResource::class,
+        'out_types_list' => SvrApiOutTypesListResource::class,
+        'out_basises_list' => SvrApiOutBasisesListResource::class,
+        'companies_objects_list' => SvrApiCompaniesObjectsListResource::class,
+        'mark_tools_locations_list' => SvrApiToolsLocationsListResource::class,
+        'mark_tool_types_list' => SvrApiToolTypesListResource::class,
+        'mark_statuses_list' => SvrApiMarkStatusesListResource::class,
+        'mark_types_list' => SvrApiMarkTypesListResource::class,
     ];
 
     /**

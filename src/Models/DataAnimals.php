@@ -823,6 +823,7 @@ class DataAnimals extends Model
 
         foreach ($animals_list as &$animal_data)
         {
+            $animal_data = (array)$animal_data;
             $animal_data['animal_registration_available'] = $this->animal_registration_available($animal_data);
         }
         $animals_count_query = 'SELECT COUNT(*) AS cnt FROM (SELECT DISTINCT ON (t_animal.animal_id)
@@ -858,7 +859,7 @@ class DataAnimals extends Model
 
         $animals_count = DB::select($animals_count_query);
 
-        $this->animals_count = $animals_count[0]['cnt'];
+        $this->animals_count = ((array)$animals_count[0])['cnt'];
 
         return $animals_list;
     }
