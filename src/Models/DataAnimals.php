@@ -881,28 +881,29 @@ class DataAnimals extends Model
         if (isset($filters_list['animal_date_birth_max'])) $filters_list['animal_date_birth_max'] = date('Y-m-d', strtotime($filters_list['animal_date_birth_max']));
 
 
+
         $filters_mapping = [
-            'animal_sex' => " AND t_animal.animal_sex = '". strtolower($filters_list['animal_sex']) . "'",
-            'specie_id' => " AND t_animal_breed.specie_id IN (" . implode(',', $filters_list['specie_id']) . ")",
-            'breeds_id' => " AND t_animal.breed_id IN (" . implode(',', $filters_list['breeds_id']) . ")",
-            'application_id' => " AND t_application_animal.application_id IN (" . implode(',', $filters_list['application_id']) . ")",
-            'animal_date_create_record_herriot_min' => " AND t_application_animal.application_animal_date_horriot >= '" . $filters_list['animal_date_create_record_herriot_min'] . "'",
-            'animal_date_create_record_herriot_max' => " AND t_application_animal.application_animal_date_horriot <= '" . $filters_list['animal_date_create_record_herriot_max'] . "'",
-            'animal_date_create_record_svr_min' => " AND t_animal.animal_date_create_record >= '" . $filters_list['animal_date_create_record_svr_min'] . "'",
-            'animal_date_create_record_svr_max' => " AND t_animal.animal_date_create_record <= '" . $filters_list['animal_date_create_record_svr_max'] . "'",
-            'animal_date_birth_min' => " AND t_animal.animal_date_birth >= '" . $filters_list['animal_date_birth_min'] . "'",
-            'animal_date_birth_max' => " AND t_animal.animal_date_birth <= '" . $filters_list['animal_date_birth_max'] . "'",
-            'animal_status' => " AND t_animal.animal_status = '" . $filters_list['animal_status'] ."'",
-            'search_inv' => " AND t_animal.animal_code_inv_value ILIKE '%" . $filters_list['search_inv'] ."%'",
-            'search_unsm' => " AND lower(t_animal.animal_code_rshn_value) ILIKE '%" . mb_strtolower($filters_list['search_unsm']) ."%'",
-            'search_horriot_number' => " AND lower(t_animal.animal_number_horriot) ILIKE '%" . mb_strtolower($filters_list['search_horriot_number']) ."%'",
+            'animal_sex' => " AND t_animal.animal_sex = '". strtolower(($filters_list['animal_sex'] ?? false)) . "'",
+            'specie_id' => " AND t_animal_breed.specie_id IN (" . implode(',', ($filters_list['specie_id'] ?? [])) . ")",
+            'breeds_id' => " AND t_animal.breed_id IN (" . implode(',', ($filters_list['breeds_id'] ?? [])) . ")",
+            'application_id' => " AND t_application_animal.application_id IN (" . implode(',', ($filters_list['application_id'] ?? [])) . ")",
+            'animal_date_create_record_herriot_min' => " AND t_application_animal.application_animal_date_horriot >= '" . ($filters_list['animal_date_create_record_herriot_min'] ?? false) . "'",
+            'animal_date_create_record_herriot_max' => " AND t_application_animal.application_animal_date_horriot <= '" . ($filters_list['animal_date_create_record_herriot_max'] ?? false) . "'",
+            'animal_date_create_record_svr_min' => " AND t_animal.animal_date_create_record >= '" . ($filters_list['animal_date_create_record_svr_min'] ?? false) . "'",
+            'animal_date_create_record_svr_max' => " AND t_animal.animal_date_create_record <= '" . ($filters_list['animal_date_create_record_svr_max'] ?? false) . "'",
+            'animal_date_birth_min' => " AND t_animal.animal_date_birth >= '" . ($filters_list['animal_date_birth_min'] ?? false). "'",
+            'animal_date_birth_max' => " AND t_animal.animal_date_birth <= '" . ($filters_list['animal_date_birth_max'] ?? false) . "'",
+            'animal_status' => " AND t_animal.animal_status = '" . ($filters_list['animal_status'] ?? false) ."'",
+            'search_inv' => " AND t_animal.animal_code_inv_value ILIKE '%" . ($filters_list['search_inv'] ?? false) ."%'",
+            'search_unsm' => " AND lower(t_animal.animal_code_rshn_value) ILIKE '%" . mb_strtolower(($filters_list['search_unsm'] ?? false)) ."%'",
+            'search_horriot_number' => " AND lower(t_animal.animal_number_horriot) ILIKE '%" . mb_strtolower(($filters_list['search_horriot_number'] ?? false)) ."%'",
         ];
 
-        if ($filters_list['application_animal_status'] == 'added')
+        if (isset($filters_list['application_animal_status']) && $filters_list['application_animal_status'] == 'added')
         {
             $filters_mapping['application_animal_status'] = " AND t_application_animal.application_animal_status IS NULL";
         }else {
-            $filters_mapping['application_animal_status'] = " AND t_application_animal.application_animal_status = '" . $filters_list['application_animal_status'] ."'";
+            $filters_mapping['application_animal_status'] = " AND t_application_animal.application_animal_status = '" . ($filters_list['application_animal_status'] ?? false) ."'";
         }
 
         $query = '';

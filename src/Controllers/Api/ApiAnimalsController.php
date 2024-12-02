@@ -173,28 +173,56 @@ class ApiAnimalsController extends Controller
         [
             'search' 				                        => ['string', 'max:255'],
             'data_sections' 		                        => ['array', Rule::in(['main','gen','base','mark','genealogy','vib','registration','history','animals_id'])],
-            'company_location_id' 	                        => ['int', Rule::exists(DataCompaniesLocations::getTableName(), 'company_location_id')],
-            'company_region_id'		                        => ['int', Rule::exists(DirectoryCountriesRegion::getTableName(), 'region_id')],
-            'company_district_id'	                        => ['int', Rule::exists(DirectoryCountriesRegionsDistrict::getTableName(), 'district_id')],
+            'company_location_id' 	                        => ['int', Rule::exists(DataCompaniesLocations::class, 'company_location_id')],
+            'company_region_id'		                        => ['int', Rule::exists(DirectoryCountriesRegion::class, 'region_id')],
+            'company_district_id'	                        => ['int', Rule::exists(DirectoryCountriesRegionsDistrict::class, 'district_id')],
             'filter'                                        => ['array'],
-            'filter.register_status'                        => ['array', Rule::in(AnimalRegisterStatusEnum::get_option_list())],
-            'filter.animal_sex'                             => ['array', Rule::in(['male','female','MALE','FEMALE'])],
-            'filter.specie_id'                              => ['array', Rule::exists(DirectoryAnimalsSpecies::getTableName(), 'specie_id')],
+            'filter.register_status'                        => ['string', Rule::in(AnimalRegisterStatusEnum::get_option_list())],
+            'filter.animal_sex'                             => ['string', Rule::in(['male','female','MALE','FEMALE'])],
+            'filter.specie_id'                              => ['int', Rule::exists(DirectoryAnimalsSpecies::class, 'specie_id')],
             'filter.animal_date_birth_min' 	                => ['date'],
             'filter.animal_date_birth_max' 	                => ['date'],
-            'filter.breeds_id'                              => ['array', Rule::exists(DirectoryAnimalsBreeds::getTableName(), 'breed_id')],
-            'filter.application_id'                         => ['array', Rule::exists(DataApplications::getTableName(), 'application_id')],
-            'filter.animal_status'                          => ['array', Rule::in(SystemStatusEnum::get_option_list())],
+            'filter.breeds_id'                              => ['int', Rule::exists(DirectoryAnimalsBreeds::class, 'breed_id')],
+            'filter.application_id'                         => ['int', Rule::exists(DataApplications::class, 'application_id')],
+            'filter.animal_status'                          => ['string', Rule::in(SystemStatusEnum::get_option_list())],
             'filter.animal_date_create_record_svr_min' 	    => ['date'],
             'filter.animal_date_create_record_svr_max' 	    => ['date'],
             'filter.animal_date_create_record_herriot_min'  => ['date'],
             'filter.animal_date_create_record_herriot_max'  => ['date'],
-            'filter.application_animal_status'              => ['array', Rule::in(ApplicationAnimalStatusEnum::get_option_list())],
+            'filter.application_animal_status'              => ['string', Rule::in(ApplicationAnimalStatusEnum::get_option_list())],
             'filter.search_inv'                             => ['string', 'max:20'],
             'filter.search_unsm'                            => ['string', 'max:11'],
             'filter.search_horriot_number'                  => ['string', 'max:14'],
         ]);
+        //TODO: Тут сейчас будет ерунда, надо будет переделать когда появится осознание
         if (!isset($valid_data['filter'])) $valid_data['filter'] = [];
+        if (!isset($valid_data['filter']['specie_id']))
+        {
+            $valid_data['filter']['specie_id'] = [];
+        } else {
+            if (!is_array($valid_data['filter']['specie_id']))
+            {
+                $valid_data['filter']['specie_id'] = [$valid_data['filter']['specie_id']];
+            }
+        }
+        if (!isset($valid_data['filter']['breeds_id']))
+        {
+            $valid_data['filter']['breeds_id'] = [];
+        } else {
+            if (!is_array($valid_data['filter']['breeds_id']))
+            {
+                $valid_data['filter']['breeds_id'] = [$valid_data['filter']['breeds_id']];
+            }
+        }
+        if (!isset($valid_data['filter']['application_id']))
+        {
+            $valid_data['filter']['application_id'] = [];
+        } else {
+            if (!is_array($valid_data['filter']['application_id']))
+            {
+                $valid_data['filter']['application_id'] = [$valid_data['filter']['application_id']];
+            }
+        }
 
         $user = auth()->user();
 
@@ -309,9 +337,9 @@ class ApiAnimalsController extends Controller
             'response_resource_data' => SvrApiAnimalsListResource::class,
             'response_resource_dictionary' => SvrApiAnimalsDataDictionaryResource::class,
             'pagination' => [
-                'total_records' => 1,
-                'cur_page' => 1,
-                'per_page' => 1
+                'total_records' => $animals_count,
+                'cur_page' => $user['pagination_cur_page'],
+                'per_page' => $user['pagination_per_page']
             ],
         ]);
 
