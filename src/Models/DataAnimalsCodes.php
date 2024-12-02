@@ -235,4 +235,31 @@ class DataAnimalsCodes extends Model
             ->where('t_animal_codes.animal_id', '=', $animal_id)
             ->get()->toArray();
     }
+
+
+    /**
+     * Получаем данные о средстве маркирования
+     * @param $code_id
+     * @return object|null
+     */
+    public static function mark_data($code_id): ?object
+    {
+        $mark_data = DB::table(self::getTableName() . ' AS t_animal_codes')
+            ->leftJoin(DirectoryMarkTypes::getTableName() . ' AS t_mark_type', 't_mark_type.mark_type_id',  '=', 't_animal_codes.code_type_id')
+            ->leftJoin(DirectoryMarkStatuses::getTableName() . ' AS t_mark_status', 't_mark_status.mark_status_id', '=' ,'t_animal_codes.code_status_id')
+			->leftJoin(DirectoryMarkToolTypes::getTableName() . ' AS t_mark_tool_type', 't_mark_tool_type.mark_tool_type_id', '=', 't_animal_codes.code_tool_type_id')
+			->leftJoin(DirectoryToolsLocations::getTableName() . ' AS t_mark_location', 't_mark_location.tool_location_id', '=', 't_animal_codes.code_tool_location_id')
+            ->select('t_animal_codes.*',
+						't_mark_type.mark_type_name',
+						't_mark_type.mark_type_id',
+						't_mark_status.mark_status_name',
+						't_mark_status.mark_status_id',
+						't_mark_tool_type.mark_tool_type_name',
+						't_mark_tool_type.mark_tool_type_id',
+						't_mark_location.tool_location_name',
+						't_mark_location.tool_location_id')
+            ->where('t_animal_codes.code_id', '=', $code_id)
+            ->first();
+        return collect($mark_data);
+    }
 }
