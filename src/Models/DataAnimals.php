@@ -677,6 +677,36 @@ class DataAnimals extends Model
      */
     public function animals_list($count_per_page, $page_number, $only_enabled = true, $filters_list = [], $valid_data = '')
     {
+        //TODO: Тут сейчас будет ерунда, надо будет переделать когда появится осознание
+        if (!isset($filters_list)) $filters_list = [];
+        if (!isset($filters_list['specie_id']))
+        {
+            $filters_list['specie_id'] = [];
+        } else {
+            if (!is_array($filters_list['specie_id']))
+            {
+                $filters_list['specie_id'] = [$filters_list['specie_id']];
+            }
+        }
+        if (!isset($filters_list['breeds_id']))
+        {
+            $filters_list['breeds_id'] = [];
+        } else {
+            if (!is_array($filters_list['breeds_id']))
+            {
+                $filters_list['breeds_id'] = [$filters_list['breeds_id']];
+            }
+        }
+        if (!isset($filters_list['application_id']))
+        {
+            $filters_list['application_id'] = [];
+        } else {
+            if (!is_array($filters_list['application_id']))
+            {
+                $filters_list['application_id'] = [$filters_list['application_id']];
+            }
+        }
+
         $user = auth()->user();
 
         $where_view = " animal_status_delete = 'active' ";

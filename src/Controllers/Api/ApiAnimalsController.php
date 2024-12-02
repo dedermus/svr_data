@@ -194,35 +194,6 @@ class ApiAnimalsController extends Controller
             'filter.search_unsm'                            => ['string', 'max:11'],
             'filter.search_horriot_number'                  => ['string', 'max:14'],
         ]);
-        //TODO: Тут сейчас будет ерунда, надо будет переделать когда появится осознание
-        if (!isset($valid_data['filter'])) $valid_data['filter'] = [];
-        if (!isset($valid_data['filter']['specie_id']))
-        {
-            $valid_data['filter']['specie_id'] = [];
-        } else {
-            if (!is_array($valid_data['filter']['specie_id']))
-            {
-                $valid_data['filter']['specie_id'] = [$valid_data['filter']['specie_id']];
-            }
-        }
-        if (!isset($valid_data['filter']['breeds_id']))
-        {
-            $valid_data['filter']['breeds_id'] = [];
-        } else {
-            if (!is_array($valid_data['filter']['breeds_id']))
-            {
-                $valid_data['filter']['breeds_id'] = [$valid_data['filter']['breeds_id']];
-            }
-        }
-        if (!isset($valid_data['filter']['application_id']))
-        {
-            $valid_data['filter']['application_id'] = [];
-        } else {
-            if (!is_array($valid_data['filter']['application_id']))
-            {
-                $valid_data['filter']['application_id'] = [$valid_data['filter']['application_id']];
-            }
-        }
 
         $user = auth()->user();
 
