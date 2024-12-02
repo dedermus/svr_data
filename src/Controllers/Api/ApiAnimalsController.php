@@ -195,6 +195,8 @@ class ApiAnimalsController extends Controller
             'filter.search_horriot_number'                  => ['string', 'max:14'],
         ]);
 
+        if (!isset($valid_data['filter'])) $valid_data['filter'] = [];
+
         $user = auth()->user();
 
         $dataAnimalsModel = new DataAnimals();
