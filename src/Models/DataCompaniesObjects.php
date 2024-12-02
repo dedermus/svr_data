@@ -6,9 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Svr\Core\Traits\GetTableName;
 
 class DataCompaniesObjects extends Model
 {
+    use GetTableName;
     use HasFactory;
 
 

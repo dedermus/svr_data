@@ -9,9 +9,11 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Svr\Core\Enums\ApplicationStatusEnum;
 use Svr\Core\Models\SystemUsers;
+use Svr\Core\Traits\GetTableName;
 
 class DataApplications extends Model
 {
+    use GetTableName;
     use HasFactory;
 
 

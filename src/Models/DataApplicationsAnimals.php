@@ -8,9 +8,11 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Svr\Core\Enums\ApplicationAnimalStatusEnum;
 use Svr\Core\Enums\HerriotErrorTypesEnum;
+use Svr\Core\Traits\GetTableName;
 
 class DataApplicationsAnimals extends Model
 {
+    use GetTableName;
     use HasFactory;
 
 
