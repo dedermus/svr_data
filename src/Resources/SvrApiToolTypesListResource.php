@@ -27,7 +27,7 @@ class SvrApiToolTypesListResource extends JsonResource
         $returned_data = [];
         foreach ($this->resource as $value)
         {
-            $returned_data[$value->tool_type_id] = new SvrApiToolTypesResource(collect($value));
+            $returned_data[$value->mark_tool_type_id] = new SvrApiToolTypesResource(collect($value));
         }
         return $returned_data;
     }

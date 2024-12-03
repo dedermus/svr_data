@@ -39,7 +39,6 @@ class SvrApiAnimalsDataDictionaryResource extends JsonResource
     public function toArray(Request|Collection $request): array
     {
         $returned_data = [];
-
         foreach ($this->resource['list_directories'] as $dictionary_name => $dictionary_value_list)
         {
             $returned_data[$dictionary_name] = new $this->mapping_resources[$dictionary_name]($dictionary_value_list);
