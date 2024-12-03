@@ -2,10 +2,13 @@
 
 namespace Svr\Data\Controllers\Api;
 
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Svr\Core\Enums\AnimalRegisterStatusEnum;
 use Svr\Core\Enums\ApplicationAnimalStatusEnum;
 use Svr\Core\Enums\SystemStatusEnum;
@@ -33,6 +36,7 @@ use Svr\Directories\Models\DirectoryMarkTypes;
 use Svr\Directories\Models\DirectoryOutBasises;
 use Svr\Directories\Models\DirectoryOutTypes;
 use Svr\Directories\Models\DirectoryToolsLocations;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class ApiAnimalsController extends Controller
 {
@@ -40,14 +44,22 @@ class ApiAnimalsController extends Controller
      * Информация по животному
      * @param Request $request
      * @return JsonResponse|SvrApiResponseResource
+     * @throws \Exception
      */
     public function animalsData(Request $request): SvrApiResponseResource|JsonResponse
     {
-        $valid_data = $request->validate([
+        $validator = Validator::make($request->all(), [
             'animal_id' => ['required', 'integer', Rule::exists('Svr\Data\Models\DataAnimals', 'animal_id')],
             'application_id' => ['array'],
             'data_sections' => ['array', Rule::in(['main','gen','base','mark','genealogy','vib','registration','history'])]
+        ],
+        [
+            'animal_id' => trans('svr-core-lang::validation'),
+            'application_id' => trans('svr-core-lang::validation'),
+            'data_sections' => trans('svr-core-lang::validation'),
         ]);
+
+        $valid_data = $validator->validated();
 
         if (!isset($valid_data['data_sections'])) {
             $valid_data['data_sections'] = ['main'];
@@ -57,7 +69,7 @@ class ApiAnimalsController extends Controller
 
         if (empty($animal_data))
         {
-            return response()->json(['message' => 'Животное не найдено', 'status' => false], 200);
+            throw new NotFoundHttpException('Животное не найдено', null,200);
         }
 
         $mark_data = false;
@@ -167,10 +179,11 @@ class ApiAnimalsController extends Controller
      * Список животных
      * @param Request $request
      * @return JsonResponse|SvrApiResponseResource
- */
+     * @throws ValidationException
+     */
     public function animalsList(Request $request): SvrApiResponseResource|JsonResponse
     {
-        $valid_data = $request->validate(
+        $validator = Validator::make($request->all(),
         [
             'search' 				                        => ['string', 'max:255'],
             'data_sections' 		                        => ['array', Rule::in(['main','gen','base','mark','genealogy','vib','registration','history','animals_id'])],
@@ -194,9 +207,35 @@ class ApiAnimalsController extends Controller
             'filter.search_inv'                             => ['string', 'max:20'],
             'filter.search_unsm'                            => ['string', 'max:11'],
             'filter.search_horriot_number'                  => ['string', 'max:14'],
+        ],
+        [
+            'search' => trans('svr-core-lang::validation'),
+            'data_sections' => trans('svr-core-lang::validation'),
+            'company_location_id' => trans('svr-core-lang::validation'),
+            'company_region_id' => trans('svr-core-lang::validation'),
+            'company_district_id' => trans('svr-core-lang::validation'),
+            'filter' => trans('svr-core-lang::validation'),
+            'filter.register_status' => trans('svr-core-lang::validation'),
+            'filter.animal_sex' => trans('svr-core-lang::validation'),
+            'filter.specie_id' => trans('svr-core-lang::validation'),
+            'filter.animal_date_birth_min' => trans('svr-core-lang::validation'),
+            'filter.animal_date_birth_max' => trans('svr-core-lang::validation'),
+            'filter.breeds_id' => trans('svr-core-lang::validation'),
+            'filter.application_id' => trans('svr-core-lang::validation'),
+            'filter.animal_status' => trans('svr-core-lang::validation'),
+            'filter.animal_date_create_record_svr_min' => trans('svr-core-lang::validation'),
+            'filter.animal_date_create_record_svr_max' => trans('svr-core-lang::validation'),
+            'filter.animal_date_create_record_herriot_min' => trans('svr-core-lang::validation'),
+            'filter.animal_date_create_record_herriot_max' => trans('svr-core-lang::validation'),
+            'filter.application_animal_status' => trans('svr-core-lang::validation'),
+            'filter.search_inv' => trans('svr-core-lang::validation'),
+            'filter.search_unsm' => trans('svr-core-lang::validation'),
+            'filter.search_horriot_number' => trans('svr-core-lang::validation'),
         ]);
 
-        if (!isset($valid_data['filter'])) $valid_data['filter'] = [];
+        $valid_data = $validator->validated();
+
+        if (!isset($valid_data[''])) $valid_data['filter'] = [];
 
         $user = auth()->user();
 
@@ -206,7 +245,7 @@ class ApiAnimalsController extends Controller
 
         if ($animals_list === false)
         {
-            return response()->json(['message' => 'Животные не найдены', 'status' => false], 200);
+            throw new NotFoundHttpException('Животные не найдено', null,200);
         }
 
         if (!isset($valid_data['data_sections'])) {
@@ -324,10 +363,11 @@ class ApiAnimalsController extends Controller
      * Редактирование маркирования животного
      * @param Request $request
      * @return JsonResponse|SvrApiResponseResource
-    */
+     * @throws ValidationException
+     */
     public function animalsMarkEdit(Request $request): SvrApiResponseResource|JsonResponse
     {
-        $valid_data = $request->validate(
+        $validator = Validator::make($request->all(),
         [
             'mark_id' 				=> ['required', 'int', Rule::exists(DataAnimalsCodes::class, 'code_id')],
             'mark_status'			=> ['required', 'int', Rule::exists(DirectoryMarkStatuses::class, 'mark_status_id')],
@@ -336,7 +376,18 @@ class ApiAnimalsController extends Controller
             'description'			=> ['required', 'string', 'max:255'],
             'mark_date_set' 		=> ['required', 'date'],
             'mark_date_out' 		=> ['date'],
+        ],
+        [
+            'mark_id'               => trans('svr-core-lang::validation'),
+            'mark_status'           => trans('svr-core-lang::validation'),
+            'mark_tool_type'        => trans('svr-core-lang::validation'),
+            'mark_tool_location'    => trans('svr-core-lang::validation'),
+            'description'           => trans('svr-core-lang::validation'),
+            'mark_date_set'         => trans('svr-core-lang::validation'),
+            'mark_date_out'         => trans('svr-core-lang::validation'),
         ]);
+
+        $valid_data = $validator->validated();
 
         $mark_data = DataAnimalsCodes::mark_data($valid_data['mark_id']);
 
@@ -344,7 +395,7 @@ class ApiAnimalsController extends Controller
 
         if ($animal_data === false)
         {
-            return response()->json(['message' => 'Не найдено животное', 'status' => false], 200);
+            throw new NotFoundHttpException('Животное не найдено', null,200);
         }
 
         $data_for_update = [
@@ -415,10 +466,11 @@ class ApiAnimalsController extends Controller
      * Групповое редактирование маркирования животного
      * @param Request $request
      * @return JsonResponse|SvrApiResponseResource
+     * @throws ValidationException
      */
     public function animalsMarkEditGroup(Request $request): SvrApiResponseResource|JsonResponse
     {
-        $valid_data = $request->validate(
+        $validator = Validator::make($request->all(),
         [
             'search' 				                        => ['string', 'max:255'],
             'company_location_id' 	                        => ['int', Rule::exists(DataCompaniesLocations::class, 'company_location_id')],
@@ -443,7 +495,33 @@ class ApiAnimalsController extends Controller
             'filter.search_inv'                             => ['string', 'max:20'],
             'filter.search_unsm'                            => ['string', 'max:11'],
             'filter.search_horriot_number'                  => ['string', 'max:14'],
+        ],
+        [
+            'search' => trans('svr-core-lang::validation'),
+            'data_sections' => trans('svr-core-lang::validation'),
+            'company_location_id' => trans('svr-core-lang::validation'),
+            'company_region_id' => trans('svr-core-lang::validation'),
+            'company_district_id' => trans('svr-core-lang::validation'),
+            'filter' => trans('svr-core-lang::validation'),
+            'filter.register_status' => trans('svr-core-lang::validation'),
+            'filter.animal_sex' => trans('svr-core-lang::validation'),
+            'filter.specie_id' => trans('svr-core-lang::validation'),
+            'filter.animal_date_birth_min' => trans('svr-core-lang::validation'),
+            'filter.animal_date_birth_max' => trans('svr-core-lang::validation'),
+            'filter.breeds_id' => trans('svr-core-lang::validation'),
+            'filter.application_id' => trans('svr-core-lang::validation'),
+            'filter.animal_status' => trans('svr-core-lang::validation'),
+            'filter.animal_date_create_record_svr_min' => trans('svr-core-lang::validation'),
+            'filter.animal_date_create_record_svr_max' => trans('svr-core-lang::validation'),
+            'filter.animal_date_create_record_herriot_min' => trans('svr-core-lang::validation'),
+            'filter.animal_date_create_record_herriot_max' => trans('svr-core-lang::validation'),
+            'filter.application_animal_status' => trans('svr-core-lang::validation'),
+            'filter.search_inv' => trans('svr-core-lang::validation'),
+            'filter.search_unsm' => trans('svr-core-lang::validation'),
+            'filter.search_horriot_number' => trans('svr-core-lang::validation'),
         ]);
+
+        $valid_data = $validator->validated();
 
         if (!isset($valid_data['filter'])) $valid_data['filter'] = [];
 
@@ -452,7 +530,6 @@ class ApiAnimalsController extends Controller
         {
             $dataAnimalsModel = new DataAnimals();
             $animals_list = $dataAnimalsModel->animals_list(9999999, 1, false, $valid_data['filter'], $valid_data);
-            $animals_count = $dataAnimalsModel->animals_count;
 
             if($animals_list && count($animals_list) > 0)
             {
