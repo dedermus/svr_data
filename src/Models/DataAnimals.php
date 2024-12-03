@@ -2,9 +2,12 @@
 
 namespace Svr\Data\Models;
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Svr\Core\Enums\ApplicationStatusEnum;
 use Svr\Core\Models\SystemRoles;
 use Svr\Core\Traits\GetTableName;
+use Svr\Core\Traits\GetValidationRules;
 use Svr\Directories\Models\DirectoryAnimalsBreeds;
 use Svr\Directories\Models\DirectoryAnimalsSpecies;
 use Svr\Directories\Models\DirectoryGenders;
@@ -28,6 +31,7 @@ class DataAnimals extends Model
     use GetTableName;
 	use GetEnums;
     use HasFactory;
+	use GetValidationRules;
 
 
 	private $validator								= false;
@@ -455,6 +459,35 @@ class DataAnimals extends Model
 	public function animal_place_of_birth()
 	{
 		return $this->belongsTo(DataCompanies::class, 'animal_place_of_birth_id', 'company_id');
+	}
+
+
+	/**
+	 * Получить правила валидации
+	 * @param Request $request
+	 *
+	 * @return string[]
+	 */
+	private function getValidationRules(Request $request): array
+	{
+		return [
+			$this->primaryKey => [
+				$request->isMethod('put') ? 'required' : '',
+				Rule::exists('.'.$this->getTable(), $this->primaryKey),
+			]
+		];
+	}
+
+
+	/**
+	 * Получить сообщения об ошибках валидации
+	 * @return array
+	 */
+	private function getValidationMessages(): array
+	{
+		return [
+			$this->primaryKey => trans('svr-core-lang::validation.required')
+		];
 	}
 
     /**

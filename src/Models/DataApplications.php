@@ -157,9 +157,7 @@ class DataApplications extends Model
      */
     private function getValidationRules(Request $request): array
     {
-        $id = $request->input($this->primaryKey);
-
-        return [
+		return [
             $this->primaryKey => [
                 $request->isMethod('put') ? 'required' : '',
                 Rule::exists('.'.$this->getTable(), $this->primaryKey),
