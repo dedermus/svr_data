@@ -23,7 +23,7 @@ return new class extends Migration
             {
                 $table->comment('Список хозяйств');
                 $table->increments('company_id')->comment('Инкремент');
-                $table->string('company_base_index', 7)->nullable(true)->default(null)->comment(
+                $table->string('company_base_index', 7)->nullable(true)->unique()->default(null)->comment(
                     'Базовый индекс хозяйства'
                 );
                 $table->string('company_guid_vetis', 128)->nullable(true)->default(null)->comment(

@@ -33,8 +33,80 @@ class DataAnimals extends Model
     use HasFactory;
 	use GetValidationRules;
 
+    //количество животных для метода лист
+    public int $animals_count = 0;
 
-	private $validator								= false;
+    // список колонок, участвующих в поиске и сортировке (метод list)
+    private array $columns_list = [
+        'animal_rshn' => [
+            'column_name' => ['t_animal_rshn.code_value'],
+            'to_lower' => true,
+            'section' => 'where',
+            'order_field' => 'animal_rshn_value'
+        ],
+        'animal_guid_self' => [
+            'column_name' => ['t_animal.animal_guid_self'],
+            'to_lower' => true,
+            'section' => 'where',
+            'order_field' => 'animal_guid_self'
+        ],
+        'animal_inv' => [
+            'column_name' => ['t_animal_inv.code_value'],
+            'to_lower' => true,
+            'section' => 'where',
+            'order_field' => 'animal_inv_value'
+        ],
+        'animal_specie' => [
+            'column_name' => ['t_animal_specie.specie_name'],
+            'to_lower' => true,
+            'section' => 'where',
+            'order_field' => 'animal_specie_name'
+        ],
+        'animal_sex' => [
+            'column_name' => ['t_gender.gender_name'],
+            'to_lower' => true,
+            'section' => 'where',
+            'order_field' => 'animal_gender_name'
+        ],
+        'animal_date_create_record_herriot' => [
+            'column_name' => ['to_char(t_application_animal.application_animal_date_horriot, \'DD.MM.YYYY\')'],
+            'to_lower' => true,
+            'section' => 'where',
+            'order_field' => 'application_animal_date_horriot'
+        ],
+        'animal_date_birth' => [
+            'column_name' => ['to_char(t_animal.animal_date_birth, \'DD.MM.YYYY\')'],
+            'to_lower' => true,
+            'section' => 'where',
+            'order_field' => 'animal_date_birth'
+        ],
+        'animal_breed' => [
+            'column_name' => ['t_animal_breed.breed_name'],
+            'to_lower' => true,
+            'section' => 'where',
+            'order_field' => 'animal_breed_name'
+        ],
+        'animal_date_create_record_svr' => [
+            'column_name' => ['to_char(t_animal.animal_date_create_record, \'DD.MM.YYYY\')'],
+            'to_lower' => true,
+            'section' => 'where',
+            'order_field' => 'animal_date_create_record'
+        ],
+        'animal_status' => [
+            'column_name' => [],
+            'to_lower' => false,
+            'section' => 'where',
+            'order_field' => 'animal_status'
+        ],
+        'application_animal_status' => [
+            'column_name' => ['t_application_animal.application_animal_status::text'],
+            'to_lower' => false,
+            'section' => 'where',
+            'order_field' => 'application_animal_status'
+        ],
+    ];
+
+    private $validator								= false;
 
 
 	/**
@@ -627,7 +699,295 @@ class DataAnimals extends Model
         return $animal_data;
     }
 
+    /**
+     * Список животных
+     * @param $count_per_page
+     * @param $page_number
+     * @param bool $only_enabled
+     * @param array $filters_list
+     * @param string $valid_data
+     * @return array
+     */
+    public function animals_list($count_per_page, $page_number, $only_enabled = true, $filters_list = [], $valid_data = '')
+    {
+        //TODO: Тут сейчас будет ерунда, надо будет переделать когда появится осознание
+        if (!isset($filters_list)) $filters_list = [];
+        if (!isset($filters_list['specie_id']))
+        {
+            $filters_list['specie_id'] = [];
+        } else {
+            if (!is_array($filters_list['specie_id']))
+            {
+                $filters_list['specie_id'] = [$filters_list['specie_id']];
+            }
+        }
+        if (!isset($filters_list['breeds_id']))
+        {
+            $filters_list['breeds_id'] = [];
+        } else {
+            if (!is_array($filters_list['breeds_id']))
+            {
+                $filters_list['breeds_id'] = [$filters_list['breeds_id']];
+            }
+        }
+        if (!isset($filters_list['application_id']))
+        {
+            $filters_list['application_id'] = [];
+        } else {
+            if (!is_array($filters_list['application_id']))
+            {
+                $filters_list['application_id'] = [$filters_list['application_id']];
+            }
+        }
 
+        $user = auth()->user();
+
+        $where_view = " animal_status_delete = 'active' ";
+
+        $where_view .= $this->create_filter_restrictions($valid_data);
+
+        if (isset($filters_list['application_id']) && count($filters_list['application_id']) > 0) {
+            $application_left_join = ' LEFT JOIN ' .DataApplicationsAnimals::getTableName(). ' t_application_animal ON
+										t_application_animal.animal_id = t_animal.animal_id AND
+										t_application_animal.application_id IN (' . implode(',', $filters_list['application_id']) . ')';
+        }
+        else
+        {
+            $application_left_join = ' LEFT JOIN
+											(
+												SELECT MAX(application_id) AS application_id, animal_id
+												FROM ' .DataApplicationsAnimals::getTableName(). ' t_application_animal_temp GROUP BY animal_id
+											) t_application_animal_temp ON t_application_animal_temp.animal_id = t_animal.animal_id
+										LEFT JOIN ' .DataApplicationsAnimals::getTableName(). ' t_application_animal ON t_application_animal.animal_id = t_animal.animal_id
+											AND t_application_animal.application_id = t_application_animal_temp.application_id';
+        }
+
+        $where = ' ';
+
+        if (count($filters_list) > 0) {
+            $where .= $this->create_filter_sql($filters_list);
+        }
+
+        if ($only_enabled) $where .= " AND t_animal.animal_status = 'enabled' ";
+
+        $order_string = '';
+        if ($user['order_field'] !== false && array_key_exists($user['order_field'], $this->columns_list)) {
+            $order_field = $user['order_field'];
+            if ($this->columns_list[$order_field]['order_field'] !== false) $order_field = $this->columns_list[$order_field]['order_field'];
+            $order_string = ' ORDER BY ' . $order_field . ' ' . $user['order_direction'];
+        }
+
+        $query = 'SELECT * FROM (SELECT DISTINCT ON (t_animal.animal_id)
+    				t_animal.*,
+    				t_application_animal.application_animal_status,
+    				t_application_animal.application_id,
+    				t_application_animal.application_animal_id,
+    				t_application_animal.application_animal_date_add,
+    				t_application_animal.application_animal_date_horriot,
+    				t_application_animal.application_animal_date_response,
+					t_application_animal.application_herriot_send_text_error,
+					t_application_animal.application_herriot_check_text_error,
+					t_animal_breed.breed_name as animal_breed_name,
+					t_animal_breed.breed_id as animal_breed_id,
+					t_animal_breed.breed_guid_horriot as animal_breed_guid_horriot,
+					t_animal_specie.specie_name as animal_specie_name,
+					t_animal_specie.specie_id as animal_specie_id,
+					t_animal_specie.specie_guid_horriot as animal_specie_guid_horriot,
+					t_animal_chip.code_value as animal_chip_value,
+					t_animal_chip.code_tool_type_id as animal_chip_tool_type,
+					t_animal_chip.code_tool_date_set as animal_chip_tool_date,
+					t_animal_left.code_value as animal_left_value,
+					t_animal_left.code_tool_type_id as animal_left_tool_type,
+					t_animal_left.code_tool_date_set as animal_left_tool_date,
+					t_animal_right.code_value as animal_right_value,
+					t_animal_right.code_tool_type_id as animal_right_tool_type,
+					t_animal_right.code_tool_date_set as animal_right_tool_date,
+					t_animal_rshn.code_value as animal_rshn_value,
+					t_animal_rshn.code_tool_type_id as animal_rshn_tool_type,
+					t_animal_rshn.code_tool_date_set as animal_rshn_tool_date,
+					t_animal_inv.code_value as animal_inv_value,
+					t_animal_inv.code_tool_type_id as animal_inv_tool_type,
+					t_animal_inv.code_tool_date_set as animal_inv_tool_date,
+					t_animal_device.code_value as animal_device_value,
+					t_animal_device.code_tool_type_id as animal_device_tool_type,
+					t_animal_device.code_tool_date_set as animal_device_tool_date,
+					t_animal_tattoo.code_value as animal_tattoo_value,
+					t_animal_tattoo.code_tool_type_id as animal_tattoo_tool_type,
+					t_animal_tattoo.code_tool_date_set as animal_tattoo_tool_date,
+					t_animal_import.code_value as animal_import_value,
+					t_animal_import.code_tool_type_id as animal_import_tool_type,
+					t_animal_import.code_tool_date_set as animal_import_tool_date,
+					t_animal_name.code_value as animal_name_value,
+					t_gender.gender_name as animal_gender_name,
+					t_gender.gender_id as animal_gender_id,
+					t_gender.gender_value_horriot as animal_gender_value_horriot,
+					t_animal_owner_company_info.company_name_short as animal_owner_company_name_short,
+					t_animal_owner_company_info.company_id as animal_owner_company_id,
+					t_animal_owner_company_info.company_guid_vetis as animal_owner_company_guid_vetis,
+					t_animal_owner_company.region_id as animal_owner_region_id,
+					t_animal_owner_company.district_id as animal_owner_district_id,
+					t_animal_keeping_company_info.company_name_short as animal_keeping_company_name_short,
+					t_animal_keeping_company_info.company_id as animal_keeping_company_id,
+					t_animal_keeping_company_info.company_guid_vetis as animal_keeping_company_guid_vetis,
+					t_animal_birth_company_info.company_name_short as animal_birth_company_name_short,
+					t_animal_birth_company_info.company_id as animal_birth_company_id,
+					t_animal_birth_company_info.company_guid_vetis as animal_birth_company_guid_vetis,
+					t_animal_keeping_type.keeping_type_name as animal_keeping_type_name,
+					t_animal_keeping_type.keeping_type_id as animal_keeping_type_id,
+					t_animal_keeping_type.keeping_type_guid_horriot as animal_keeping_type_guid_horriot,
+					t_animal_keeping_purpose.keeping_purpose_name as animal_keeping_purpose_name,
+					t_animal_keeping_purpose.keeping_purpose_id as animal_keeping_purpose_id,
+					t_animal_keeping_purpose.keeping_purpose_guid_horriot as animal_keeping_purpose_guid_horriot,
+					t_animal_country_import.country_name as animal_country_import_name,
+					t_animal_country_import.country_id as animal_country_import_id,
+					t_animal_out_type.out_type_name as animal_out_type_name,
+					t_animal_out_basis.out_basis_name as animal_out_basis_name,
+					t_mother_breed.breed_name as animal_mother_breed_name,
+					t_father_breed.breed_name as animal_father_breed_name,
+					t_birth_company_object.company_object_guid_horriot as birth_object_guid_horriot,
+					t_keeping_company_object.company_object_guid_horriot as keeping_object_guid_horriot
+    			FROM ' . DataAnimals::getTableName() . ' t_animal
+					LEFT JOIN ' . DirectoryAnimalsBreeds::getTableName() . ' 	t_animal_breed ON t_animal_breed.breed_id = t_animal.breed_id
+					LEFT JOIN ' . DirectoryAnimalsSpecies::getTableName() . ' 	t_animal_specie ON t_animal_specie.specie_id = t_animal_breed.specie_id
+					'.$application_left_join.'
+					LEFT JOIN ' . DataAnimalsCodes::getTableName() . ' 			t_animal_chip ON t_animal_chip.code_id = t_animal.animal_code_chip_id AND t_animal.animal_code_chip_id IS NOT NULL
+					LEFT JOIN ' . DataAnimalsCodes::getTableName() . ' 			t_animal_left ON t_animal_left.code_id = t_animal.animal_code_left_id AND t_animal.animal_code_left_id IS NOT NULL
+					LEFT JOIN ' . DataAnimalsCodes::getTableName() . ' 			t_animal_right ON t_animal_right.code_id = t_animal.animal_code_right_id AND t_animal.animal_code_right_id IS NOT NULL
+					LEFT JOIN ' . DataAnimalsCodes::getTableName() . ' 			t_animal_rshn ON t_animal_rshn.code_id = t_animal.animal_code_rshn_id AND t_animal.animal_code_rshn_id IS NOT NULL
+					LEFT JOIN ' . DataAnimalsCodes::getTableName() . ' 			t_animal_inv ON t_animal_inv.code_id = t_animal.animal_code_inv_id AND t_animal.animal_code_inv_id IS NOT NULL
+					LEFT JOIN ' . DataAnimalsCodes::getTableName() . ' 			t_animal_device ON t_animal_device.code_id = t_animal.animal_code_device_id AND t_animal.animal_code_device_id IS NOT NULL
+					LEFT JOIN ' . DataAnimalsCodes::getTableName() . ' 			t_animal_tattoo ON t_animal_tattoo.code_id = t_animal.animal_code_tattoo_id AND t_animal.animal_code_tattoo_id IS NOT NULL
+					LEFT JOIN ' . DataAnimalsCodes::getTableName() . ' 			t_animal_import ON t_animal_import.code_id = t_animal.animal_code_import_id AND t_animal.animal_code_import_id IS NOT NULL
+					LEFT JOIN ' . DataAnimalsCodes::getTableName() . ' 			t_animal_name ON t_animal_name.code_id = t_animal.animal_code_name_id AND t_animal.animal_code_name_id IS NOT NULL
+					LEFT JOIN ' . DirectoryGenders::getTableName() . ' 			t_gender ON t_gender.gender_id = t_animal.animal_sex_id
+					LEFT JOIN ' . DataCompaniesLocations::getTableName() . ' 		t_animal_owner_company ON t_animal_owner_company.company_location_id = t_animal.company_location_id
+					LEFT JOIN ' . DataCompanies::getTableName() . ' 				t_animal_owner_company_info ON t_animal_owner_company_info.company_id = t_animal_owner_company.company_id
+					LEFT JOIN ' . DataCompanies::getTableName() . ' 				t_animal_keeping_company_info ON t_animal_keeping_company_info.company_id = t_animal.animal_place_of_keeping_id
+					LEFT JOIN ' . DataCompanies::getTableName() . ' 				t_animal_birth_company_info ON t_animal_birth_company_info.company_id = t_animal.animal_place_of_birth_id
+					LEFT JOIN ' . DirectoryKeepingTypes::getTableName() . ' 		t_animal_keeping_type ON t_animal_keeping_type.keeping_type_id = t_animal.animal_type_of_keeping_id
+					LEFT JOIN ' . DirectoryKeepingPurposes::getTableName() . ' 	t_animal_keeping_purpose ON t_animal_keeping_purpose.keeping_purpose_id = t_animal.animal_purpose_of_keeping_id
+					LEFT JOIN ' . DirectoryCountries::getTableName() . ' 			t_animal_country_import ON t_animal_country_import.country_id = t_animal.animal_country_nameport_id
+					LEFT JOIN ' . DirectoryOutTypes::getTableName() . '			t_animal_out_type ON t_animal_out_type.out_type_id = t_animal.animal_out_type_id
+					LEFT JOIN ' . DirectoryOutBasises::getTableName() . '		t_animal_out_basis ON t_animal_out_basis.out_basis_id = t_animal.animal_out_basis_id
+					LEFT JOIN ' . DirectoryAnimalsBreeds::getTableName() . ' 	t_mother_breed ON t_mother_breed.breed_id = t_animal.animal_mother_breed_id
+					LEFT JOIN ' . DirectoryAnimalsBreeds::getTableName() . ' 	t_father_breed ON t_father_breed.breed_id = t_animal.animal_father_breed_id
+					LEFT JOIN ' . DataCompaniesObjects::getTablename() . ' 		t_birth_company_object ON t_birth_company_object.company_object_id = t_animal.animal_object_of_birth_id
+					LEFT JOIN ' . DataCompaniesObjects::getTablename() . ' 		t_keeping_company_object ON t_keeping_company_object.company_object_id = t_animal.animal_object_of_keeping_id
+				WHERE ' . $where_view.$where .') AS temp '. $order_string . ' LIMIT :items_limit OFFSET :items_offset';
+
+        $animals_list = DB::select($query, [
+            'items_limit' => (int)$count_per_page,
+            'items_offset' => (int)$count_per_page * ((int)$page_number - 1)
+        ]);
+
+        if ($animals_list === false || count($animals_list) < 1) {
+            return false;
+        }
+
+        foreach ($animals_list as &$animal_data)
+        {
+            $animal_data = (array)$animal_data;
+            $animal_data['animal_registration_available'] = $this->animal_registration_available($animal_data);
+        }
+        $animals_count_query = 'SELECT COUNT(*) AS cnt FROM (SELECT DISTINCT ON (t_animal.animal_id)
+    				t_animal.animal_id
+    			FROM ' . DataAnimals::getTableName() . ' t_animal
+					LEFT JOIN ' . DirectoryAnimalsBreeds::getTableName() . ' 	t_animal_breed ON t_animal_breed.breed_id = t_animal.breed_id
+					LEFT JOIN ' . DirectoryAnimalsSpecies::getTableName() . ' 	t_animal_specie ON t_animal_specie.specie_id = t_animal_breed.specie_id
+					'.$application_left_join.'
+					LEFT JOIN ' . DataAnimalsCodes::getTableName() . ' 			t_animal_chip ON t_animal_chip.code_id = t_animal.animal_code_chip_id AND t_animal.animal_code_chip_id IS NOT NULL
+					LEFT JOIN ' . DataAnimalsCodes::getTableName() . ' 			t_animal_left ON t_animal_left.code_id = t_animal.animal_code_left_id AND t_animal.animal_code_left_id IS NOT NULL
+					LEFT JOIN ' . DataAnimalsCodes::getTableName() . ' 			t_animal_right ON t_animal_right.code_id = t_animal.animal_code_right_id AND t_animal.animal_code_right_id IS NOT NULL
+					LEFT JOIN ' . DataAnimalsCodes::getTableName() . ' 			t_animal_rshn ON t_animal_rshn.code_id = t_animal.animal_code_rshn_id AND t_animal.animal_code_rshn_id IS NOT NULL
+					LEFT JOIN ' . DataAnimalsCodes::getTableName() . ' 			t_animal_inv ON t_animal_inv.code_id = t_animal.animal_code_inv_id AND t_animal.animal_code_inv_id IS NOT NULL
+					LEFT JOIN ' . DataAnimalsCodes::getTableName() . ' 			t_animal_device ON t_animal_device.code_id = t_animal.animal_code_device_id AND t_animal.animal_code_device_id IS NOT NULL
+					LEFT JOIN ' . DataAnimalsCodes::getTableName() . ' 			t_animal_tattoo ON t_animal_tattoo.code_id = t_animal.animal_code_tattoo_id AND t_animal.animal_code_tattoo_id IS NOT NULL
+					LEFT JOIN ' . DataAnimalsCodes::getTableName() . ' 			t_animal_import ON t_animal_import.code_id = t_animal.animal_code_import_id AND t_animal.animal_code_import_id IS NOT NULL
+					LEFT JOIN ' . DataAnimalsCodes::getTableName() . ' 			t_animal_name ON t_animal_name.code_id = t_animal.animal_code_name_id AND t_animal.animal_code_name_id IS NOT NULL
+					LEFT JOIN ' . DirectoryGenders::getTableName() . ' 			t_gender ON t_gender.gender_id = t_animal.animal_sex_id
+					LEFT JOIN ' . DataCompaniesLocations::getTableName() . ' 		t_animal_owner_company ON t_animal_owner_company.company_location_id = t_animal.company_location_id
+					LEFT JOIN ' . DataCompanies::getTableName() . ' 				t_animal_owner_company_info ON t_animal_owner_company_info.company_id = t_animal_owner_company.company_id
+					LEFT JOIN ' . DataCompanies::getTableName() . ' 				t_animal_keeping_company_info ON t_animal_keeping_company_info.company_id = t_animal.animal_place_of_keeping_id
+					LEFT JOIN ' . DataCompanies::getTableName() . ' 				t_animal_birth_company_info ON t_animal_birth_company_info.company_id = t_animal.animal_place_of_birth_id
+					LEFT JOIN ' . DirectoryKeepingTypes::getTableName() . ' 		t_animal_keeping_type ON t_animal_keeping_type.keeping_type_id = t_animal.animal_type_of_keeping_id
+					LEFT JOIN ' . DirectoryKeepingPurposes::getTableName() . ' 	t_animal_keeping_purpose ON t_animal_keeping_purpose.keeping_purpose_id = t_animal.animal_purpose_of_keeping_id
+					LEFT JOIN ' . DirectoryCountries::getTableName() . ' 			t_animal_country_import ON t_animal_country_import.country_id = t_animal.animal_country_nameport_id
+					LEFT JOIN ' . DirectoryOutTypes::getTableName() . '			t_animal_out_type ON t_animal_out_type.out_type_id = t_animal.animal_out_type_id
+					LEFT JOIN ' . DirectoryOutBasises::getTableName() . '		t_animal_out_basis ON t_animal_out_basis.out_basis_id = t_animal.animal_out_basis_id
+					LEFT JOIN ' . DirectoryAnimalsBreeds::getTableName() . ' 	t_mother_breed ON t_mother_breed.breed_id = t_animal.animal_mother_breed_id
+					LEFT JOIN ' . DirectoryAnimalsBreeds::getTableName() . ' 	t_father_breed ON t_father_breed.breed_id = t_animal.animal_father_breed_id
+					LEFT JOIN ' . DataCompaniesObjects::getTablename() . ' 		t_birth_company_object ON t_birth_company_object.company_object_id = t_animal.animal_object_of_birth_id
+					LEFT JOIN ' . DataCompaniesObjects::getTablename() . ' 		t_keeping_company_object ON t_keeping_company_object.company_object_id = t_animal.animal_object_of_keeping_id
+				WHERE ' . $where_view.$where .') AS temp';
+
+        $animals_count = DB::select($animals_count_query);
+
+        $this->animals_count = ((array)$animals_count[0])['cnt'];
+
+        return $animals_list;
+    }
+
+    /**
+     * Добавляет фильтры в запрос в зависимости от входящих фильтров
+     * @param $filters_list
+     * @return string
+     */
+    private function create_filter_sql($filters_list)
+    {
+        if (isset($filters_list['animal_date_create_record_herriot_min'])) $filters_list['animal_date_create_record_herriot_min'] = date('Y-m-d', strtotime($filters_list['animal_date_create_record_herriot_min']));
+        if (isset($filters_list['animal_date_create_record_herriot_max'])) $filters_list['animal_date_create_record_herriot_max'] = date('Y-m-d', strtotime($filters_list['animal_date_create_record_herriot_max']));
+
+        if (isset($filters_list['animal_date_create_record_svr_min'])) $filters_list['animal_date_create_record_svr_min'] = date('Y-m-d', strtotime($filters_list['animal_date_create_record_svr_min']));
+        if (isset($filters_list['animal_date_create_record_svr_max'])) $filters_list['animal_date_create_record_svr_max'] = date('Y-m-d', strtotime($filters_list['animal_date_create_record_svr_max']));
+
+        if (isset($filters_list['animal_date_birth_min'])) $filters_list['animal_date_birth_min'] = date('Y-m-d', strtotime($filters_list['animal_date_birth_min']));
+        if (isset($filters_list['animal_date_birth_max'])) $filters_list['animal_date_birth_max'] = date('Y-m-d', strtotime($filters_list['animal_date_birth_max']));
+
+
+
+        $filters_mapping = [
+            'animal_sex' => " AND t_animal.animal_sex = '". strtolower(($filters_list['animal_sex'] ?? false)) . "'",
+            'specie_id' => " AND t_animal_breed.specie_id IN (" . implode(',', ($filters_list['specie_id'] ?? [])) . ")",
+            'breeds_id' => " AND t_animal.breed_id IN (" . implode(',', ($filters_list['breeds_id'] ?? [])) . ")",
+            'application_id' => " AND t_application_animal.application_id IN (" . implode(',', ($filters_list['application_id'] ?? [])) . ")",
+            'animal_date_create_record_herriot_min' => " AND t_application_animal.application_animal_date_horriot >= '" . ($filters_list['animal_date_create_record_herriot_min'] ?? false) . "'",
+            'animal_date_create_record_herriot_max' => " AND t_application_animal.application_animal_date_horriot <= '" . ($filters_list['animal_date_create_record_herriot_max'] ?? false) . "'",
+            'animal_date_create_record_svr_min' => " AND t_animal.animal_date_create_record >= '" . ($filters_list['animal_date_create_record_svr_min'] ?? false) . "'",
+            'animal_date_create_record_svr_max' => " AND t_animal.animal_date_create_record <= '" . ($filters_list['animal_date_create_record_svr_max'] ?? false) . "'",
+            'animal_date_birth_min' => " AND t_animal.animal_date_birth >= '" . ($filters_list['animal_date_birth_min'] ?? false). "'",
+            'animal_date_birth_max' => " AND t_animal.animal_date_birth <= '" . ($filters_list['animal_date_birth_max'] ?? false) . "'",
+            'animal_status' => " AND t_animal.animal_status = '" . ($filters_list['animal_status'] ?? false) ."'",
+            'search_inv' => " AND t_animal.animal_code_inv_value ILIKE '%" . ($filters_list['search_inv'] ?? false) ."%'",
+            'search_unsm' => " AND lower(t_animal.animal_code_rshn_value) ILIKE '%" . mb_strtolower(($filters_list['search_unsm'] ?? false)) ."%'",
+            'search_horriot_number' => " AND lower(t_animal.animal_number_horriot) ILIKE '%" . mb_strtolower(($filters_list['search_horriot_number'] ?? false)) ."%'",
+        ];
+
+        if (isset($filters_list['application_animal_status']) && $filters_list['application_animal_status'] == 'added')
+        {
+            $filters_mapping['application_animal_status'] = " AND t_application_animal.application_animal_status IS NULL";
+        }else {
+            $filters_mapping['application_animal_status'] = " AND t_application_animal.application_animal_status = '" . ($filters_list['application_animal_status'] ?? false) ."'";
+        }
+
+        $query = '';
+
+        foreach ($filters_list as $key => $value) {
+            if (empty($value)) {
+                continue;
+            }
+
+            $query .= $filters_mapping[$key];
+        }
+
+        return ($query);
+    }
+
+
+    /**
+     * Добавляет фильтры в зависимости от текущей роли пользователя
+     * @param $valid_data
+     * @return string
+     */
     private static function create_filter_restrictions($valid_data): string
     {
         $user_token_data = auth()->user();

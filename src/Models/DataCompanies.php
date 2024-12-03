@@ -170,7 +170,7 @@ class DataCompanies extends Model
                 $request->isMethod('put') ? 'required' : '',
                 Rule::exists('.'.$this->getTable(), $this->primaryKey),
             ],
-            'company_base_index' => 'min:0|max:7',
+            'company_base_index' => ['min:0|max:7', Rule::unique(DataCompanies::getTableName(), 'company_base_index')],
             'company_guid_vetis' => 'min:0|max:2',
             'company_guid' => 'min:0|max:36',
             'company_name_short' => 'min:0|max:100',
