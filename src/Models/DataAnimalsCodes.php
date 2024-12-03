@@ -262,4 +262,19 @@ class DataAnimalsCodes extends Model
             ->first();
         return collect($mark_data);
     }
+
+    /**
+     * Обновляем данные средств маркирования группе животных
+     * @param $data_for_update
+     * @param $code_type_id
+     * @param $animals_id
+     * @return int
+     */
+    public static function updateMarkGroup($data_for_update, $code_type_id, $animals_id): int
+    {
+        return DB::table(self::getTableName())
+            ->where('code_type_id', '=', $code_type_id)
+            ->whereIn('animal_id', $animals_id)
+            ->update($data_for_update);
+    }
 }

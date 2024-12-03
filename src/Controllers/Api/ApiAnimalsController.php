@@ -166,9 +166,9 @@ class ApiAnimalsController extends Controller
     /**
      * Список животных
      * @param Request $request
-     * @return SvrApiResponseResource
-     */
-    public function animalsList(Request $request)
+     * @return JsonResponse|SvrApiResponseResource
+ */
+    public function animalsList(Request $request): SvrApiResponseResource|JsonResponse
     {
         $valid_data = $request->validate(
         [
@@ -323,9 +323,9 @@ class ApiAnimalsController extends Controller
     /**
      * Редактирование маркирования животного
      * @param Request $request
-     * @return SvrApiResponseResource
-     */
-    public function animalsMarkEdit(Request $request)
+     * @return JsonResponse|SvrApiResponseResource
+    */
+    public function animalsMarkEdit(Request $request): SvrApiResponseResource|JsonResponse
     {
         $valid_data = $request->validate(
         [
@@ -409,5 +409,118 @@ class ApiAnimalsController extends Controller
         ]);
 
         return new SvrApiResponseResource($data);
+    }
+
+    /**
+     * Групповое редактирование маркирования животного
+     * @param Request $request
+     * @return JsonResponse|SvrApiResponseResource
+     */
+    public function animalsMarkEditGroup(Request $request): SvrApiResponseResource|JsonResponse
+    {
+        $valid_data = $request->validate(
+        [
+            'search' 				                        => ['string', 'max:255'],
+            'company_location_id' 	                        => ['int', Rule::exists(DataCompaniesLocations::class, 'company_location_id')],
+            'company_region_id'		                        => ['int', Rule::exists(DirectoryCountriesRegion::class, 'region_id')],
+            'company_district_id'	                        => ['int', Rule::exists(DirectoryCountriesRegionsDistrict::class, 'district_id')],
+            'animal_id' 			                        => ['array'],
+            'updates' 				                        => ['required', 'array'],
+            'filter'                                        => ['array'],
+            'filter.register_status'                        => ['string', Rule::in(AnimalRegisterStatusEnum::get_option_list())],
+            'filter.animal_sex'                             => ['string', Rule::in(['male','female','MALE','FEMALE'])],
+            'filter.specie_id'                              => ['int', Rule::exists(DirectoryAnimalsSpecies::class, 'specie_id')],
+            'filter.animal_date_birth_min' 	                => ['date'],
+            'filter.animal_date_birth_max' 	                => ['date'],
+            'filter.breeds_id'                              => ['int', Rule::exists(DirectoryAnimalsBreeds::class, 'breed_id')],
+            'filter.application_id'                         => ['int', Rule::exists(DataApplications::class, 'application_id')],
+            'filter.animal_status'                          => ['string', Rule::in(SystemStatusEnum::get_option_list())],
+            'filter.animal_date_create_record_svr_min' 	    => ['date'],
+            'filter.animal_date_create_record_svr_max' 	    => ['date'],
+            'filter.animal_date_create_record_herriot_min'  => ['date'],
+            'filter.animal_date_create_record_herriot_max'  => ['date'],
+            'filter.application_animal_status'              => ['string', Rule::in(ApplicationAnimalStatusEnum::get_option_list())],
+            'filter.search_inv'                             => ['string', 'max:20'],
+            'filter.search_unsm'                            => ['string', 'max:11'],
+            'filter.search_horriot_number'                  => ['string', 'max:14'],
+        ]);
+
+        if (!isset($valid_data['filter'])) $valid_data['filter'] = [];
+
+        //Если пришли фильтры, то находим по ним список айдишников животных, если не пришли, то айдишники животных уже есть в запросе
+        if((isset($valid_data['animal_id']) && count($valid_data['animal_id']) == 0) || !isset($valid_data['animal_id']))
+        {
+            $dataAnimalsModel = new DataAnimals();
+            $animals_list = $dataAnimalsModel->animals_list(9999999, 1, false, $valid_data['filter'], $valid_data);
+            $animals_count = $dataAnimalsModel->animals_count;
+
+            if($animals_list && count($animals_list) > 0)
+            {
+                $valid_data['animal_id']			= array_column($animals_list, 'animal_id');
+            }
+        }
+
+        if(isset($valid_data['animal_id']) && count($valid_data['animal_id']) > 0 && isset($valid_data['updates']) && count($valid_data['updates']) > 0)
+        {
+            foreach($valid_data['updates'] as $item)
+            {
+                //будущий массив данных для обновления
+                $data_for_update = [];
+
+                //если не указан вид маркирования (чип, тату, рсхн), то пропускаем
+                if (isset($item['mark_type_id']))
+                {
+                    $mark_type = DirectoryMarkTypes::find($item['mark_type_id']);
+
+                    if ($mark_type)
+                    {
+                        $code_type_id = $item['mark_type_id'];
+                    }else {
+                        continue;
+                    }
+                }else {
+                    continue;
+                }
+
+                if (isset($item['mark_status']))
+                {
+                    $mark_status = DirectoryMarkStatuses::find($item['mark_status']);
+                    if ($mark_status)
+                    {
+                        $data_for_update['code_status_id'] = $item['mark_status'];
+                    }
+                }
+
+                if (isset($item['mark_tool_type']))
+                {
+                    $mark_tool_type = DirectoryMarkToolTypes::find($item['mark_tool_type']);
+                    if ($mark_tool_type)
+                    {
+                        $data_for_update['code_tool_type_id'] = $item['mark_tool_type'];
+                    }
+                }
+
+                if (isset($item['mark_tool_location']))
+                {
+                    $mark_tool_location = DirectoryToolsLocations::find($item['mark_tool_location']);
+                    if ($mark_tool_location)
+                    {
+                        $data_for_update['code_tool_location_id'] = $item['mark_tool_location'];
+                    }
+                }
+
+                if (isset($item['description']))
+                {
+                    $data_for_update['code_description'] = $item['description'];
+                }
+
+                if (count($data_for_update) > 0)
+                {
+                    DataAnimalsCodes::updateMarkGroup($data_for_update, $code_type_id, $valid_data['animal_id']);
+                }
+            }
+        }
+
+        return response()->json(['message' => 'Данные успешно обновлены', 'status' => true], 200);
     }
 }
