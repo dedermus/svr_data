@@ -12,6 +12,7 @@ use Illuminate\Validation\ValidationException;
 use Svr\Core\Enums\AnimalRegisterStatusEnum;
 use Svr\Core\Enums\ApplicationAnimalStatusEnum;
 use Svr\Core\Enums\SystemStatusEnum;
+use Svr\Core\Exceptions\CustomException;
 use Svr\Core\Resources\SvrApiResponseResource;
 use Svr\Data\Models\DataAnimals;
 use Svr\Data\Models\DataAnimalsCodes;
@@ -69,7 +70,7 @@ class ApiAnimalsController extends Controller
 
         if (empty($animal_data))
         {
-            throw new NotFoundHttpException('Животное не найдено', null,200);
+            throw new CustomException('Животное не найдено',200);
         }
 
         $mark_data = false;
@@ -245,7 +246,7 @@ class ApiAnimalsController extends Controller
 
         if ($animals_list === false)
         {
-            throw new NotFoundHttpException('Животные не найдено', null,200);
+            throw new CustomException('Животные не найдено', 200);
         }
 
         if (!isset($valid_data['data_sections'])) {
@@ -393,9 +394,9 @@ class ApiAnimalsController extends Controller
 
         $animal_data = DataAnimals::animal_data($mark_data['animal_id']);
 
-        if ($animal_data === false)
+        if (empty($animal_data))
         {
-            throw new NotFoundHttpException('Животное не найдено', null,200);
+            throw new CustomException('Животное не найдено',200);
         }
 
         $data_for_update = [
@@ -598,7 +599,22 @@ class ApiAnimalsController extends Controller
             }
         }
 
-        return response()->json(['message' => 'Данные успешно обновлены', 'status' => true], 200);
+        $user = auth()->user();
+
+        $data = collect([
+            'user_id' => $user['user_id'],
+            'status' => true,
+            'message' => 'Данные успешно обновлены',
+            'response_resource_data' => false,
+            'response_resource_dictionary' => false,
+            'pagination' => [
+                'total_records' => 1,
+                'cur_page' => 1,
+                'per_page' => 1
+            ],
+        ]);
+
+        return new SvrApiResponseResource($data);
     }
 
     /**
@@ -675,6 +691,7 @@ class ApiAnimalsController extends Controller
     /**
      * Удаление фотографии средства маркирования животного
      * @param Request $request
+     * @param $mark_id
      * @return JsonResponse|SvrApiResponseResource
      * @throws ValidationException
      */
@@ -734,6 +751,54 @@ class ApiAnimalsController extends Controller
             'message' => '',
             'response_resource_data' => SvrApiAnimalsListMarkResource::class,
             'response_resource_dictionary' => SvrApiAnimalsDataDictionaryResource::class,
+            'pagination' => [
+                'total_records' => 1,
+                'cur_page' => 1,
+                'per_page' => 1
+            ],
+        ]);
+
+        return new SvrApiResponseResource($data);
+    }
+
+    /**
+     * Редактирование объекта содержания животного
+     * @param Request $request
+     * @return SvrApiResponseResource
+     * @throws CustomException
+     * @throws ValidationException
+     */
+    public function animalsKeepingObjectEdit(Request $request)
+    {
+        $validator = Validator::make($request->all(),
+            [
+                'animal_id' 			=> ['required', 'int', Rule::exists(DataAnimals::class, 'animal_id')],
+                'company_object_id'     => ['required', 'int', Rule::exists(DataCompaniesObjects::class, 'company_object_id')],
+            ],
+            [
+                'animal_id'             => trans('svr-core-lang::validation'),
+                'company_object_id'     => trans('svr-core-lang::validation'),
+            ]);
+
+        $valid_data = $validator->validated();
+
+        $animal_data = DataAnimals::animal_data($valid_data['animal_id']);
+
+        if (empty($animal_data))
+        {
+            throw new CustomException('Животное не найдено',200);
+        }
+
+        DataAnimals::setAnimalKeepingCompanyObject($valid_data['animal_id'], $valid_data['company_object_id']);
+
+        $user = auth()->user();
+
+        $data = collect([
+            'user_id' => $user['user_id'],
+            'status' => true,
+            'message' => 'Поднадзорный объект успешно установлен',
+            'response_resource_data' => false,
+            'response_resource_dictionary' => false,
             'pagination' => [
                 'total_records' => 1,
                 'cur_page' => 1,

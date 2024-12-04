@@ -657,7 +657,7 @@ class DataAnimals extends Model
 
         $animal_data = DB::select($query, ['animal_id' => $animal_id]);
 
-        if($animal_data)
+        if(count($animal_data) > 0)
         {
             $animal_data = (array)$animal_data[0];
             $animal_data['animal_registration_available'] = self::animal_registration_available($animal_data);
@@ -1018,5 +1018,15 @@ class DataAnimals extends Model
         }else{
             return false;
         }
+    }
+
+    /**
+     * @param $animal_id
+     * @param $company_object_id
+     * @return mixed
+     */
+    public static function setAnimalKeepingCompanyObject($animal_id, $company_object_id)
+    {
+        return self::find($animal_id)->update(['animal_object_of_keeping_id' => $company_object_id]);
     }
 }
