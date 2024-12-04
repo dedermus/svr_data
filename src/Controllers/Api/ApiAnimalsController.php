@@ -600,4 +600,77 @@ class ApiAnimalsController extends Controller
 
         return response()->json(['message' => 'Данные успешно обновлены', 'status' => true], 200);
     }
+
+    /**
+     * Редактирования фотографии средства маркирования животного
+     * @param Request $request
+     * @return JsonResponse|SvrApiResponseResource
+     * @throws ValidationException
+    */
+    public function animalsMarkPhotoEdit(Request $request)
+    {
+        //dd($request->all());
+        $validator = Validator::make($request->all(),
+            [
+                'mark_id' 				=> ['required', 'int', Rule::exists(DataAnimalsCodes::class, 'code_id')],
+                'mark_photo'            => ['required', 'file', 'nullable', 'mimes:jpeg,jpg,png,gif', 'max:10000'],
+            ],
+            [
+                'mark_id'               => trans('svr-core-lang::validation'),
+                'mark_photo'            => trans('svr-core-lang::validation'),
+            ]);
+
+        $valid_data = $validator->validated();
+
+
+        $mark_model = new DataAnimalsCodes();
+
+        DataAnimalsCodes::where('code_id', $valid_data['mark_id'])
+            ->update(['code_tool_photo' => $mark_model->addFileMarkPhoto($request)]);
+
+        $new_mark_data = DataAnimalsCodes::mark_data($valid_data['mark_id'])->toArray();
+
+        $list_directories = [];
+        $mark_types_ids = array_filter([$new_mark_data['mark_type_id']]);
+        if (count($mark_types_ids) > 0) {
+            $list_directories['mark_types_list'] = DirectoryMarkTypes::find($mark_types_ids);
+        }
+
+        $mark_statuses_ids = array_filter([$new_mark_data['mark_status_id']]);
+        if (count($mark_statuses_ids) > 0)
+        {
+            $list_directories['mark_statuses_list'] = DirectoryMarkStatuses::find($mark_statuses_ids);
+        }
+
+        $mark_tool_types_ids = array_filter([$new_mark_data['mark_tool_type_id']]);
+        if (count($mark_tool_types_ids) > 0)
+        {
+            $list_directories['mark_tool_types_list'] = DirectoryMarkToolTypes::find($mark_tool_types_ids);
+        }
+
+        $mark_tools_locations_ids = array_filter([$new_mark_data['tool_location_id']]);
+        if (count($mark_tools_locations_ids) > 0)
+        {
+            $list_directories['mark_tools_locations_list'] = DirectoryToolsLocations::find($mark_tools_locations_ids);
+        }
+        $user = auth()->user();
+
+        $data = collect([
+            'user_id' => $user['user_id'],
+            'mark_data' => [$new_mark_data],
+            'animal_id' => $new_mark_data['animal_id'],
+            'list_directories' => $list_directories,
+            'status' => true,
+            'message' => '',
+            'response_resource_data' => SvrApiAnimalsListMarkResource::class,
+            'response_resource_dictionary' => SvrApiAnimalsDataDictionaryResource::class,
+            'pagination' => [
+                'total_records' => 1,
+                'cur_page' => 1,
+                'per_page' => 1
+            ],
+        ]);
+
+        return new SvrApiResponseResource($data);
+    }
 }
