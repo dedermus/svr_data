@@ -192,8 +192,19 @@ class DataApplications extends Model
     }
 
 
-	public static function applicationData($application_id)
+	public static function applicationData($application_id = false, $current = false, $create_new = true)
 	{
+		$user				= auth()->user();
+		$where_data			= [];
+
+		if($current)
+		{
+			$where_data[]	= ['a.company_location_id', '=', $user['company_application_id']];
+			$where_data[]	= ['a.application_status', '=', 'created'];
+		}else{
+			$where_data[]	= ['application_id', '=', '$application_id'];
+		}
+
 		$application_data	= DB::table(DataApplications::GetTableName().' as a')
 			->select(
 				'a.*',
@@ -223,11 +234,36 @@ class DataApplications extends Model
 			->leftJoin(DataCompanies::GetTableName().' as c', 'cl.company_id', '=', 'c.company_id')
 			->leftJoin(DirectoryCountriesRegion::GetTableName().' as r', 'cl.region_id', '=', 'r.region_id')
 			->leftJoin(DirectoryCountriesRegionsDistrict::GetTableName().' as rd', 'cl.district_id', '=', 'rd.district_id')
-			->where('application_id', $application_id)
 			->whereRaw(DataApplications::appicationsFilterRestrictions())
+			->where($where_data)
 			->first();
 
-		return $application_data;
+//		dd('application_data', $application_data);
+
+		if(!is_null($application_data))
+		{
+			dd(16);
+
+			return $application_data;
+		}else{
+			if($create_new)
+			{
+//				dd($user['company_application_id'], $user['user_id']);
+
+				$application_id = DB::table(DataApplications::GetTableName())->insertGetId([
+					'company_location_id'		=> $user['company_location_id'],
+					'user_id'					=> $user['user_id']
+				]);
+
+				dd('application_data111', $application_id);
+
+				return DataApplications::find($application_id);
+			}else{
+				dd(13);
+
+				return false;
+			}
+		}
 	}
 
 
@@ -248,5 +284,101 @@ class DataApplications extends Model
 				return 'cl.district_id = '.(int)$user_token_data['district_district_id'];
 			break;
 		}
+	}
+
+
+
+	public static function applicationsAnimalAdd($animal_id)
+	{
+		$animal_data				= DataAnimals::animal_data($animal_id);
+
+		if(is_null($animal_data))
+		{
+//			$this->response_message('Животное не найдено');
+			dd(1);
+			return false;
+		}
+
+		if(!empty($animal_data['animal_guid_horriot']))
+		{
+//			$this->response_message('Животное уже имеет GUID');
+			dd(2);
+			return false;
+		}
+
+		if($animal_data['animal_status'] == 'disabled')
+		{
+//			$this->response_message('Животное не активно');
+			dd(3);
+			return false;
+		}
+
+		if($animal_data['animal_status_delete'] !== 'active')
+		{
+//			$this->response_message('Животное удалено');
+			dd(4);
+			return false;
+		}
+
+		if($animal_data['animal_registration_available'] === false)
+		{
+//			$this->response_message('Животное не подготовлено к регистрации');
+			dd(5);
+			return false;
+		}
+
+		if(!empty($animal_data['application_animal_status']))
+		{
+			switch($animal_data['application_animal_status'])
+			{
+				case 'added':
+//					$this->response_message('Животное уже находится в заявке');
+					dd(6);
+					return false;
+				break;
+				case 'in_application':
+//					$this->response_message('Животное уже находится в заявке');
+					dd(7);
+					return false;
+				break;
+				case 'sent':
+//					$this->response_message('Животное уже находится в заявке');
+					dd(8);
+					return false;
+				break;
+				case 'registered':
+//					$this->response_message('Животное уже зарегистрировано');
+					dd(9);
+					return false;
+				break;
+				case 'rejected':
+					// можно добавлять в заявку
+				break;
+				case 'finished':
+//					$this->response_message('Животное уже зарегистрировано');
+					dd(10);
+					return false;
+				break;
+			}
+		}
+
+//		dd($animal_data);
+
+		$application_data			= DataApplications::applicationData(false, true);
+
+		if(is_null($application_data))
+		{
+			dd(11);
+//			$this->response_message('Заявка не найдена');
+			return false;
+		}
+
+		DB::table(DataApplicationsAnimals::GetTableName())->insert([
+			'application_id'					=> $application_data['application_id'],
+			'animal_id'							=> $animal_data['animal_id'],
+			'application_animal_status'			=> 'in_application'
+		]);
+
+		return true;
 	}
 }

@@ -956,6 +956,7 @@ class DataAnimals extends Model
             'animal_date_create_record_svr_max' => " AND t_animal.animal_date_create_record <= '" . ($filters_list['animal_date_create_record_svr_max'] ?? false) . "'",
             'animal_date_birth_min' => " AND t_animal.animal_date_birth >= '" . ($filters_list['animal_date_birth_min'] ?? false). "'",
             'animal_date_birth_max' => " AND t_animal.animal_date_birth <= '" . ($filters_list['animal_date_birth_max'] ?? false) . "'",
+//            'register_status' => " AND t_application_animal.application_animal_status = '" . ($filters_list['register_status'] ?? false) ."'",
             'animal_status' => " AND t_animal.animal_status = '" . ($filters_list['animal_status'] ?? false) ."'",
             'search_inv' => " AND t_animal.animal_code_inv_value ILIKE '%" . ($filters_list['search_inv'] ?? false) ."%'",
             'search_unsm' => " AND lower(t_animal.animal_code_rshn_value) ILIKE '%" . mb_strtolower(($filters_list['search_unsm'] ?? false)) ."%'",
