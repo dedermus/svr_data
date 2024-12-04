@@ -323,7 +323,7 @@ class DataAnimalsCodes extends Model
     {
         if (empty(trim($photo))) return false;
 
-        $path = $this->pathMarkPhoto .$photo.'.'.$this->markPhotoExp;
+        $path = $this->pathMarkPhoto .$photo.'_resized.'.$this->markPhotoExp;
         if (Storage::exists( $path)) {
             Storage::delete( $path);
         }
