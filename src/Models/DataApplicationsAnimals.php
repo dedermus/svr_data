@@ -9,11 +9,13 @@ use Illuminate\Validation\Rule;
 use Svr\Core\Enums\ApplicationAnimalStatusEnum;
 use Svr\Core\Enums\HerriotErrorTypesEnum;
 use Svr\Core\Traits\GetTableName;
+use Svr\Core\Traits\GetValidationRules;
 
 class DataApplicationsAnimals extends Model
 {
-    use GetTableName;
+	use GetTableName;
     use HasFactory;
+	use GetValidationRules;
 
 
 	/**

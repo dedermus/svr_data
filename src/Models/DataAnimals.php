@@ -2,9 +2,12 @@
 
 namespace Svr\Data\Models;
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Svr\Core\Enums\ApplicationStatusEnum;
 use Svr\Core\Models\SystemRoles;
 use Svr\Core\Traits\GetTableName;
+use Svr\Core\Traits\GetValidationRules;
 use Svr\Directories\Models\DirectoryAnimalsBreeds;
 use Svr\Directories\Models\DirectoryAnimalsSpecies;
 use Svr\Directories\Models\DirectoryGenders;
@@ -28,6 +31,7 @@ class DataAnimals extends Model
     use GetTableName;
 	use GetEnums;
     use HasFactory;
+	use GetValidationRules;
 
     //количество животных для метода лист
     public int $animals_count = 0;
@@ -529,6 +533,35 @@ class DataAnimals extends Model
 		return $this->belongsTo(DataCompanies::class, 'animal_place_of_birth_id', 'company_id');
 	}
 
+
+	/**
+	 * Получить правила валидации
+	 * @param Request $request
+	 *
+	 * @return string[]
+	 */
+	private function getValidationRules(Request $request): array
+	{
+		return [
+			$this->primaryKey => [
+				$request->isMethod('put') ? 'required' : '',
+				Rule::exists('.'.$this->getTable(), $this->primaryKey),
+			]
+		];
+	}
+
+
+	/**
+	 * Получить сообщения об ошибках валидации
+	 * @return array
+	 */
+	private function getValidationMessages(): array
+	{
+		return [
+			$this->primaryKey => trans('svr-core-lang::validation.required')
+		];
+	}
+
     /**
      * Данные по животным
      * @param $animal_id
@@ -923,6 +956,7 @@ class DataAnimals extends Model
             'animal_date_create_record_svr_max' => " AND t_animal.animal_date_create_record <= '" . ($filters_list['animal_date_create_record_svr_max'] ?? false) . "'",
             'animal_date_birth_min' => " AND t_animal.animal_date_birth >= '" . ($filters_list['animal_date_birth_min'] ?? false). "'",
             'animal_date_birth_max' => " AND t_animal.animal_date_birth <= '" . ($filters_list['animal_date_birth_max'] ?? false) . "'",
+//            'register_status' => " AND t_application_animal.application_animal_status = '" . ($filters_list['register_status'] ?? false) ."'",
             'animal_status' => " AND t_animal.animal_status = '" . ($filters_list['animal_status'] ?? false) ."'",
             'search_inv' => " AND t_animal.animal_code_inv_value ILIKE '%" . ($filters_list['search_inv'] ?? false) ."%'",
             'search_unsm' => " AND lower(t_animal.animal_code_rshn_value) ILIKE '%" . mb_strtolower(($filters_list['search_unsm'] ?? false)) ."%'",
