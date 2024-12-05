@@ -8,6 +8,8 @@ use Illuminate\Support\Collection;
 
 use Svr\Core\Models\SystemUsers;
 
+use Svr\Data\Resources\SvrApiAnimalsListResource;
+
 
 class SvrApiApplicationDataResource extends JsonResource
 {
@@ -47,7 +49,10 @@ class SvrApiApplicationDataResource extends JsonResource
 				"login"							=> "***",
         	    "password"						=> "***"
         	],
-        	"animals_list"						=> []	// эдем от Илюши реализацию списка животных с фильтрами
+        	"animals_list"					=> new SvrApiAnimalsListResource(collect([
+				'animals_list' 					=> $this->resource['animals_list'],
+				'data_sections'					=> ['main']
+			])),
         ];
     }
 }

@@ -17,6 +17,8 @@ use Svr\Core\Traits\GetValidationRules;
 use Svr\Directories\Models\DirectoryCountriesRegion;
 use Svr\Directories\Models\DirectoryCountriesRegionsDistrict;
 
+use Svr\Core\Exceptions\CustomException;
+
 class DataApplications extends Model
 {
 	use GetTableName;
@@ -199,10 +201,10 @@ class DataApplications extends Model
 
 		if($current)
 		{
-			$where_data[]	= ['a.company_location_id', '=', $user['company_application_id']];
+			$where_data[]	= ['a.company_location_id', '=', $user['company_location_id']];
 			$where_data[]	= ['a.application_status', '=', 'created'];
 		}else{
-			$where_data[]	= ['application_id', '=', '$application_id'];
+			$where_data[]	= ['application_id', '=', $application_id];
 		}
 
 		$application_data	= DB::table(DataApplications::GetTableName().' as a')
@@ -238,29 +240,19 @@ class DataApplications extends Model
 			->where($where_data)
 			->first();
 
-//		dd('application_data', $application_data);
-
 		if(!is_null($application_data))
 		{
-			dd(16);
-
 			return $application_data;
 		}else{
 			if($create_new)
 			{
-//				dd($user['company_application_id'], $user['user_id']);
-
 				$application_id = DB::table(DataApplications::GetTableName())->insertGetId([
 					'company_location_id'		=> $user['company_location_id'],
 					'user_id'					=> $user['user_id']
-				]);
-
-				dd('application_data111', $application_id);
+				], 'application_id');
 
 				return DataApplications::find($application_id);
 			}else{
-				dd(13);
-
 				return false;
 			}
 		}
@@ -294,37 +286,27 @@ class DataApplications extends Model
 
 		if(is_null($animal_data))
 		{
-//			$this->response_message('Животное не найдено');
-			dd(1);
-			return false;
+			throw new CustomException('Животное не найдено', 200);
 		}
 
 		if(!empty($animal_data['animal_guid_horriot']))
 		{
-//			$this->response_message('Животное уже имеет GUID');
-			dd(2);
-			return false;
+			throw new CustomException('Животное уже имеет GUID', 200);
 		}
 
 		if($animal_data['animal_status'] == 'disabled')
 		{
-//			$this->response_message('Животное не активно');
-			dd(3);
-			return false;
+			throw new CustomException('Животное не активно', 200);
 		}
 
 		if($animal_data['animal_status_delete'] !== 'active')
 		{
-//			$this->response_message('Животное удалено');
-			dd(4);
-			return false;
+			throw new CustomException('Животное удалено', 200);
 		}
 
 		if($animal_data['animal_registration_available'] === false)
 		{
-//			$this->response_message('Животное не подготовлено к регистрации');
-			dd(5);
-			return false;
+			throw new CustomException('Животное не подготовлено к регистрации', 200);
 		}
 
 		if(!empty($animal_data['application_animal_status']))
@@ -332,49 +314,29 @@ class DataApplications extends Model
 			switch($animal_data['application_animal_status'])
 			{
 				case 'added':
-//					$this->response_message('Животное уже находится в заявке');
-					dd(6);
-					return false;
-				break;
 				case 'in_application':
-//					$this->response_message('Животное уже находится в заявке');
-					dd(7);
-					return false;
-				break;
 				case 'sent':
-//					$this->response_message('Животное уже находится в заявке');
-					dd(8);
-					return false;
+					throw new CustomException('Животное уже находится в заявке', 200);
 				break;
 				case 'registered':
-//					$this->response_message('Животное уже зарегистрировано');
-					dd(9);
-					return false;
+				case 'finished':
+					throw new CustomException('Животное уже зарегистрировано', 200);
 				break;
 				case 'rejected':
 					// можно добавлять в заявку
 				break;
-				case 'finished':
-//					$this->response_message('Животное уже зарегистрировано');
-					dd(10);
-					return false;
-				break;
 			}
 		}
 
-//		dd($animal_data);
-
-		$application_data			= DataApplications::applicationData(false, true);
+		$application_data			= DataApplications::applicationData(false, true, true);
 
 		if(is_null($application_data))
 		{
-			dd(11);
-//			$this->response_message('Заявка не найдена');
-			return false;
+			throw new CustomException('Заявка не найдена', 200);
 		}
 
 		DB::table(DataApplicationsAnimals::GetTableName())->insert([
-			'application_id'					=> $application_data['application_id'],
+			'application_id'					=> $application_data->application_id,
 			'animal_id'							=> $animal_data['animal_id'],
 			'application_animal_status'			=> 'in_application'
 		]);

@@ -14,6 +14,7 @@ use Svr\Data\Models\DataApplications;
 use Svr\Core\Resources\SvrApiResponseResource;
 
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Svr\Core\Exceptions\CustomException;
 
 use Svr\Core\Enums\AnimalRegisterStatusEnum;
 use Svr\Core\Enums\ApplicationAnimalStatusEnum;
@@ -42,6 +43,7 @@ class ApiApplicationsController extends Controller
         /** @var  $user - получим авторизированного пользователя */
         $user				= auth()->user();
 		$model				= new DataApplications();
+		$animals			= new DataAnimals();
 		$filterKeys			= ['application_id'];
 		$rules				= $model->getFilterValidationRules($request, $filterKeys);
 		$messages			= $model->getFilterValidationMessages($filterKeys);
@@ -49,11 +51,12 @@ class ApiApplicationsController extends Controller
 		$request->validate($rules, $messages);
 
 		$credentials		= $request->only($filterKeys);
+
 		$application_data	= DataApplications::applicationData($credentials['application_id']);
 
 		if(is_null($application_data))
 		{
-			return response()->json(['error' => 'Запрошенная заявка не найдена'], 404);
+			throw new CustomException('Запрошенная заявка не найдена', 200);
 		}
 
         $data				= collect([
@@ -62,6 +65,9 @@ class ApiApplicationsController extends Controller
             'user_id'						=> $user['user_id'],
             'status'						=> true,
             'message'						=> '',
+			'animals_list'					=> $animals->animals_list(999999999, 1, true, [
+				'application_id'				=> $application_data->application_id,
+			], []),
             'response_resource_data'		=> SvrApiApplicationDataResource::class,
             'response_resource_dictionary'	=> SvrApiApplicationDataDictionaryResource::class,
             'pagination'					=> [
@@ -81,6 +87,7 @@ class ApiApplicationsController extends Controller
 		/** @var  $user - получим авторизированного пользователя */
 		$user				= auth()->user();
 		$model				= new DataApplications();
+		$animals			= new DataAnimals();
 		$filterKeys			= ['application_id', 'application_status'];
 		$rules				= $model->getFilterValidationRules($request, $filterKeys);
 		$messages			= $model->getFilterValidationMessages($filterKeys);
@@ -91,14 +98,14 @@ class ApiApplicationsController extends Controller
 
 		if(!in_array($credentials['application_status'], ['prepared','sent']))
 		{
-			return response()->json(['error' => 'Нельзя изменить статус этой заявки'], 403);
+			throw new CustomException('Нельзя изменить статус этой заявки', 200);
 		}
 
 		$application_data	= (array)DataApplications::applicationData($credentials['application_id']);
 
 		if(is_null($application_data))
 		{
-			return response()->json(['error' => 'Запрошенная заявка не найдена'], 404);
+			throw new CustomException('Запрошенная заявка не найдена', 200);
 		}
 
 		$role_data			= SystemRoles::find($user['role_id'])->toArray();
@@ -108,12 +115,12 @@ class ApiApplicationsController extends Controller
 			case 'prepared':
 				if($role_data['role_slug'] !== 'doctor_company')
 				{
-					return response()->json(['error' => 'Нельзя завершить заявку с текущей ролью'], 403);
+					throw new CustomException('Нельзя завершить заявку с текущей ролью', 200);
 				}
 
 				if($application_data['application_status'] !== 'created')
 				{
-					return response()->json(['error' => 'Нельзя завершить эту заявку'], 403);
+					throw new CustomException('Нельзя завершить эту заявку', 200);
 				}
 
 				//TODO: ждем реализацию методов уведомлений
@@ -125,12 +132,12 @@ class ApiApplicationsController extends Controller
 			case 'sent':
 				if($application_data['application_status'] !== 'prepared')
 				{
-					return response()->json(['error' => 'Нельзя отправить эту заявку'], 403);
+					throw new CustomException('Нельзя отправить эту заявку', 200);
 				}
 
 				if (empty($user['user_herriot_login']) || empty($user['user_herriot_web_login']))
 				{
-					return response()->json(['error' => 'У пользователя не установлены реквизиты Хорриота.'], 403);
+					throw new CustomException('У пользователя не установлены реквизиты Хорриота', 200);
 				}
 
 				//TODO: ждем реализацию методов уведомлений
@@ -152,6 +159,9 @@ class ApiApplicationsController extends Controller
 			'user_id'						=> $user['user_id'],
 			'status'						=> true,
 			'message'						=> '',
+			'animals_list'					=> $animals->animals_list(999999999, 1, true, [
+				'application_id'				=> $application_data['application_id'],
+			], []),
 			'response_resource_data'		=> SvrApiApplicationDataResource::class,
 			'response_resource_dictionary'	=> SvrApiApplicationDataDictionaryResource::class,
 			'pagination'					=> [
@@ -177,35 +187,13 @@ class ApiApplicationsController extends Controller
 			'errors'		=> 0
 		];
 
-//		$filterKeys			= ['animal_id'];
-//		$rules				= $model->getFilterValidationRules($request, $filterKeys);
-//		$messages			= $model->getFilterValidationMessages($filterKeys);
-//		$animals			= new DataAnimals();
-
-//		$request->validate($rules, $messages);
-//
-//		$credentials		= $request->only($filterKeys);
-//		$animal_data		= DataAnimals::animal_data($credentials['animal_id']);
-//		$application_data	= (array)DataApplications::applicationData($credentials['application_id']);
-//
-//		if(is_null($application_data))
-//		{
-//			return response()->json(['error' => 'Запрошенная заявка не найдена'], 404);
-//		}
-//
-//		if(empty($animal_data))
-//		{
-//			return response()->json(['error' => 'Животное не найдено'], 404);
-//		}
-
-
 		$valid_data = $request->validate(
 			[
-				'search'                                 => ['string', 'max:255'],
+				'search'                                 		=> ['string', 'max:255'],
 				'company_location_id'                           => ['int', Rule::exists(DataCompaniesLocations::class, 'company_location_id')],
 				'company_region_id'                            	=> ['int', Rule::exists(DirectoryCountriesRegion::class, 'region_id')],
 				'company_district_id'                          	=> ['int', Rule::exists(DirectoryCountriesRegionsDistrict::class, 'district_id')],
-				'animal_id'                               => ['array'],
+				'animal_id'                               		=> ['array'],
 				'filter'                                        => ['array'],
 //				'filter.register_status'                        => ['string', Rule::in(AnimalRegisterStatusEnum::get_option_list())],
 				'filter.animal_sex'                             => ['string', Rule::in(['male','female','MALE','FEMALE'])],
@@ -237,7 +225,7 @@ class ApiApplicationsController extends Controller
 			{
 				$animals_ids	= array_column($animals_list, 'animal_id');
 			}else{
-				throw new NotFoundHttpException('Животные не найдены', null, 200);
+				throw new CustomException('Животные не найдены', 200);
 			}
 		}
 
@@ -251,7 +239,7 @@ class ApiApplicationsController extends Controller
 				{
 					$animal_add_result['success']	+= 1;
 				}else{
-					$animal_add_result['errors']		+= 1;
+					$animal_add_result['errors']	+= 1;
 				}
 			}
 		}
@@ -270,24 +258,93 @@ class ApiApplicationsController extends Controller
 
 		if(is_null($application_data))
 		{
-			throw new NotFoundHttpException('Запрошенная заявка не найдена', null, 200);
+			throw new CustomException('Запрошенная заявка не найдена', 200);
 		}
 
 		// TODO: не забыть запилить после реализации оповещений
 //		(new module_Notifications)->notification_create('application_animal_add', $this->USER('company_id'), false, $application_data);
 
-		dd($animal_add_message);
-
-
-
 		$data				= collect([
-			'application_data'				=> DataApplications::applicationData($credentials['application_id']),
-			'application_status'			=> self::DictionaryApplicationStatus(),
 			'user_id'						=> $user['user_id'],
 			'status'						=> true,
-			'message'						=> '',
-			'response_resource_data'		=> SvrApiApplicationDataResource::class,
-			'response_resource_dictionary'	=> SvrApiApplicationDataDictionaryResource::class,
+			'message'						=> $animal_add_message,
+			'response_resource_data'		=> false,
+			'response_resource_dictionary'	=> false,
+			'pagination'					=> [
+				'total_records'					=> 1,
+				'cur_page'						=> 1,
+				'per_page'						=> 1
+			],
+		]);
+
+		return new SvrApiResponseResource($data);
+	}
+
+
+	public function applicationsAnimalDelete(Request $request): SvrApiResponseResource|JsonResponse
+	{
+		/** @var  $user - получим авторизированного пользователя */
+		$user						= auth()->user();
+		$valid_data					= $request->validate([
+			'animal_id'                 => ['required', 'int']
+		]);
+
+		$application_data			= DataApplications::applicationData(false, true, false);
+		$animal_data				= DataAnimals::animal_data($valid_data['animal_id']);
+
+		if(is_null($application_data) || $application_data === false)
+		{
+			throw new CustomException('Активная заявка отсутствует', 200);
+		}
+
+		if(is_null($animal_data))
+		{
+			throw new CustomException('Животное не найдено', 200);
+		}
+
+		if($application_data->application_status !== 'created')
+		{
+			throw new CustomException('Нельзя удалить животное из подготовленной заявки', 200);
+		}
+
+		if($animal_data['animal_status_delete'] !== 'active')
+		{
+			throw new CustomException('Животное удалено', 200);
+		}
+
+		if($animal_data['application_id'] !== $application_data->application_id)
+		{
+			throw new CustomException('Животное находится в другой заявке', 200);
+		}
+
+		if(!empty($animal_data['application_animal_status']))
+		{
+			switch($animal_data['application_animal_status'])
+			{
+				case 'added':
+				case 'in_application':
+				case 'registered':
+				case 'rejected':
+				case 'finished':
+					// можно удалять
+				break;
+				case 'sent':
+					throw new CustomException('Животное уже отправлено на регистрацию', 200);
+				break;
+			}
+		}
+
+		DataApplicationsAnimals::find($animal_data['application_animal_id'])->delete();
+
+		// TODO: не забыть запилить после реализации оповещений
+//		(new module_Notifications)->notification_create('application_animal_delete', $this->USER('company_id'), false, $application_data);
+
+		$data				= collect([
+			'user_id'						=> $user['user_id'],
+			'status'						=> true,
+			'message'						=> 'Животное успешно удалено из текущей заявки',
+			'response_resource_data'		=> false,
+			'response_resource_dictionary'	=> false,
 			'pagination'					=> [
 				'total_records'					=> 1,
 				'cur_page'						=> 1,

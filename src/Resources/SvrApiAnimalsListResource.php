@@ -19,6 +19,12 @@ class SvrApiAnimalsListResource extends JsonResource
     public function toArray(Request|Collection $request): array
     {
         $returned_data = [];
+
+		if(!is_array($this->resource['animals_list']) || count($this->resource['animals_list']) == 0)
+		{
+			return $returned_data;
+		}
+
         foreach ($this->resource['animals_list'] as $animal)
         {
             $animal_widget = [];
