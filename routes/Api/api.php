@@ -26,6 +26,8 @@ Route::prefix(config('svr.api_prefix'))->group(function(){
     Route::post('animals/mark_photo_edit', [ApiAnimalsController::class, 'animalsMarkPhotoEdit'])->middleware(['auth:svr_api', 'api']);
     Route::post('animals/mark_photo_delete', [ApiAnimalsController::class, 'animalsMarkPhotoDelete'])->middleware(['auth:svr_api', 'api']);
     Route::post('animals/animal_keeping_object_edit', [ApiAnimalsController::class, 'animalsKeepingObjectEdit'])->middleware(['auth:svr_api', 'api']);
-//    Route::post('animals/animal_keeping_object_edit_group', [ApiAnimalsController::class, 'animalsKeepingObjectEditGroup'])->middleware(['auth:svr_api', 'api']);
-//    Route::post('animals/animal_birth_object_edit', [ApiAnimalsController::class, 'animalsBirthObjectEdit'])->middleware(['auth:svr_api', 'api']);
+    Route::post('animals/animal_birth_object_edit', [ApiAnimalsController::class, 'animalsBirthObjectEdit'])->middleware(['auth:svr_api', 'api']);
+    Route::post('animals/animal_object_edit_group', [ApiAnimalsController::class, 'animalsObjectEditGroup'])->middleware(['auth:svr_api', 'api']);
+    Route::post('animals/animal_keeping_type_edit', [ApiAnimalsController::class, 'animalKeepingTypeEdit'])->middleware(['auth:svr_api', 'api']);
+    Route::post('animals/animal_keeping_purpose_edit', [ApiAnimalsController::class, 'animalKeepingPurposeEdit'])->middleware(['auth:svr_api', 'api']);
 });
