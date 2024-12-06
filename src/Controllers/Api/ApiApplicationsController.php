@@ -13,6 +13,7 @@ use Svr\Data\Models\DataAnimals;
 use Svr\Data\Models\DataApplications;
 use Svr\Core\Resources\SvrApiResponseResource;
 
+use Svr\Data\Resources\SvrApiApplicationsListResource;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Svr\Core\Exceptions\CustomException;
 
@@ -195,7 +196,6 @@ class ApiApplicationsController extends Controller
 				'company_district_id'                          	=> ['int', Rule::exists(DirectoryCountriesRegionsDistrict::class, 'district_id')],
 				'animal_id'                               		=> ['array'],
 				'filter'                                        => ['array'],
-//				'filter.register_status'                        => ['string', Rule::in(AnimalRegisterStatusEnum::get_option_list())],
 				'filter.animal_sex'                             => ['string', Rule::in(['male','female','MALE','FEMALE'])],
 				'filter.specie_id'                              => ['int', Rule::exists(DirectoryAnimalsSpecies::class, 'specie_id')],
 				'filter.animal_date_birth_min'                  => ['date'],
@@ -345,6 +345,82 @@ class ApiApplicationsController extends Controller
 			'message'						=> 'Животное успешно удалено из текущей заявки',
 			'response_resource_data'		=> false,
 			'response_resource_dictionary'	=> false,
+			'pagination'					=> [
+				'total_records'					=> 1,
+				'cur_page'						=> 1,
+				'per_page'						=> 1
+			],
+		]);
+
+		return new SvrApiResponseResource($data);
+	}
+
+
+
+
+	public function applicationsList(Request $request): SvrApiResponseResource|JsonResponse
+	{
+		/** @var  $user - получим авторизированного пользователя */
+		$user						= auth()->user();
+		$valid_data 				= $request->validate(
+			[
+				'search'                                 		=> ['string', 'max:255'],
+				'company_location_id'                           => ['int', Rule::exists(DataCompaniesLocations::class, 'company_location_id')],
+				'company_region_id'                            	=> ['int', Rule::exists(DirectoryCountriesRegion::class, 'region_id')],
+				'company_district_id'                          	=> ['int', Rule::exists(DirectoryCountriesRegionsDistrict::class, 'district_id')],
+				'animal_id'                               		=> ['array'],
+				'filter'                                        => ['array'],
+				'filter.animal_sex'                             => ['string', Rule::in(['male','female','MALE','FEMALE'])],
+				'filter.specie_id'                              => ['int', Rule::exists(DirectoryAnimalsSpecies::class, 'specie_id')],
+				'filter.animal_date_birth_min'                  => ['date'],
+				'filter.animal_date_birth_max'                  => ['date'],
+				'filter.breeds_id'                              => ['int', Rule::exists(DirectoryAnimalsBreeds::class, 'breed_id')],
+				'filter.application_id'                         => ['int', Rule::exists(DataApplications::class, 'application_id')],
+				'filter.animal_status'                          => ['string', Rule::in(SystemStatusEnum::get_option_list())],
+				'filter.animal_date_create_record_svr_min'      => ['date'],
+				'filter.animal_date_create_record_svr_max'      => ['date'],
+				'filter.animal_date_create_record_herriot_min'  => ['date'],
+				'filter.animal_date_create_record_herriot_max'  => ['date'],
+				'filter.application_animal_status'              => ['string', Rule::in(ApplicationAnimalStatusEnum::get_option_list())],
+				'filter.search_inv'                             => ['string', 'max:20'],
+				'filter.search_unsm'                            => ['string', 'max:11'],
+				'filter.search_horriot_number'                  => ['string', 'max:14'],
+			]);
+
+//		$application_data			= DataApplications::applicationData(false, true, false);
+//		$animal_data				= DataAnimals::animal_data($valid_data['animal_id']);
+//
+//		if(!empty($animal_data['application_animal_status']))
+//		{
+//			switch($animal_data['application_animal_status'])
+//			{
+//				case 'added':
+//				case 'in_application':
+//				case 'registered':
+//				case 'rejected':
+//				case 'finished':
+//					// можно удалять
+//				break;
+//				case 'sent':
+//					throw new CustomException('Животное уже отправлено на регистрацию', 200);
+//				break;
+//			}
+//		}
+//
+//		DataApplicationsAnimals::find($animal_data['application_animal_id'])->delete();
+
+
+		$data				= collect([
+			'application_status'			=> self::DictionaryApplicationStatus(),
+			'users_list'					=> '',
+			'user_id'						=> $user['user_id'],
+			'status'						=> true,
+			'message'						=> '',
+			'applications_list'					=> $animals->animals_list(999999999, 1, true, [
+				'application_id'				=> $application_data['application_id'],
+			], []),
+			'response_resource_data'		=> SvrApiApplicationsListResource::class,
+			'response_resource_dictionary'	=> SvrApiApplicationsListDictionaryResource::class,
 			'pagination'					=> [
 				'total_records'					=> 1,
 				'cur_page'						=> 1,

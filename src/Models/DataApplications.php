@@ -343,4 +343,211 @@ class DataApplications extends Model
 
 		return true;
 	}
+
+
+
+
+
+
+
+
+	public static function applicationslist($search_string)
+	{
+		$params_data = explode(' ', $search_string);
+
+		// список колонок, участвующих в поиске и сортировке
+		$columns_list = [
+			'user_id' => [
+				'column_name' => ['u.user_id::text'],
+				'to_lower' => false,
+				'section' => 'where',
+				'order_field' => 'user_id'
+			],
+			'user_full_name'	    =>  [
+				'column_name' 	=> ['CONCAT(u.user_first, \' \', u.user_middle, \' \', u.user_last)'],
+				'to_lower'		=> true,
+				'section'		=> 'where',
+				'order_field'	=>  'CONCAT(user_last, \' \', user_middle, \' \', user_first)',
+			],
+			'company_district_name'	    =>  [
+				'column_name'	=> ['rd.district_name'],
+				'to_lower'		=> true,
+				'section'		=> 'where',
+				'order_field'	=> 'district_name',
+			],
+			'herriot_requisites' => false,
+			'application_date_create' => [
+				'column_name'	=> ['to_char(a.application_date_create, \'DD.MM.YYYY\')'],
+				'to_lower'		=> false,
+				'section'		=> 'where',
+				'order_field'	=> 'application_date_create',
+			],
+			'application_date_registration' => [
+				'column_name'	=> ['to_char(a.application_date_complete, \'DD.MM.YYYY\')'],
+				'to_lower'		=> false,
+				'section'		=> 'where',
+				'order_field'	=> 'application_date_complete',
+			],
+			'role' => false,
+			'application_status' => [
+				'column_name'	=> ['a.application_status::text'],
+				'to_lower'		=> true,
+				'section'		=> 'where',
+				'order_field'	=> 'application_status',
+			],
+			'company_name' => [
+				'column_name' 	=> ['c.company_name_full', 'c.company_name_short'],
+				'to_lower' 		=> true,
+				'section'		=> 'where',
+				'order_field' 	=> 'company_name_short'
+			],
+		];
+
+		$where_view = '';
+		foreach($params_data as $param)
+		{
+			$where_view .= ' AND (';
+
+			$sub_data	= ['where' => [], 'having' => []];
+
+			foreach($columns_list as $column)
+			{
+				if ($column === false) continue;
+
+				foreach ($column['column_name'] as $item)
+				{
+					if ($column['section'] === 'where')
+					{
+						if ($column['to_lower'] === true)
+						{
+							$sub_data[$column['section']][]	= 'lower('.$item.') ILIKE \'%'.mb_strtolower($param).'%\'';
+						}else {
+							$sub_data[$column['section']][]	= $item.' ILIKE \'%'.mb_strtolower($param).'%\'';
+						}
+					}else{
+						//if (!empty($param)) $sub_data[$column['section']][]	= $item.' > 0 ';
+					}
+				}
+			}
+
+			$where_view .= implode(' OR ', $sub_data['where']);
+			$where_view .= ')';
+		}
+
+		$query = 'SELECT
+							a.*,
+							u.user_last,
+							u.user_first,
+							u.user_middle,
+							u.user_avatar,
+							u.user_status,
+							u.user_date_created,
+							u.user_date_block,
+							u.user_phone,
+							u.user_email,
+							d.user_herriot_login,
+							d.user_herriot_password,
+							d.user_herriot_web_login,
+							d.user_herriot_apikey,
+							d.user_herriot_issuerid,
+							d.user_herriot_serviceid,
+							CONCAT(u.user_first, \' \', u.user_middle, \' \', u.user_last) AS user_full_name,
+							c.company_name_short,
+							c.company_name_full,
+							c.company_id,
+							r.region_name,
+							rd.district_name,
+							rd.district_id
+						FROM '.SCHEMA_DATA.'.'.TBL_APPLICATIONS.' AS a
+							LEFT JOIN '.SCHEMA_SYSTEM.'.'.TBL_USERS.' 					AS u ON u.user_id = a.user_id
+							LEFT JOIN '.SCHEMA_SYSTEM.'.'.TBL_USERS.' 					AS d ON d.user_id = a.doctor_id
+							LEFT JOIN '.SCHEMA_DATA.'.'.TBL_COMPANIES_LOCATIONS.' 		AS cl ON cl.company_location_id = a.company_location_id
+							LEFT JOIN '.SCHEMA_DATA.'.'.TBL_COMPANIES.' 				AS c ON c.company_id = cl.company_id
+							LEFT JOIN '.SCHEMA_DIRECTORIES.'.'.TBL_COUNTRIES_REGIONS.' AS r ON r.region_id = cl.region_id
+							LEFT JOIN '.SCHEMA_DIRECTORIES.'.'.TBL_COUNTRIES_REGIONS_DISTRICTS.' AS rd ON rd.district_id = cl.district_id
+						WHERE 1=1 '.$this->create_filter_restrictions([]).$where_view;
+
+		if (isset($sub_data) && count($sub_data['having']) > 0)
+		{
+			$query .= ' HAVING ' . implode(' AND ', $sub_data['having']);
+		}
+
+		$this->get_data(DB_MAIN, $query, null, 'rows');
+
+		$where = ' WHERE 1=1 ';
+
+		if(count($filters_list) > 0)
+		{
+			$where .= $this->create_filter_sql($filters_list);
+		}
+
+		$order_string = '';
+		if ($this->REQUEST('order_field') !== false && array_key_exists($this->REQUEST('order_field'), $columns_list))
+		{
+			$order_field = $this->REQUEST('order_field');
+			if ($columns_list[$order_field]['order_field'] !== false) $order_field = $columns_list[$order_field]['order_field'];
+			$order_string = ' ORDER BY '.$order_field.' '.$this->REQUEST('order_direction');
+		}
+
+		$query = 'SELECT * FROM (SELECT DISTINCT ON (application_id) * FROM '.$view_table_name.' '.$where.') AS temp '.$order_string. ' LIMIT :items_limit OFFSET :items_offset';
+
+		$applications_list = $this->get_data(DB_MAIN, $query, [
+			'items_limit' => (int)$count_per_page,
+			'items_offset' => (int)$count_per_page * ((int)$page_number - 1)
+		], 'rows', 'application_id');
+
+		if ($applications_list === false || count($applications_list) < 1)
+		{
+			return false;
+		}
+
+		$applications_count_query = 'SELECT DISTINCT(application_id) FROM '.$view_table_name.$where;
+		$applications_count = $this->get_data(DB_MAIN, $applications_count_query, null, 'rows');
+
+		$this->response_pagination(count($applications_count));
+
+		$this->exec(DB_MAIN, 'DROP view IF EXISTS '.$view_table_name);
+
+		DB::table(DataApplicationsAnimals::GetTableName())->insert([
+			'application_id'					=> $application_data->application_id,
+			'animal_id'							=> $animal_data['animal_id'],
+			'application_animal_status'			=> 'in_application'
+		]);
+
+		return true;
+	}
+
+
+	private function create_filter_sql($filters_list)
+	{
+		if (isset($filters_list['application_date_create_min'])) $filters_list['application_date_create_min'] = date('Y-m-d', strtotime($filters_list['application_date_create_min']));
+		if (isset($filters_list['application_date_create_max'])) $filters_list['application_date_create_max'] = date('Y-m-d', strtotime($filters_list['application_date_create_max']));
+		if (isset($filters_list['application_date_registration_min'])) $filters_list['application_date_registration_min'] = date('Y-m-d', strtotime($filters_list['application_date_registration_min']));
+		if (isset($filters_list['application_date_registration_max'])) $filters_list['application_date_registration_max'] = date('Y-m-d', strtotime($filters_list['application_date_registration_max']));
+
+		$filters_mapping = [
+			'application_id' 					=> " AND application_id = " . $filters_list['application_id'],
+			'user_full_name' 					=> " AND lower(user_full_name) ILIKE '%" . (mb_strtolower($filters_list['user_full_name'])) . "%'",
+			'user_id' 							=> " AND user_id = " . $filters_list['user_id'],
+			//'company_district_id' 				=> ' AND district_id IN (' . implode(',', $filters_list['company_district_id']) . ')',
+			'company_id' 						=> ' AND company_id IN (' . implode(',', $filters_list['company_id']) . ')',
+			'district_id' 						=> ' AND district_id IN (' . implode(',', $filters_list['district_id']) . ')',
+			'application_date_create_min' 		=> " AND application_date_create >= '" . $filters_list['application_date_create_min'] . "'",
+			'application_date_create_max' 		=> " AND application_date_create <= '" . $filters_list['application_date_create_max'] . "'",
+			'application_date_registration_min' => " AND application_date_complete >= '" . $filters_list['application_date_registration_min'] . "'",
+			'application_date_registration_max' => " AND application_date_complete <= '" . $filters_list['application_date_registration_max'] . "'",
+			'application_status' 				=> ' AND application_status = \'' . $filters_list['application_status']. '\'',
+		];
+
+		$query = '';
+
+		foreach ($filters_list as $key => $value) {
+			if (empty($value)) {
+				continue;
+			}
+
+			$query .= $filters_mapping[$key];
+		}
+		return ($query);
+	}
 }
