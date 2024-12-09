@@ -572,9 +572,9 @@ class DataAnimals extends Model
      * @param $application_id
      * @return array
      */
-    public static function animal_data($animal_id, $application_id = false): array
+    public static function animalData($animal_id, $application_id = false): array
     {
-        $where = self::create_filter_restrictions([]);
+        $where = self::createFilterRestrictions([]);
 
         if ($application_id !== false && count($application_id) > 0) {
             $application_left_join =
@@ -697,7 +697,7 @@ class DataAnimals extends Model
         if(count($animal_data) > 0)
         {
             $animal_data = (array)$animal_data[0];
-            $animal_data['animal_registration_available'] = self::animal_registration_available($animal_data);
+            $animal_data['animal_registration_available'] = self::animalRegistrationAvailable($animal_data);
         }
 
         return $animal_data;
@@ -712,7 +712,7 @@ class DataAnimals extends Model
      * @param string $valid_data
      * @return array
      */
-    public function animals_list($count_per_page, $page_number, $only_enabled = true, $filters_list = [], $valid_data = '')
+    public function animalsList($count_per_page, $page_number, $only_enabled = true, $filters_list = [], $valid_data = '')
     {
         //TODO: Тут сейчас будет ерунда, надо будет переделать когда появится осознание
         if (!isset($filters_list)) $filters_list = [];
@@ -748,7 +748,7 @@ class DataAnimals extends Model
 
         $where_view = " animal_status_delete = 'active' ";
 
-        $where_view .= $this->create_filter_restrictions($valid_data);
+        $where_view .= $this->createFilterRestrictions($valid_data);
 
         if (isset($filters_list['application_id']) && count($filters_list['application_id']) > 0) {
             $application_left_join = ' LEFT JOIN ' .DataApplicationsAnimals::getTableName(). ' t_application_animal ON
@@ -769,7 +769,7 @@ class DataAnimals extends Model
         $where = ' ';
 
         if (count($filters_list) > 0) {
-            $where .= $this->create_filter_sql($filters_list);
+            $where .= $this->createFilterSql($filters_list);
         }
 
         if ($only_enabled) $where .= " AND t_animal.animal_status = 'enabled' ";
@@ -891,7 +891,7 @@ class DataAnimals extends Model
         foreach ($animals_list as &$animal_data)
         {
             $animal_data = (array)$animal_data;
-            $animal_data['animal_registration_available'] = $this->animal_registration_available($animal_data);
+            $animal_data['animal_registration_available'] = $this->animalRegistrationAvailable($animal_data);
         }
         $animals_count_query = 'SELECT COUNT(*) AS cnt FROM (SELECT DISTINCT ON (t_animal.animal_id)
     				t_animal.animal_id
@@ -936,7 +936,7 @@ class DataAnimals extends Model
      * @param $filters_list
      * @return string
      */
-    private function create_filter_sql($filters_list)
+    private function createFilterSql($filters_list): string
     {
         if (isset($filters_list['animal_date_create_record_herriot_min'])) $filters_list['animal_date_create_record_herriot_min'] = date('Y-m-d', strtotime($filters_list['animal_date_create_record_herriot_min']));
         if (isset($filters_list['animal_date_create_record_herriot_max'])) $filters_list['animal_date_create_record_herriot_max'] = date('Y-m-d', strtotime($filters_list['animal_date_create_record_herriot_max']));
@@ -946,8 +946,6 @@ class DataAnimals extends Model
 
         if (isset($filters_list['animal_date_birth_min'])) $filters_list['animal_date_birth_min'] = date('Y-m-d', strtotime($filters_list['animal_date_birth_min']));
         if (isset($filters_list['animal_date_birth_max'])) $filters_list['animal_date_birth_max'] = date('Y-m-d', strtotime($filters_list['animal_date_birth_max']));
-
-
 
         $filters_mapping = [
             'animal_sex' => " AND t_animal.animal_sex = '". strtolower(($filters_list['animal_sex'] ?? false)) . "'",
@@ -993,7 +991,7 @@ class DataAnimals extends Model
      * @param $valid_data
      * @return string
      */
-    private static function create_filter_restrictions($valid_data): string
+    private static function createFilterRestrictions($valid_data): string
     {
         $user_token_data = auth()->user();
         $user_role_data = SystemRoles::find($user_token_data['role_id'])->toArray();
@@ -1031,7 +1029,7 @@ class DataAnimals extends Model
      * @param array $animal_data Данные о животном.
      * @return bool true если доступно, или false, если нет.
      */
-    public static function animal_registration_available(array $animal_data): bool
+    public static function animalRegistrationAvailable(array $animal_data): bool
     {
         if ($animal_data['animal_status'] == 'disabled' || $animal_data['animal_status_delete'] == 'deleted' || !empty($animal_data['animal_guid_horriot']) || $animal_data['keeping_object_guid_horriot'] == null)
         {

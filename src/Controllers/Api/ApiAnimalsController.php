@@ -68,7 +68,7 @@ class ApiAnimalsController extends Controller
         }
 
         //Получаем данные по животному
-        $animal_data = DataAnimals::animal_data($valid_data['animal_id'], $valid_data['application_id'] ?? false);
+        $animal_data = DataAnimals::animalData($valid_data['animal_id'], $valid_data['application_id'] ?? false);
 
         //Если животное не нашлось - выкидываем эксепшон
         if (empty($animal_data))
@@ -78,7 +78,7 @@ class ApiAnimalsController extends Controller
 
         //если запросили секцию с метками животного - запрашиваем по ним данные
         $mark_data = false;
-        if (in_array('mark', $valid_data['data_sections'])) $mark_data = DataAnimalsCodes::animal_mark_data($valid_data['animal_id']);
+        if (in_array('mark', $valid_data['data_sections'])) $mark_data = DataAnimalsCodes::animalMarkData($valid_data['animal_id']);
 
         //получаем информацию по текущему пользователю
         $user = auth()->user();
@@ -171,7 +171,7 @@ class ApiAnimalsController extends Controller
 
         //получаем список животных по желаемым фильтрам с пагинацией и количество животных
         $dataAnimalsModel = new DataAnimals();
-        $animals_list = $dataAnimalsModel->animals_list($user['pagination_per_page'], $user['pagination_cur_page'], false, $valid_data['filter'], $valid_data);
+        $animals_list = $dataAnimalsModel->animalsList($user['pagination_per_page'], $user['pagination_cur_page'], false, $valid_data['filter'], $valid_data);
         $animals_count = $dataAnimalsModel->animals_count;
 
         //если список пустой - выкидываем эксепшон
@@ -191,7 +191,7 @@ class ApiAnimalsController extends Controller
         {
             foreach ($animals_list as &$animal)
             {
-                $mark_data = DataAnimalsCodes::animal_mark_data($animal['animal_id']);
+                $mark_data = DataAnimalsCodes::animalMarkData($animal['animal_id']);
                 $animal['mark_data'] = $mark_data;
                 $all_mark_data[] = $mark_data;
             }
@@ -249,9 +249,9 @@ class ApiAnimalsController extends Controller
         $valid_data = $validator->validated();
 
         //получаем данные о маркировании по id
-        $mark_data = DataAnimalsCodes::mark_data($valid_data['mark_id']);
+        $mark_data = DataAnimalsCodes::markData($valid_data['mark_id']);
         //получаем животное по id
-        $animal_data = DataAnimals::animal_data($mark_data['animal_id']);
+        $animal_data = DataAnimals::animalData($mark_data['animal_id']);
         //если животное не нашлось - выкидываем эксепшон
         if (empty($animal_data))
         {
@@ -276,32 +276,8 @@ class ApiAnimalsController extends Controller
             $new_mark_data->update($data_for_update);
         }
         //получаем обновленные данные для вывода ответа
-        $new_mark_data = DataAnimalsCodes::mark_data($valid_data['mark_id'])->toArray();
+        $new_mark_data = DataAnimalsCodes::markData($valid_data['mark_id'])->toArray();
 
-        //собираем справочники
-        $list_directories = [];
-        $mark_types_ids = array_filter([$new_mark_data['mark_type_id']]);
-        if (count($mark_types_ids) > 0) {
-            $list_directories['mark_types_list'] = DirectoryMarkTypes::find($mark_types_ids);
-        }
-
-        $mark_statuses_ids = array_filter([$new_mark_data['mark_status_id']]);
-        if (count($mark_statuses_ids) > 0)
-        {
-            $list_directories['mark_statuses_list'] = DirectoryMarkStatuses::find($mark_statuses_ids);
-        }
-
-        $mark_tool_types_ids = array_filter([$new_mark_data['mark_tool_type_id']]);
-        if (count($mark_tool_types_ids) > 0)
-        {
-            $list_directories['mark_tool_types_list'] = DirectoryMarkToolTypes::find($mark_tool_types_ids);
-        }
-
-        $mark_tools_locations_ids = array_filter([$new_mark_data['tool_location_id']]);
-        if (count($mark_tools_locations_ids) > 0)
-        {
-            $list_directories['mark_tools_locations_list'] = DirectoryToolsLocations::find($mark_tools_locations_ids);
-        }
         //получаем инфо о текущем юзере
         $user = auth()->user();
         //формируем коллекцию
@@ -309,7 +285,7 @@ class ApiAnimalsController extends Controller
             'user_id' => $user['user_id'],
             'mark_data' => [$new_mark_data],
             'animal_id' => $new_mark_data['animal_id'],
-            'list_directories' => $list_directories,
+            'list_directories' => DataAnimalsCodes::getDirectories($new_mark_data),
             'status' => true,
             'message' => '',
             'response_resource_data' => SvrApiAnimalsListMarkResource::class,
@@ -391,7 +367,7 @@ class ApiAnimalsController extends Controller
         if((isset($valid_data['animal_id']) && count($valid_data['animal_id']) == 0) || !isset($valid_data['animal_id']))
         {
             $dataAnimalsModel = new DataAnimals();
-            $animals_list = $dataAnimalsModel->animals_list(9999999, 1, false, $valid_data['filter'], $valid_data);
+            $animals_list = $dataAnimalsModel->animalsList(9999999, 1, false, $valid_data['filter'], $valid_data);
 
             if($animals_list && count($animals_list) > 0)
             {
@@ -504,32 +480,7 @@ class ApiAnimalsController extends Controller
         DataAnimalsCodes::where('code_id', $valid_data['mark_id'])
             ->update(['code_tool_photo' => $mark_model->addFileMarkPhoto($request)]);
         //получаем обновленную информацию по маркированию
-        $new_mark_data = DataAnimalsCodes::mark_data($valid_data['mark_id'])->toArray();
-
-        //готовим справочники
-        $list_directories = [];
-        $mark_types_ids = array_filter([$new_mark_data['mark_type_id']]);
-        if (count($mark_types_ids) > 0) {
-            $list_directories['mark_types_list'] = DirectoryMarkTypes::find($mark_types_ids);
-        }
-
-        $mark_statuses_ids = array_filter([$new_mark_data['mark_status_id']]);
-        if (count($mark_statuses_ids) > 0)
-        {
-            $list_directories['mark_statuses_list'] = DirectoryMarkStatuses::find($mark_statuses_ids);
-        }
-
-        $mark_tool_types_ids = array_filter([$new_mark_data['mark_tool_type_id']]);
-        if (count($mark_tool_types_ids) > 0)
-        {
-            $list_directories['mark_tool_types_list'] = DirectoryMarkToolTypes::find($mark_tool_types_ids);
-        }
-
-        $mark_tools_locations_ids = array_filter([$new_mark_data['tool_location_id']]);
-        if (count($mark_tools_locations_ids) > 0)
-        {
-            $list_directories['mark_tools_locations_list'] = DirectoryToolsLocations::find($mark_tools_locations_ids);
-        }
+        $new_mark_data = DataAnimalsCodes::markData($valid_data['mark_id'])->toArray();
 
         //получаем данные о пользователе
         $user = auth()->user();
@@ -538,7 +489,7 @@ class ApiAnimalsController extends Controller
             'user_id' => $user['user_id'],
             'mark_data' => [$new_mark_data],
             'animal_id' => $new_mark_data['animal_id'],
-            'list_directories' => $list_directories,
+            'list_directories' => DataAnimalsCodes::getDirectories($new_mark_data),
             'status' => true,
             'message' => '',
             'response_resource_data' => SvrApiAnimalsListMarkResource::class,
@@ -581,40 +532,17 @@ class ApiAnimalsController extends Controller
         DataAnimalsCodes::where('code_id', $valid_data['mark_id'])
             ->update(['code_tool_photo' => '']);
         //получаем обновленные данные маркирования
-        $new_mark_data = DataAnimalsCodes::mark_data($valid_data['mark_id'])->toArray();
-        //формируем справочники
-        $list_directories = [];
-        $mark_types_ids = array_filter([$new_mark_data['mark_type_id']]);
-        if (count($mark_types_ids) > 0) {
-            $list_directories['mark_types_list'] = DirectoryMarkTypes::find($mark_types_ids);
-        }
-
-        $mark_statuses_ids = array_filter([$new_mark_data['mark_status_id']]);
-        if (count($mark_statuses_ids) > 0)
-        {
-            $list_directories['mark_statuses_list'] = DirectoryMarkStatuses::find($mark_statuses_ids);
-        }
-
-        $mark_tool_types_ids = array_filter([$new_mark_data['mark_tool_type_id']]);
-        if (count($mark_tool_types_ids) > 0)
-        {
-            $list_directories['mark_tool_types_list'] = DirectoryMarkToolTypes::find($mark_tool_types_ids);
-        }
-
-        $mark_tools_locations_ids = array_filter([$new_mark_data['tool_location_id']]);
-        if (count($mark_tools_locations_ids) > 0)
-        {
-            $list_directories['mark_tools_locations_list'] = DirectoryToolsLocations::find($mark_tools_locations_ids);
-        }
+        $new_mark_data = DataAnimalsCodes::markData($valid_data['mark_id'])->toArray();
 
         //получаем информацию по текущему пользователю
         $user = auth()->user();
+
         //формируем коллекцию
         $data = collect([
             'user_id' => $user['user_id'],
             'mark_data' => [$new_mark_data],
             'animal_id' => $new_mark_data['animal_id'],
-            'list_directories' => $list_directories,
+            'list_directories' => DataAnimalsCodes::getDirectories($new_mark_data),
             'status' => true,
             'message' => '',
             'response_resource_data' => SvrApiAnimalsListMarkResource::class,
@@ -650,17 +578,17 @@ class ApiAnimalsController extends Controller
 
         $valid_data = $validator->validated();
 
-        $animal_data = DataAnimals::animal_data($valid_data['animal_id']);
-
+        $animal_data = DataAnimals::animalData($valid_data['animal_id']);
+        //если животное не найдено - выкидываем эксепшон
         if (empty($animal_data))
         {
             throw new CustomException('Животное не найдено',200);
         }
-
+        //устанавливаем объект содержания животному
         DataAnimals::setAnimalKeepingCompanyObject($valid_data['animal_id'], $valid_data['company_object_id']);
-
+        //получаем информацию о пользователе
         $user = auth()->user();
-
+        //собираем коллекцию для ответа
         $data = collect([
             'user_id' => $user['user_id'],
             'status' => true,
@@ -673,7 +601,7 @@ class ApiAnimalsController extends Controller
                 'per_page' => 1
             ],
         ]);
-
+        //передаем данные в ресурс для формирования ответа
         return new SvrApiResponseResource($data);
     }
 
@@ -698,17 +626,17 @@ class ApiAnimalsController extends Controller
 
         $valid_data = $validator->validated();
 
-        $animal_data = DataAnimals::animal_data($valid_data['animal_id']);
-
+        $animal_data = DataAnimals::animalData($valid_data['animal_id']);
+        //если животное не найдено - выкидываем эксепшон
         if (empty($animal_data))
         {
             throw new CustomException('Животное не найдено',200);
         }
-
+        //устанавливаем объект рождения животному
         DataAnimals::setAnimalBirthCompanyObject($valid_data['animal_id'], $valid_data['company_object_id']);
-
+        //получаем информацию о пользователе
         $user = auth()->user();
-
+        //собираем коллекцию для ответа
         $data = collect([
             'user_id' => $user['user_id'],
             'status' => true,
@@ -721,7 +649,7 @@ class ApiAnimalsController extends Controller
                 'per_page' => 1
             ],
         ]);
-
+        //передаем данные в ресурс для формирования ответа
         return new SvrApiResponseResource($data);
     }
 
@@ -799,18 +727,19 @@ class ApiAnimalsController extends Controller
         if((isset($valid_data['animal_id']) && count($valid_data['animal_id']) == 0) || !isset($valid_data['animal_id']))
         {
             $dataAnimalsModel = new DataAnimals();
-            $animals_list = $dataAnimalsModel->animals_list(9999999, 1, false, $valid_data['filter'], $valid_data);
+            $animals_list = $dataAnimalsModel->animalsList(9999999, 1, false, $valid_data['filter'], $valid_data);
 
             if($animals_list && count($animals_list) > 0)
             {
                 $valid_data['animal_id']			= array_column($animals_list, 'animal_id');
             }
         }
-
+        //если у нас есть список айдишников животных - продолжаем
         if(isset($valid_data['animal_id']) && count($valid_data['animal_id']) > 0)
         {
+            // готовим данные для обновления в зависимости от того, что именно пришло
             $data_for_update = [];
-
+            //объект содержания
             if (isset($valid_data['keeping_object']) && $valid_data['keeping_object'] > 0)
             {
                 $company_object_data = DataCompaniesObjects::find($valid_data['keeping_object']);
@@ -820,7 +749,7 @@ class ApiAnimalsController extends Controller
                     $data_for_update['animal_object_of_keeping_id'] = $valid_data['keeping_object'];
                 }
             }
-
+            //объект рождения
             if (isset($valid_data['birth_object']) && $valid_data['birth_object'] > 0)
             {
                 $company_object_data = DataCompaniesObjects::find($valid_data['birth_object']);
@@ -830,7 +759,7 @@ class ApiAnimalsController extends Controller
                     $data_for_update['animal_object_of_birth_id'] = $valid_data['birth_object'];
                 }
             }
-
+            //тип содержания
             if (isset($valid_data['keeping_type']) && $valid_data['keeping_type'] > 0)
             {
                 $keeping_types_list = DirectoryKeepingTypes::find($valid_data['keeping_type']);
@@ -840,7 +769,7 @@ class ApiAnimalsController extends Controller
                     $data_for_update['animal_type_of_keeping_id'] = $valid_data['keeping_type'];
                 }
             }
-
+            //причина содержания
             if (isset($valid_data['keeping_purpose']) && $valid_data['keeping_purpose'] > 0)
             {
                 $keeping_types_list = DirectoryKeepingPurposes::find($valid_data['keeping_purpose']);
@@ -850,15 +779,15 @@ class ApiAnimalsController extends Controller
                     $data_for_update['animal_purpose_of_keeping_id'] = $valid_data['keeping_purpose'];
                 }
             }
-
+            //если массив данных для обновления сформировался - обновляем животных
             if (count($data_for_update) > 0)
             {
-                DataAnimals::updateAnimalsGroup($data_for_update, $data_for_update['animal_id']);
+                DataAnimals::updateAnimalsGroup($data_for_update, $valid_data['animal_id']);
             }
         }
-
+        //получаем инфу по пользователю
         $user = auth()->user();
-
+        //собираем коллекцию
         $data = collect([
             'user_id' => $user['user_id'],
             'status' => true,
@@ -871,7 +800,7 @@ class ApiAnimalsController extends Controller
                 'per_page' => 1
             ],
         ]);
-
+        //передаем все ресурсу ответа
         return new SvrApiResponseResource($data);
     }
 
@@ -896,24 +825,24 @@ class ApiAnimalsController extends Controller
 
         $valid_data = $validator->validated();
 
-        $animal_data = DataAnimals::animal_data($valid_data['animal_id']);
-
+        $animal_data = DataAnimals::animalData($valid_data['animal_id']);
+        //если животное не нашлось - выкидываем эксепшон
         if (empty($animal_data))
         {
             throw new CustomException('Животное не найдено',200);
         }
-
+        //устанавливаем вид содержания животному
         DataAnimals::setAnimalKeepingType($valid_data['animal_id'], $valid_data['keeping_type']);
-
-        $animal_data = DataAnimals::animal_data($valid_data['animal_id']);
-
+        //получаем новые данные животного
+        $animal_data = DataAnimals::animalData($valid_data['animal_id']);
+        //заполняем секции для виджетов
         $valid_data['data_sections'] = ['main','gen','base','mark','genealogy','vib','registration','history'];
-
+        //получаем данные средств маркирования
         $mark_data = false;
-        if (in_array('mark', $valid_data['data_sections'])) $mark_data = DataAnimalsCodes::animal_mark_data($valid_data['animal_id']);
-
+        if (in_array('mark', $valid_data['data_sections'])) $mark_data = DataAnimalsCodes::animalMarkData($valid_data['animal_id']);
+        //получаем информацию о пользователе
         $user = auth()->user();
-
+        //собираем коллекцию для ответа
         $data = collect([
             'user_id' => $user['user_id'],
             'animal_data' => $animal_data,
@@ -930,7 +859,7 @@ class ApiAnimalsController extends Controller
                 'per_page' => 1
             ],
         ]);
-
+        //передаем данные в ресурс для формирования ответа
         return new SvrApiResponseResource($data);
     }
 
@@ -955,24 +884,24 @@ class ApiAnimalsController extends Controller
 
         $valid_data = $validator->validated();
 
-        $animal_data = DataAnimals::animal_data($valid_data['animal_id']);
-
+        $animal_data = DataAnimals::animalData($valid_data['animal_id']);
+        //если животное не найдено - выкидываем эксепшон
         if (empty($animal_data))
         {
             throw new CustomException('Животное не найдено',200);
         }
-
+        //устанавливаем причину содержания животному
         DataAnimals::setAnimalKeepingPurpose($valid_data['animal_id'], $valid_data['keeping_purpose']);
-
-        $animal_data = DataAnimals::animal_data($valid_data['animal_id']);
-
+        //получаем новые данные животного
+        $animal_data = DataAnimals::animalData($valid_data['animal_id']);
+        //заполняем секции для виджетов
         $valid_data['data_sections'] = ['main','gen','base','mark','genealogy','vib','registration','history'];
-
+        //получаем данные средств маркирования
         $mark_data = false;
-        if (in_array('mark', $valid_data['data_sections'])) $mark_data = DataAnimalsCodes::animal_mark_data($valid_data['animal_id']);
-
+        if (in_array('mark', $valid_data['data_sections'])) $mark_data = DataAnimalsCodes::animalMarkData($valid_data['animal_id']);
+        //получаем информацию о пользователе
         $user = auth()->user();
-
+        //собираем коллекцию для ответа
         $data = collect([
             'user_id' => $user['user_id'],
             'animal_data' => $animal_data,

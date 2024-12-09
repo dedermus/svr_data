@@ -231,7 +231,7 @@ class ApiApplicationsController extends Controller
 		{
 			$animals_ids		= $valid_data['animal_id'];
 		}else{
-			$animals_list		= $model->animals_list(999999999, 1, true, $valid_data['filter'], $valid_data);
+			$animals_list		= $model->animalsList(999999999, 1, true, $valid_data['filter'], $valid_data);
 
 			if($animals_list)
 			{

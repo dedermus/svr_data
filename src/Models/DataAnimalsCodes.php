@@ -233,7 +233,7 @@ class DataAnimalsCodes extends Model
      * @param $animal_id
      * @return mixed[]
      */
-    public static function animal_mark_data($animal_id): array
+    public static function animalMarkData($animal_id): array
     {
         return DB::table(self::getTableName() . ' AS t_animal_codes')
             ->leftJoin(DirectoryMarkTypes::getTableName() .' AS t_mark_type', 't_mark_type.mark_type_id', '=', 't_animal_codes.code_type_id')
@@ -263,7 +263,7 @@ class DataAnimalsCodes extends Model
      * @param $code_id
      * @return object|null
      */
-    public static function mark_data($code_id): ?object
+    public static function markData($code_id): ?object
     {
         $mark_data = DB::table(self::getTableName() . ' AS t_animal_codes')
             ->leftJoin(DirectoryMarkTypes::getTableName() . ' AS t_mark_type', 't_mark_type.mark_type_id',  '=', 't_animal_codes.code_type_id')
@@ -339,7 +339,7 @@ class DataAnimalsCodes extends Model
      * @param int    $width               Новая ширина изображения.
      * @param int    $height              Новая высота изображения.
      */
-    public function image_resize(string $original_image_name, string $new_message_name, string $image_path, int $width, int $height): bool|string
+    public function imageResize(string $original_image_name, string $new_message_name, string $image_path, int $width, int $height): bool|string
     {
         $image = new Zebra_Image();
         $image->source_path = Storage::disk($this->diskMarkPhoto)->path($this->pathMarkPhoto.$original_image_name);
@@ -399,12 +399,45 @@ class DataAnimalsCodes extends Model
 
         $image_name = str_replace('.' . $extension, '_resized.'.$this->markPhotoExp, $filenamebild);
 
-        $this->image_resize($filenamebild, $image_name, $this->pathMarkPhoto, 800, 800);
+        $this->imageResize($filenamebild, $image_name, $this->pathMarkPhoto, 800, 800);
 
         if (Storage::exists($this->pathMarkPhoto . $filenamebild) && !is_null($filenamebild)) {
             Storage::delete($this->pathMarkPhoto . $filenamebild);
         }
 
         return str_replace('.' . $extension, '', $filenamebild);
+    }
+
+    /**
+     * Формируем массив справочников для средств маркирования
+     * @param $mark_data
+     * @return array
+     */
+    public static function getDirectories($mark_data): array
+    {
+        $list_directories = [];
+        $mark_types_ids = array_filter([$mark_data['mark_type_id']]);
+        if (count($mark_types_ids) > 0) {
+            $list_directories['mark_types_list'] = DirectoryMarkTypes::find($mark_types_ids);
+        }
+
+        $mark_statuses_ids = array_filter([$mark_data['mark_status_id']]);
+        if (count($mark_statuses_ids) > 0)
+        {
+            $list_directories['mark_statuses_list'] = DirectoryMarkStatuses::find($mark_statuses_ids);
+        }
+
+        $mark_tool_types_ids = array_filter([$mark_data['mark_tool_type_id']]);
+        if (count($mark_tool_types_ids) > 0)
+        {
+            $list_directories['mark_tool_types_list'] = DirectoryMarkToolTypes::find($mark_tool_types_ids);
+        }
+
+        $mark_tools_locations_ids = array_filter([$mark_data['tool_location_id']]);
+        if (count($mark_tools_locations_ids) > 0)
+        {
+            $list_directories['mark_tools_locations_list'] = DirectoryToolsLocations::find($mark_tools_locations_ids);
+        }
+        return $list_directories;
     }
 }
