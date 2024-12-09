@@ -8,13 +8,16 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Svr\Core\Enums\SystemStatusDeleteEnum;
+use Svr\Core\Models\SystemUsers;
 use Svr\Core\Traits\GetTableName;
 use Svr\Directories\Models\DirectoryMarkStatuses;
 use Svr\Directories\Models\DirectoryMarkToolTypes;
 use Svr\Directories\Models\DirectoryMarkTypes;
 use Svr\Directories\Models\DirectoryToolsLocations;
+use Zebra_Image;
 
 class DataAnimalsCodes extends Model
 {
@@ -97,6 +100,24 @@ class DataAnimalsCodes extends Model
 	protected $hidden								= [
 		'created_at',
 	];
+
+    /**
+     * Путь до папки с фото средств маркирования
+     * @var string
+     */
+    protected string $pathMarkPhoto = 'images/mark_photo/';
+
+    /**
+     * Расширение фото средства маркирования
+     * @var string
+     */
+    protected string $markPhotoExp = 'jpg';
+
+    /**
+     * Диск хранения
+     * @var string
+     */
+    protected string $diskMarkPhoto = 'local';
 
 
 	/**
@@ -276,5 +297,114 @@ class DataAnimalsCodes extends Model
             ->where('code_type_id', '=', $code_type_id)
             ->whereIn('animal_id', $animals_id)
             ->update($data_for_update);
+    }
+
+    /**
+     * Подготовка удаления фото с диска
+     * @param $request
+     *
+     * @return bool
+     */
+    public function deleteMarkPhoto($request): bool
+    {
+        $data = $request->all();
+        $id = $data['mark_id'] ?? null;
+        $res = $id ? self::findOrFail($id)->toArray() : [];
+        return $this->eraseMarkPhoto($res['code_tool_photo']);
+    }
+
+    /**
+     * Удаление фото с диска
+     * @param $photo
+     *
+     * @return bool
+     */
+    public function eraseMarkPhoto($photo): bool
+    {
+        if (empty(trim($photo))) return false;
+
+        $path = $this->pathMarkPhoto .$photo.'_resized.'.$this->markPhotoExp;
+        if (Storage::exists( $path)) {
+            Storage::delete( $path);
+        }
+        return true;
+    }
+
+    /**
+     * Изменяет размер изображения на указанную ширину и высоту.
+     *
+     * @param string $original_image_name Название исходного файла изображения.
+     * @param string $new_message_name    Название измененного файла изображения.
+     * @param string $image_path          Путь к файлам изображения.
+     * @param int    $width               Новая ширина изображения.
+     * @param int    $height              Новая высота изображения.
+     */
+    public function image_resize(string $original_image_name, string $new_message_name, string $image_path, int $width, int $height): bool|string
+    {
+        $image = new Zebra_Image();
+        $image->source_path = Storage::disk($this->diskMarkPhoto)->path($this->pathMarkPhoto.$original_image_name);
+        $image->target_path = Storage::disk($this->diskMarkPhoto)->path($this->pathMarkPhoto.$new_message_name);
+        if (!$image->resize($width, $height, ZEBRA_IMAGE_NOT_BOXED)) {
+            switch ($image->error) {
+                case 1:
+                    return 'Файл не существует';
+                    break;
+                case 2:
+                    return 'Файл не является изображением';
+                    break;
+                case 3:
+                    return 'Не удалось сохранить изображение';
+                    break;
+                case 4:
+                    return 'Неподдерживаемый тип исходного изображения';
+                    break;
+                case 5:
+                    return 'Неподдерживаемый тип изменяемого изображения';
+                    break;
+                case 6:
+                    return 'Библиотека GD не поддерживает тип изображения';
+                    break;
+                case 7:
+                    return 'Библиотека GD не установлена';
+                    break;
+                case 8:
+                    return 'Команда "chmod" отключена в конфигурации PHP';
+                    break;
+                case 9:
+                    return 'Функция "exif_read_data" недоступна';
+                    break;
+            }
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Добавляем фото средства маркирования
+     * @param $request
+     * @return array|string|string[]
+     */
+    public function addFileMarkPhoto($request)
+    {
+        $this->deleteMarkPhoto($request);
+
+        $filenameWithExt = $request->file('mark_photo')->getClientOriginalName();
+        $filename = pathinfo($filenameWithExt, PATHINFO_FILENAME);
+        $extension = $request->file('mark_photo')->getClientOriginalExtension();
+        $filenamebild = $filename . "_" . time() . "." . $extension;
+        $fileNameToStore = $this->pathMarkPhoto . $filenamebild;
+        $request->file('mark_photo')->storeAs($fileNameToStore);
+
+        $image_name = str_replace('.' . $extension, '_resized.'.$this->markPhotoExp, $filenamebild);
+
+        $this->image_resize($filenamebild, $image_name, $this->pathMarkPhoto, 800, 800);
+
+        if (Storage::exists($this->pathMarkPhoto . $filenamebild) && !is_null($filenamebild)) {
+            Storage::delete($this->pathMarkPhoto . $filenamebild);
+        }
+
+        return str_replace('.' . $extension, '', $filenamebild);
     }
 }
