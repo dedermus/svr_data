@@ -750,7 +750,7 @@ class DataAnimals extends Model
 
         $where_view .= $this->createFilterRestrictions($valid_data);
 
-        if (isset($filters_list['application_id']) && count($filters_list['application_id']) > 0) {
+        if (count($filters_list['application_id']) > 0) {
             $application_left_join = ' LEFT JOIN ' .DataApplicationsAnimals::getTableName(). ' t_application_animal ON
 										t_application_animal.animal_id = t_animal.animal_id AND
 										t_application_animal.application_id IN (' . implode(',', $filters_list['application_id']) . ')';
@@ -768,14 +768,16 @@ class DataAnimals extends Model
 
         $where = ' ';
 
-        if (count($filters_list) > 0) {
+        if (count($filters_list) > 0)
+        {
             $where .= $this->createFilterSql($filters_list);
         }
 
         if ($only_enabled) $where .= " AND t_animal.animal_status = 'enabled' ";
 
         $order_string = '';
-        if ($user['order_field'] !== false && array_key_exists($user['order_field'], $this->columns_list)) {
+        if ($user['order_field'] !== false && array_key_exists($user['order_field'], $this->columns_list))
+        {
             $order_field = $user['order_field'];
             if ($this->columns_list[$order_field]['order_field'] !== false) $order_field = $this->columns_list[$order_field]['order_field'];
             $order_string = ' ORDER BY ' . $order_field . ' ' . $user['order_direction'];

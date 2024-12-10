@@ -164,8 +164,7 @@ class ApiAnimalsController extends Controller
         ]);
 
         $valid_data = $validator->validated();
-
-        if (!isset($valid_data[''])) $valid_data['filter'] = [];
+        if (!isset($valid_data['filter'])) $valid_data['filter'] = [];
 
         $user = auth()->user();
 
