@@ -25,7 +25,8 @@ class SvrApiBreedsListResource extends JsonResource
     public function toArray(Request|Collection $request): array
     {
         $returned_data = [];
-        foreach ($this->resource as $value)
+        $items_list = $this->resource['breeds_list'] ?? $this->resource;
+        foreach ($items_list as $value)
         {
             $returned_data[$value->breed_id] = new SvrApiBreedsResource(collect($value));
         }

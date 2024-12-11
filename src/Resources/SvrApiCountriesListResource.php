@@ -25,7 +25,8 @@ class SvrApiCountriesListResource extends JsonResource
     public function toArray(Request|Collection $request): array
     {
         $returned_data = [];
-        foreach ($this->resource as $value)
+        $items_list = $this->resource['countries_list'] ?? $this->resource;
+        foreach ($items_list as $value)
         {
             $returned_data[$value->country_id] = new SvrApiCountriesResource(collect($value));
         }

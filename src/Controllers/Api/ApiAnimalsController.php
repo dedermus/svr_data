@@ -6,7 +6,6 @@ use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -26,17 +25,13 @@ use Svr\Data\Resources\SvrApiAnimalsListMarkResource;
 use Svr\Data\Resources\SvrApiAnimalsListResource;
 use Svr\Directories\Models\DirectoryAnimalsBreeds;
 use Svr\Directories\Models\DirectoryAnimalsSpecies;
-use Svr\Directories\Models\DirectoryCountries;
 use Svr\Directories\Models\DirectoryCountriesRegion;
 use Svr\Directories\Models\DirectoryCountriesRegionsDistrict;
-use Svr\Directories\Models\DirectoryGenders;
 use Svr\Directories\Models\DirectoryKeepingPurposes;
 use Svr\Directories\Models\DirectoryKeepingTypes;
 use Svr\Directories\Models\DirectoryMarkStatuses;
 use Svr\Directories\Models\DirectoryMarkToolTypes;
 use Svr\Directories\Models\DirectoryMarkTypes;
-use Svr\Directories\Models\DirectoryOutBasises;
-use Svr\Directories\Models\DirectoryOutTypes;
 use Svr\Directories\Models\DirectoryToolsLocations;
 
 class ApiAnimalsController extends Controller
