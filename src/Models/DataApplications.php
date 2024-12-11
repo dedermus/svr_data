@@ -282,7 +282,7 @@ class DataApplications extends Model
 
 	public static function applicationsAnimalAdd($animal_id)
 	{
-		$animal_data				= DataAnimals::animal_data($animal_id);
+		$animal_data				= DataAnimals::animalData($animal_id);
 
 		if(is_null($animal_data))
 		{
