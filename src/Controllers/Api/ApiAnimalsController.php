@@ -6,6 +6,7 @@ use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -89,11 +90,6 @@ class ApiAnimalsController extends Controller
             'message' => '',
             'response_resource_data' => SvrApiAnimalsDataResource::class,
             'response_resource_dictionary' => SvrApiAnimalsDataDictionaryResource::class,
-            'pagination' => [
-                'total_records' => 1,
-                'cur_page' => 1,
-                'per_page' => 1
-            ],
         ]);
 
         //отдаем ресурс с ответом
@@ -164,9 +160,7 @@ class ApiAnimalsController extends Controller
         $user = auth()->user();
 
         //получаем список животных по желаемым фильтрам с пагинацией и количество животных
-        $dataAnimalsModel = new DataAnimals();
-        $animals_list = $dataAnimalsModel->animalsList($user['pagination_per_page'], $user['pagination_cur_page'], false, $valid_data['filter'], $valid_data);
-        $animals_count = $dataAnimalsModel->animals_count;
+        $animals_list = DataAnimals::animalsList(Config::get('per_page'), Config::get('cur_page'), false, $valid_data['filter'], $valid_data);
 
         //если список пустой - выкидываем эксепшон
         if ($animals_list === false)
@@ -201,11 +195,6 @@ class ApiAnimalsController extends Controller
             'message' => '',
             'response_resource_data' => SvrApiAnimalsListResource::class,
             'response_resource_dictionary' => SvrApiAnimalsDataDictionaryResource::class,
-            'pagination' => [
-                'total_records' => $animals_count,
-                'cur_page' => $user['pagination_cur_page'],
-                'per_page' => $user['pagination_per_page']
-            ],
         ]);
 
         //возвращаем ресурс
@@ -284,11 +273,6 @@ class ApiAnimalsController extends Controller
             'message' => '',
             'response_resource_data' => SvrApiAnimalsListMarkResource::class,
             'response_resource_dictionary' => SvrApiAnimalsDataDictionaryResource::class,
-            'pagination' => [
-                'total_records' => 1,
-                'cur_page' => 1,
-                'per_page' => 1
-            ],
         ]);
         //передаем все в ресурс для ответа
         return new SvrApiResponseResource($data);
@@ -439,11 +423,6 @@ class ApiAnimalsController extends Controller
             'message' => 'Данные успешно обновлены',
             'response_resource_data' => false,
             'response_resource_dictionary' => false,
-            'pagination' => [
-                'total_records' => 1,
-                'cur_page' => 1,
-                'per_page' => 1
-            ],
         ]);
         //передаем все ресурсу ответа
         return new SvrApiResponseResource($data);
@@ -488,11 +467,6 @@ class ApiAnimalsController extends Controller
             'message' => '',
             'response_resource_data' => SvrApiAnimalsListMarkResource::class,
             'response_resource_dictionary' => SvrApiAnimalsDataDictionaryResource::class,
-            'pagination' => [
-                'total_records' => 1,
-                'cur_page' => 1,
-                'per_page' => 1
-            ],
         ]);
         //передаем данные в ресурс
         return new SvrApiResponseResource($data);
@@ -530,7 +504,6 @@ class ApiAnimalsController extends Controller
 
         //получаем информацию по текущему пользователю
         $user = auth()->user();
-
         //формируем коллекцию
         $data = collect([
             'user_id' => $user['user_id'],
@@ -541,11 +514,6 @@ class ApiAnimalsController extends Controller
             'message' => '',
             'response_resource_data' => SvrApiAnimalsListMarkResource::class,
             'response_resource_dictionary' => SvrApiAnimalsDataDictionaryResource::class,
-            'pagination' => [
-                'total_records' => 1,
-                'cur_page' => 1,
-                'per_page' => 1
-            ],
         ]);
         //передаем все в ресурс для формирования ответа
         return new SvrApiResponseResource($data);
@@ -589,11 +557,6 @@ class ApiAnimalsController extends Controller
             'message' => 'Поднадзорный объект успешно установлен',
             'response_resource_data' => false,
             'response_resource_dictionary' => false,
-            'pagination' => [
-                'total_records' => 1,
-                'cur_page' => 1,
-                'per_page' => 1
-            ],
         ]);
         //передаем данные в ресурс для формирования ответа
         return new SvrApiResponseResource($data);
@@ -637,11 +600,6 @@ class ApiAnimalsController extends Controller
             'message' => 'Поднадзорный объект успешно установлен',
             'response_resource_data' => false,
             'response_resource_dictionary' => false,
-            'pagination' => [
-                'total_records' => 1,
-                'cur_page' => 1,
-                'per_page' => 1
-            ],
         ]);
         //передаем данные в ресурс для формирования ответа
         return new SvrApiResponseResource($data);
@@ -788,11 +746,6 @@ class ApiAnimalsController extends Controller
             'message' => 'Данные успешно сохранены',
             'response_resource_data' => false,
             'response_resource_dictionary' => false,
-            'pagination' => [
-                'total_records' => 1,
-                'cur_page' => 1,
-                'per_page' => 1
-            ],
         ]);
         //передаем все ресурсу ответа
         return new SvrApiResponseResource($data);
@@ -847,11 +800,6 @@ class ApiAnimalsController extends Controller
             'message' => '',
             'response_resource_data' => SvrApiAnimalsDataResource::class,
             'response_resource_dictionary' => SvrApiAnimalsDataDictionaryResource::class,
-            'pagination' => [
-                'total_records' => 1,
-                'cur_page' => 1,
-                'per_page' => 1
-            ],
         ]);
         //передаем данные в ресурс для формирования ответа
         return new SvrApiResponseResource($data);
@@ -906,11 +854,6 @@ class ApiAnimalsController extends Controller
             'message' => '',
             'response_resource_data' => SvrApiAnimalsDataResource::class,
             'response_resource_dictionary' => SvrApiAnimalsDataDictionaryResource::class,
-            'pagination' => [
-                'total_records' => 1,
-                'cur_page' => 1,
-                'per_page' => 1
-            ],
         ]);
 
         return new SvrApiResponseResource($data);
