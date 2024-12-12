@@ -18,8 +18,18 @@ class SvrApiApplicationsListResource extends JsonResource
      */
     public function toArray(Request|Collection $request): array
     {
-        return [
-            'user_id' => $this->resource['user']['user_id'],
-        ];
+		$returned_data = [];
+
+		if(!is_array($this->resource['applications_list']) || count($this->resource['applications_list']) == 0)
+		{
+			return $returned_data;
+		}
+
+		foreach ($this->resource['applications_list'] as $item)
+		{
+			$returned_data[] = new SvrApiApplicationDataSimpleResource(['application_data' => $item]);
+		}
+
+		return $returned_data;
     }
 }

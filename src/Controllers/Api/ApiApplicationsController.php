@@ -7,17 +7,19 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Validation\Rule;
 
+use Svr\Core\Enums\ApplicationStatusEnum;
 use Svr\Core\Models\SystemRoles;
+use Svr\Core\Models\SystemUsers;
 use Svr\Core\Traits\GetDictionary;
 use Svr\Data\Models\DataAnimals;
 use Svr\Data\Models\DataApplications;
 use Svr\Core\Resources\SvrApiResponseResource;
 
+use Svr\Data\Models\DataCompanies;
 use Svr\Data\Resources\SvrApiApplicationsListResource;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Svr\Data\Resources\SvrApiApplicationsListDictionaryResource;
 use Svr\Core\Exceptions\CustomException;
 
-use Svr\Core\Enums\AnimalRegisterStatusEnum;
 use Svr\Core\Enums\ApplicationAnimalStatusEnum;
 use Svr\Core\Enums\SystemStatusEnum;
 use Svr\Data\Models\DataCompaniesLocations;
@@ -34,11 +36,12 @@ class ApiApplicationsController extends Controller
 {
 	use GetDictionary;
 
-    /**
-     * Получение информации о пользователе.
-     *
-     * @return SvrApiResponseResource|JsonResponse
-     */
+	/**
+	 * Получение информации о заявке.
+	 *
+	 * @return SvrApiResponseResource|JsonResponse
+	 * @throws CustomException
+	 */
     public function applicationsData(Request $request): SvrApiResponseResource|JsonResponse
     {
         /** @var  $user - получим авторизированного пользователя */
@@ -66,7 +69,7 @@ class ApiApplicationsController extends Controller
             'user_id'						=> $user['user_id'],
             'status'						=> true,
             'message'						=> '',
-			'animals_list'					=> $animals->animals_list(999999999, 1, true, [
+			'animals_list'					=> $animals->animalsList(999999999, 1, true, [
 				'application_id'				=> $application_data->application_id,
 			], []),
             'response_resource_data'		=> SvrApiApplicationDataResource::class,
@@ -82,7 +85,11 @@ class ApiApplicationsController extends Controller
     }
 
 
-
+	/**
+	 * Изменение статуса заявки
+	 *
+	 * @throws CustomException
+	 */
 	public function applicationsStatus(Request $request): SvrApiResponseResource|JsonResponse
 	{
 		/** @var  $user - получим авторизированного пользователя */
@@ -160,7 +167,7 @@ class ApiApplicationsController extends Controller
 			'user_id'						=> $user['user_id'],
 			'status'						=> true,
 			'message'						=> '',
-			'animals_list'					=> $animals->animals_list(999999999, 1, true, [
+			'animals_list'					=> $animals->animalsList(999999999, 1, true, [
 				'application_id'				=> $application_data['application_id'],
 			], []),
 			'response_resource_data'		=> SvrApiApplicationDataResource::class,
@@ -176,6 +183,11 @@ class ApiApplicationsController extends Controller
 	}
 
 
+	/**
+	 * Добавление животного в заявку
+	 *
+	 * @throws CustomException
+	 */
 	public function applicationsAnimalAdd(Request $request): SvrApiResponseResource|JsonResponse
 	{
 		/** @var  $user - получим авторизированного пользователя */
@@ -281,6 +293,11 @@ class ApiApplicationsController extends Controller
 	}
 
 
+	/**
+	 * Удаление животного из заявки
+	 *
+	 * @throws CustomException
+	 */
 	public function applicationsAnimalDelete(Request $request): SvrApiResponseResource|JsonResponse
 	{
 		/** @var  $user - получим авторизированного пользователя */
@@ -356,75 +373,61 @@ class ApiApplicationsController extends Controller
 	}
 
 
-
-
+	/**
+	 * Список заявок
+	 *
+	 * @throws CustomException
+	 */
 	public function applicationsList(Request $request): SvrApiResponseResource|JsonResponse
 	{
 		/** @var  $user - получим авторизированного пользователя */
 		$user						= auth()->user();
-		$valid_data 				= $request->validate(
-			[
-				'search'                                 		=> ['string', 'max:255'],
-				'company_location_id'                           => ['int', Rule::exists(DataCompaniesLocations::class, 'company_location_id')],
-				'company_region_id'                            	=> ['int', Rule::exists(DirectoryCountriesRegion::class, 'region_id')],
-				'company_district_id'                          	=> ['int', Rule::exists(DirectoryCountriesRegionsDistrict::class, 'district_id')],
-				'animal_id'                               		=> ['array'],
-				'filter'                                        => ['array'],
-				'filter.animal_sex'                             => ['string', Rule::in(['male','female','MALE','FEMALE'])],
-				'filter.specie_id'                              => ['int', Rule::exists(DirectoryAnimalsSpecies::class, 'specie_id')],
-				'filter.animal_date_birth_min'                  => ['date'],
-				'filter.animal_date_birth_max'                  => ['date'],
-				'filter.breeds_id'                              => ['int', Rule::exists(DirectoryAnimalsBreeds::class, 'breed_id')],
-				'filter.application_id'                         => ['int', Rule::exists(DataApplications::class, 'application_id')],
-				'filter.animal_status'                          => ['string', Rule::in(SystemStatusEnum::get_option_list())],
-				'filter.animal_date_create_record_svr_min'      => ['date'],
-				'filter.animal_date_create_record_svr_max'      => ['date'],
-				'filter.animal_date_create_record_herriot_min'  => ['date'],
-				'filter.animal_date_create_record_herriot_max'  => ['date'],
-				'filter.application_animal_status'              => ['string', Rule::in(ApplicationAnimalStatusEnum::get_option_list())],
-				'filter.search_inv'                             => ['string', 'max:20'],
-				'filter.search_unsm'                            => ['string', 'max:11'],
-				'filter.search_horriot_number'                  => ['string', 'max:14'],
-			]);
+		$applications				= new DataApplications();
+		$valid_data 				= $request->validate([
+			'search'                                 		=> ['string', 'max:255'],
+			'filter'                                        => ['array'],
+			'filter.application_id'                         => ['int', Rule::exists(DataApplications::class, 'application_id')],
+			'filter.user_id'                         		=> ['int', Rule::exists(SystemUsers::class, 'user_id')],
+			'filter.company_id'                         	=> ['int', Rule::exists(DataCompanies::class, 'company_id')],
+			'filter.company_district_id'					=> ['int', Rule::exists(DirectoryCountriesRegionsDistrict::class, 'district_id')],
+			'filter.application_status'                     => ['string', Rule::in(ApplicationStatusEnum::get_option_list())],
+			'filter.application_date_create_min'			=> ['date'],
+			'filter.application_date_create_max'			=> ['date'],
+			'filter.application_date_registration_min'		=> ['date'],
+			'filter.application_date_registration_max'		=> ['date']
+		]);
 
-//		$application_data			= DataApplications::applicationData(false, true, false);
-//		$animal_data				= DataAnimals::animal_data($valid_data['animal_id']);
-//
-//		if(!empty($animal_data['application_animal_status']))
-//		{
-//			switch($animal_data['application_animal_status'])
-//			{
-//				case 'added':
-//				case 'in_application':
-//				case 'registered':
-//				case 'rejected':
-//				case 'finished':
-//					// можно удалять
-//				break;
-//				case 'sent':
-//					throw new CustomException('Животное уже отправлено на регистрацию', 200);
-//				break;
-//			}
-//		}
-//
-//		DataApplicationsAnimals::find($animal_data['application_animal_id'])->delete();
+		if(!isset($valid_data['filter']))
+		{
+			$valid_data['filter']			= [];
+		}
 
+		if(!isset($valid_data['search']))
+		{
+			$valid_data['search']			= '';
+		}
+
+		$applications_list					= $applications->applicationsList($user['pagination_per_page'], $user['pagination_cur_page'], $valid_data['filter'], $valid_data['search']);
+		$users_ids							= [];
+
+		if($applications_list && !is_null($applications_list))
+		{
+			$users_ids							= array_column($applications_list, 'user_id');
+		}
 
 		$data				= collect([
 			'application_status'			=> self::DictionaryApplicationStatus(),
-			'users_list'					=> '',
+			'users_list'					=> SystemUsers::getListUser($users_ids),
 			'user_id'						=> $user['user_id'],
 			'status'						=> true,
 			'message'						=> '',
-			'applications_list'					=> $animals->animals_list(999999999, 1, true, [
-				'application_id'				=> $application_data['application_id'],
-			], []),
+			'applications_list'				=> $applications_list,
 			'response_resource_data'		=> SvrApiApplicationsListResource::class,
 			'response_resource_dictionary'	=> SvrApiApplicationsListDictionaryResource::class,
 			'pagination'					=> [
-				'total_records'					=> 1,
-				'cur_page'						=> 1,
-				'per_page'						=> 1
+				'total_records'					=> $applications->applications_count,
+				'cur_page'						=> $user['pagination_cur_page'],
+				'per_page'						=> $user['pagination_per_page']
 			],
 		]);
 

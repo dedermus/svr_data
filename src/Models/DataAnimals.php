@@ -711,7 +711,7 @@ class DataAnimals extends Model
      */
     public static function animalsList($count_per_page, $page_number, $only_enabled = true, $filters_list = [], $valid_data = ''): false|array
     {
-        //TODO: Тут сейчас будет ерунда, надо будет переделать когда появится осознание
+        //TODO: Тут сейчас будет ерунда, надо будет переделать когда появится сознание
         if (!isset($filters_list)) $filters_list = [];
         if (!isset($filters_list['specie_id']))
         {
