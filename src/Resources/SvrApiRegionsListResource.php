@@ -5,9 +5,8 @@ namespace Svr\Data\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Collection;
-use Svr\Core\Resources\SvrApiUserDistrictResource;
 
-class SvrApiBreedsListResource extends JsonResource
+class SvrApiRegionsListResource extends JsonResource
 {
     /**
      * Указывает, следует ли сохранить ключи коллекции ресурса.
@@ -25,10 +24,10 @@ class SvrApiBreedsListResource extends JsonResource
     public function toArray(Request|Collection $request): array
     {
         $returned_data = [];
-        $items_list = $this->resource['breeds_list'] ?? $this->resource;
+        $items_list = $this->resource['regions_list'] ?? $this->resource;
         foreach ($items_list as $value)
         {
-            $returned_data[$value->breed_id] = new SvrApiBreedsResource(collect($value));
+            $returned_data[$value->region_id] = new SvrApiRegionsResource(collect($value));
         }
         return $returned_data;
     }

@@ -25,7 +25,8 @@ class SvrApiSpeciesListResource extends JsonResource
     public function toArray(Request|Collection $request): array
     {
         $returned_data = [];
-        foreach ($this->resource as $value)
+        $items_list = $this->resource['species_list'] ?? $this->resource;
+        foreach ($items_list as $value)
         {
             $returned_data[$value->specie_id] = new SvrApiSpeciesResource(collect($value));
         }

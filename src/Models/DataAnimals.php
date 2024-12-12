@@ -3,8 +3,8 @@
 namespace Svr\Data\Models;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
-use Svr\Core\Enums\ApplicationStatusEnum;
 use Svr\Core\Models\SystemRoles;
 use Svr\Core\Traits\GetTableName;
 use Svr\Core\Traits\GetValidationRules;
@@ -37,11 +37,8 @@ class DataAnimals extends Model
     use HasFactory;
 	use GetValidationRules;
 
-    //количество животных для метода лист
-    public int $animals_count = 0;
-
     // список колонок, участвующих в поиске и сортировке (метод list)
-    private array $columns_list = [
+    private static array $columns_list = [
         'animal_rshn' => [
             'column_name' => ['t_animal_rshn.code_value'],
             'to_lower' => true,
@@ -710,9 +707,9 @@ class DataAnimals extends Model
      * @param bool $only_enabled
      * @param array $filters_list
      * @param string $valid_data
-     * @return array
+     * @return false|array
      */
-    public function animalsList($count_per_page, $page_number, $only_enabled = true, $filters_list = [], $valid_data = '')
+    public static function animalsList($count_per_page, $page_number, $only_enabled = true, $filters_list = [], $valid_data = ''): false|array
     {
         //TODO: Тут сейчас будет ерунда, надо будет переделать когда появится осознание
         if (!isset($filters_list)) $filters_list = [];
@@ -748,7 +745,7 @@ class DataAnimals extends Model
 
         $where_view = " animal_status_delete = 'active' ";
 
-        $where_view .= $this->createFilterRestrictions($valid_data);
+        $where_view .= self::createFilterRestrictions($valid_data);
 
         if (count($filters_list['application_id']) > 0) {
             $application_left_join = ' LEFT JOIN ' .DataApplicationsAnimals::getTableName(). ' t_application_animal ON
@@ -770,16 +767,16 @@ class DataAnimals extends Model
 
         if (count($filters_list) > 0)
         {
-            $where .= $this->createFilterSql($filters_list);
+            $where .= self::createFilterSql($filters_list);
         }
 
         if ($only_enabled) $where .= " AND t_animal.animal_status = 'enabled' ";
 
         $order_string = '';
-        if ($user['order_field'] !== false && array_key_exists($user['order_field'], $this->columns_list))
+        if ($user['order_field'] !== false && array_key_exists($user['order_field'], self::$columns_list))
         {
             $order_field = $user['order_field'];
-            if ($this->columns_list[$order_field]['order_field'] !== false) $order_field = $this->columns_list[$order_field]['order_field'];
+            if (self::$columns_list[$order_field]['order_field'] !== false) $order_field = self::$columns_list[$order_field]['order_field'];
             $order_string = ' ORDER BY ' . $order_field . ' ' . $user['order_direction'];
         }
 
@@ -893,7 +890,7 @@ class DataAnimals extends Model
         foreach ($animals_list as &$animal_data)
         {
             $animal_data = (array)$animal_data;
-            $animal_data['animal_registration_available'] = $this->animalRegistrationAvailable($animal_data);
+            $animal_data['animal_registration_available'] = self::animalRegistrationAvailable($animal_data);
         }
         $animals_count_query = 'SELECT COUNT(*) AS cnt FROM (SELECT DISTINCT ON (t_animal.animal_id)
     				t_animal.animal_id
@@ -928,7 +925,7 @@ class DataAnimals extends Model
 
         $animals_count = DB::select($animals_count_query);
 
-        $this->animals_count = ((array)$animals_count[0])['cnt'];
+        Config::set('total_records', ((array)$animals_count[0])['cnt']);
 
         return $animals_list;
     }
@@ -938,7 +935,7 @@ class DataAnimals extends Model
      * @param $filters_list
      * @return string
      */
-    private function createFilterSql($filters_list): string
+    private static function createFilterSql($filters_list): string
     {
         if (isset($filters_list['animal_date_create_record_herriot_min'])) $filters_list['animal_date_create_record_herriot_min'] = date('Y-m-d', strtotime($filters_list['animal_date_create_record_herriot_min']));
         if (isset($filters_list['animal_date_create_record_herriot_max'])) $filters_list['animal_date_create_record_herriot_max'] = date('Y-m-d', strtotime($filters_list['animal_date_create_record_herriot_max']));
