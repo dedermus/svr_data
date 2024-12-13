@@ -25,9 +25,10 @@ class SvrApiOutBasisesListResource extends JsonResource
     public function toArray(Request|Collection $request): array
     {
         $returned_data = [];
-        foreach ($this->resource as $value)
+        $items = $this->resource['out_basises_list'] ?? $this->resource;
+        foreach ($items as $value)
         {
-            $returned_data[$value->out_basise_id] = new SvrApiOutBasisesResource(collect($value));
+            $returned_data[$value->out_basis_id] = new SvrApiOutBasisesResource(collect($value));
         }
         return $returned_data;
     }

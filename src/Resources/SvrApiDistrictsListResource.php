@@ -5,9 +5,8 @@ namespace Svr\Data\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Collection;
-use Svr\Core\Resources\SvrApiUserDistrictResource;
 
-class SvrApiKeepingTypesListResource extends JsonResource
+class SvrApiDistrictsListResource extends JsonResource
 {
     /**
      * Указывает, следует ли сохранить ключи коллекции ресурса.
@@ -25,10 +24,10 @@ class SvrApiKeepingTypesListResource extends JsonResource
     public function toArray(Request|Collection $request): array
     {
         $returned_data = [];
-        $items = $this->resource['keeping_types_list'] ?? $this->resource;
-        foreach ($items as $value)
+        $items_list = $this->resource['districts_list'] ?? $this->resource;
+        foreach ($items_list as $value)
         {
-            $returned_data[$value->keeping_type_id] = new SvrApiKeepingTypesResource(collect($value));
+            $returned_data[$value->district_id] = new SvrApiDistrictsResource(collect($value));
         }
         return $returned_data;
     }

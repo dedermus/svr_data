@@ -25,7 +25,8 @@ class SvrApiKeepingPurposesListResource extends JsonResource
     public function toArray(Request|Collection $request): array
     {
         $returned_data = [];
-        foreach ($this->resource as $value)
+        $items = $this->resource['keeping_purposes_list'] ?? $this->resource;
+        foreach ($items as $value)
         {
             $returned_data[$value->keeping_purpose_id] = new SvrApiKeepingPurposesResource(collect($value));
         }
