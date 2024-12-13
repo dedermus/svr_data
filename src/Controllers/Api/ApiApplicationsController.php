@@ -15,6 +15,8 @@ use Svr\Data\Models\DataAnimals;
 use Svr\Data\Models\DataApplications;
 use Svr\Core\Resources\SvrApiResponseResource;
 
+use Illuminate\Support\Facades\Config;
+
 use Svr\Data\Models\DataCompanies;
 use Svr\Data\Resources\SvrApiApplicationsListResource;
 use Svr\Data\Resources\SvrApiApplicationsListDictionaryResource;
@@ -47,7 +49,6 @@ class ApiApplicationsController extends Controller
         /** @var  $user - получим авторизированного пользователя */
         $user				= auth()->user();
 		$model				= new DataApplications();
-		$animals			= new DataAnimals();
 		$filterKeys			= ['application_id'];
 		$rules				= $model->getFilterValidationRules($request, $filterKeys);
 		$messages			= $model->getFilterValidationMessages($filterKeys);
@@ -69,16 +70,11 @@ class ApiApplicationsController extends Controller
             'user_id'						=> $user['user_id'],
             'status'						=> true,
             'message'						=> '',
-			'animals_list'					=> $animals->animalsList(999999999, 1, true, [
+			'animals_list'					=> DataAnimals::animalsList(999999999, 1, true, [
 				'application_id'				=> $application_data->application_id,
 			], []),
             'response_resource_data'		=> SvrApiApplicationDataResource::class,
-            'response_resource_dictionary'	=> SvrApiApplicationDataDictionaryResource::class,
-            'pagination'					=> [
-                'total_records'					=> 1,
-                'cur_page'						=> 1,
-                'per_page'						=> 1
-            ],
+            'response_resource_dictionary'	=> SvrApiApplicationDataDictionaryResource::class
         ]);
 
         return new SvrApiResponseResource($data);
@@ -95,7 +91,6 @@ class ApiApplicationsController extends Controller
 		/** @var  $user - получим авторизированного пользователя */
 		$user				= auth()->user();
 		$model				= new DataApplications();
-		$animals			= new DataAnimals();
 		$filterKeys			= ['application_id', 'application_status'];
 		$rules				= $model->getFilterValidationRules($request, $filterKeys);
 		$messages			= $model->getFilterValidationMessages($filterKeys);
@@ -167,16 +162,11 @@ class ApiApplicationsController extends Controller
 			'user_id'						=> $user['user_id'],
 			'status'						=> true,
 			'message'						=> '',
-			'animals_list'					=> $animals->animalsList(999999999, 1, true, [
+			'animals_list'					=> DataAnimals::animalsList(999999999, 1, true, [
 				'application_id'				=> $application_data['application_id'],
 			], []),
 			'response_resource_data'		=> SvrApiApplicationDataResource::class,
-			'response_resource_dictionary'	=> SvrApiApplicationDataDictionaryResource::class,
-			'pagination'					=> [
-				'total_records'					=> 1,
-				'cur_page'						=> 1,
-				'per_page'						=> 1
-			],
+			'response_resource_dictionary'	=> SvrApiApplicationDataDictionaryResource::class
 		]);
 
 		return new SvrApiResponseResource($data);
@@ -192,7 +182,6 @@ class ApiApplicationsController extends Controller
 	{
 		/** @var  $user - получим авторизированного пользователя */
 		$user				= auth()->user();
-		$model				= new DataAnimals();
 
 		$animal_add_message			= '';
 		$animal_add_result			= [
@@ -231,7 +220,7 @@ class ApiApplicationsController extends Controller
 		{
 			$animals_ids		= $valid_data['animal_id'];
 		}else{
-			$animals_list		= $model->animalsList(999999999, 1, true, $valid_data['filter'], $valid_data);
+			$animals_list		= DataAnimals::animalsList(999999999, 1, true, $valid_data['filter'], $valid_data);
 
 			if($animals_list)
 			{
@@ -256,14 +245,16 @@ class ApiApplicationsController extends Controller
 			}
 		}
 
+		$animal_add_message							= '';
+
 		if($animal_add_result['success'] > 0)
 		{
-			$animal_add_message						= 'Добавлено животных: '.$animal_add_result['success'];
+			$animal_add_message						.= 'Добавлено животных: '.$animal_add_result['success'];
 		}
 
 		if($animal_add_result['errors'] > 0)
 		{
-			$animal_add_message						= '; Ошибок: '.$animal_add_result['errors'];
+			$animal_add_message						.= '; Ошибок: '.$animal_add_result['errors'];
 		}
 
 		$application_data	= (array)DataApplications::applicationData(false, true, false);
@@ -281,12 +272,7 @@ class ApiApplicationsController extends Controller
 			'status'						=> true,
 			'message'						=> $animal_add_message,
 			'response_resource_data'		=> false,
-			'response_resource_dictionary'	=> false,
-			'pagination'					=> [
-				'total_records'					=> 1,
-				'cur_page'						=> 1,
-				'per_page'						=> 1
-			],
+			'response_resource_dictionary'	=> false
 		]);
 
 		return new SvrApiResponseResource($data);
@@ -361,12 +347,7 @@ class ApiApplicationsController extends Controller
 			'status'						=> true,
 			'message'						=> 'Животное успешно удалено из текущей заявки',
 			'response_resource_data'		=> false,
-			'response_resource_dictionary'	=> false,
-			'pagination'					=> [
-				'total_records'					=> 1,
-				'cur_page'						=> 1,
-				'per_page'						=> 1
-			],
+			'response_resource_dictionary'	=> false
 		]);
 
 		return new SvrApiResponseResource($data);
@@ -407,12 +388,12 @@ class ApiApplicationsController extends Controller
 			$valid_data['search']			= '';
 		}
 
-		$applications_list					= $applications->applicationsList($user['pagination_per_page'], $user['pagination_cur_page'], $valid_data['filter'], $valid_data['search']);
+		$applications_list					= $applications->applicationsList(Config::get('per_page'), Config::get('cur_page'), $valid_data['filter'], $valid_data['search']);
 		$users_ids							= [];
 
 		if($applications_list && !is_null($applications_list))
 		{
-			$users_ids							= array_column($applications_list, 'user_id');
+			$users_ids						= array_column($applications_list, 'user_id');
 		}
 
 		$data				= collect([
@@ -423,12 +404,7 @@ class ApiApplicationsController extends Controller
 			'message'						=> '',
 			'applications_list'				=> $applications_list,
 			'response_resource_data'		=> SvrApiApplicationsListResource::class,
-			'response_resource_dictionary'	=> SvrApiApplicationsListDictionaryResource::class,
-			'pagination'					=> [
-				'total_records'					=> $applications->applications_count,
-				'cur_page'						=> $user['pagination_cur_page'],
-				'per_page'						=> $user['pagination_per_page']
-			],
+			'response_resource_dictionary'	=> SvrApiApplicationsListDictionaryResource::class
 		]);
 
 		return new SvrApiResponseResource($data);

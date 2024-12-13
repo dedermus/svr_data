@@ -22,7 +22,6 @@ class SvrApiApplicationsListDictionaryResource extends JsonResource
     {
         return [
 			'application_status' 	=> $this->resource['application_status'] ?? [],
-//			'users_list'			=> $this->resource['users_list'] ?? []
 			'users_list'			=> new SvrApiUsersSimpleListResource($this->resource['users_list'])
         ];
     }

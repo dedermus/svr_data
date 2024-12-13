@@ -17,6 +17,8 @@ use Svr\Core\Traits\GetValidationRules;
 use Svr\Directories\Models\DirectoryCountriesRegion;
 use Svr\Directories\Models\DirectoryCountriesRegionsDistrict;
 
+use Illuminate\Support\Facades\Config;
+
 use Svr\Core\Exceptions\CustomException;
 
 class DataApplications extends Model
@@ -87,10 +89,6 @@ class DataApplications extends Model
 	protected $guarded								= [
 		'application_id',
 	];
-
-
-	//количество заявок для метода лист
-	public int $applications_count					= 0;
 
 
 	/**
@@ -349,13 +347,7 @@ class DataApplications extends Model
 	}
 
 
-
-
-
-
-
-
-	public function applicationsList($count_per_page, $page_number, $filter, $search_string)
+	public static function applicationsList($count_per_page, $page_number, $filter, $search_string)
 	{
 		$user				= auth()->user();
 		$params_data		= explode(' ', trim($search_string), -1);
@@ -495,7 +487,7 @@ class DataApplications extends Model
 				->whereRaw(self::createFilterSql($filter))
 				->get();
 
-			$this->applications_count			= count($applications_list_count);
+			Config::set('total_records', count($applications_list_count));
 
 			return $applications_list->toArray();
 		}else{
