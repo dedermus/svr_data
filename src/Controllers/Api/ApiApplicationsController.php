@@ -245,8 +245,6 @@ class ApiApplicationsController extends Controller
 			}
 		}
 
-		$animal_add_message							= '';
-
 		if($animal_add_result['success'] > 0)
 		{
 			$animal_add_message						.= 'Добавлено животных: '.$animal_add_result['success'];
@@ -293,7 +291,7 @@ class ApiApplicationsController extends Controller
 		]);
 
 		$application_data			= DataApplications::applicationData(false, true, false);
-		$animal_data				= DataAnimals::animal_data($valid_data['animal_id']);
+		$animal_data				= DataAnimals::animalData($valid_data['animal_id']);
 
 		if(is_null($application_data) || $application_data === false)
 		{
