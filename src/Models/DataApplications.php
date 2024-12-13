@@ -196,6 +196,10 @@ class DataApplications extends Model
     }
 
 
+	/**
+	 * Получить данные заявки
+	 * @return array
+	 */
 	public static function applicationData($application_id = false, $current = false, $create_new = true)
 	{
 		$user				= auth()->user();
@@ -261,6 +265,10 @@ class DataApplications extends Model
 	}
 
 
+	/**
+	 * Получить параметра запроса
+	 * @return array
+	 */
 	public static function appicationsFilterRestrictions()
 	{
 		$user_token_data	= auth()->user();
@@ -281,7 +289,10 @@ class DataApplications extends Model
 	}
 
 
-
+	/**
+	 * Добавление животного в заявку
+	 * @return array
+	 */
 	public static function applicationsAnimalAdd($animal_id)
 	{
 		$animal_data				= DataAnimals::animalData($animal_id);
@@ -347,6 +358,10 @@ class DataApplications extends Model
 	}
 
 
+	/**
+	 * Список заявок по параметрам и с фильтрами
+	 * @return array
+	 */
 	public static function applicationsList($count_per_page, $page_number, $filter, $search_string)
 	{
 		$user				= auth()->user();
@@ -496,6 +511,10 @@ class DataApplications extends Model
 	}
 
 
+	/**
+	 * Получить куска запроса с учетом фильтров
+	 * @return array
+	 */
 	private static function createFilterSql($filters_list)
 	{
 		if(isset($filters_list['application_date_create_min'])) $filters_list['application_date_create_min'] = date('Y-m-d', strtotime($filters_list['application_date_create_min']));
