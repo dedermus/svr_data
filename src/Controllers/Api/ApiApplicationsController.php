@@ -10,6 +10,7 @@ use Illuminate\Validation\Rule;
 use Svr\Core\Enums\ApplicationStatusEnum;
 use Svr\Core\Models\SystemRoles;
 use Svr\Core\Models\SystemUsers;
+use Svr\Core\Models\SystemUsersNotificationsMessages;
 use Svr\Core\Traits\GetDictionary;
 use Svr\Data\Models\DataAnimals;
 use Svr\Data\Models\DataApplications;
@@ -126,8 +127,7 @@ class ApiApplicationsController extends Controller
 					throw new CustomException('Нельзя завершить эту заявку', 200);
 				}
 
-				//TODO: ждем реализацию методов уведомлений
-//				(new module_Notifications)->notification_create('application_prepared', $this->USER('company_id'), false, $application_data);
+				(new SystemUsersNotifications())->notificationCreate('application_prepared', $application_data['company_id'], false, $application_data);
 
 				DataApplications::find($credentials['application_id'])->update(['application_status' => 'prepared']);
 			break;
@@ -143,8 +143,7 @@ class ApiApplicationsController extends Controller
 					throw new CustomException('У пользователя не установлены реквизиты Хорриота', 200);
 				}
 
-				//TODO: ждем реализацию методов уведомлений
-//				(new module_Notifications)->notification_create('application_sent', $this->USER('company_id'), false, $application_data);
+				(new SystemUsersNotifications())->notificationCreate('application_sent', $application_data['company_id'], false, $application_data);
 
 				DataApplications::find($credentials['application_id'])->update([
 					'application_status' => 'sent',
@@ -262,8 +261,7 @@ class ApiApplicationsController extends Controller
 			throw new CustomException('Запрошенная заявка не найдена', 200);
 		}
 
-		// TODO: не забыть запилить после реализации оповещений
-//		(new module_Notifications)->notification_create('application_animal_add', $this->USER('company_id'), false, $application_data);
+		(new SystemUsersNotifications())->notificationCreate('application_animal_add', $application_data['company_id'], false, $application_data);
 
 		$data				= collect([
 			'user_id'						=> $user['user_id'],
@@ -337,8 +335,7 @@ class ApiApplicationsController extends Controller
 
 		DataApplicationsAnimals::find($animal_data['application_animal_id'])->delete();
 
-		// TODO: не забыть запилить после реализации оповещений
-//		(new module_Notifications)->notification_create('application_animal_delete', $this->USER('company_id'), false, $application_data);
+		(new SystemUsersNotifications())->notificationCreate('application_animal_delete', $application_data['company_id'], false, $application_data);
 
 		$data				= collect([
 			'user_id'						=> $user['user_id'],

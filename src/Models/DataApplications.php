@@ -232,6 +232,7 @@ class DataApplications extends Model
 				'doctor.user_herriot_apikey',
 				'doctor.user_herriot_issuerid',
 				'doctor.user_herriot_serviceid',
+				'c.company_id',
 				'c.company_name_short',
 				'r.region_name',
 				'rd.district_name'
