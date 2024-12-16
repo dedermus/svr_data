@@ -10,6 +10,7 @@ use Illuminate\Validation\Rule;
 use Svr\Core\Enums\ApplicationStatusEnum;
 use Svr\Core\Models\SystemRoles;
 use Svr\Core\Models\SystemUsers;
+use Svr\Core\Models\SystemUsersNotifications;
 use Svr\Core\Models\SystemUsersNotificationsMessages;
 use Svr\Core\Traits\GetDictionary;
 use Svr\Data\Models\DataAnimals;
