@@ -25,7 +25,8 @@ class SvrApiGendersListResource extends JsonResource
     public function toArray(Request|Collection $request): array
     {
         $returned_data = [];
-        foreach ($this->resource as $value)
+        $items = $this->resource['genders_list'] ?? $this->resource;
+        foreach ($items as $value)
         {
             $returned_data[$value->gender_value_horriot] = new SvrApiGendersResource(collect($value));
         }

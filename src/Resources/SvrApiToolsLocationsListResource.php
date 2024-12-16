@@ -25,7 +25,8 @@ class SvrApiToolsLocationsListResource extends JsonResource
     public function toArray(Request|Collection $request): array
     {
         $returned_data = [];
-        foreach ($this->resource as $value)
+        $items = $this->resource['tools_locations_list'] ?? $this->resource;
+        foreach ($items as $value)
         {
             $returned_data[$value->tool_location_id] = new SvrApiToolsLocationsResource(collect($value));
         }

@@ -25,7 +25,8 @@ class SvrApiOutTypesListResource extends JsonResource
     public function toArray(Request|Collection $request): array
     {
         $returned_data = [];
-        foreach ($this->resource as $value)
+        $items = $this->resource['out_types_list'] ?? $this->resource;
+        foreach ($items as $value)
         {
             $returned_data[$value->out_type_id] = new SvrApiOutTypesResource(collect($value));
         }
