@@ -567,9 +567,9 @@ class DataAnimals extends Model
      * Данные по животным
      * @param $animal_id
      * @param $application_id
-     * @return array
+     * @return array|null
      */
-    public static function animalData($animal_id, $application_id = false): array
+    public static function animalData($animal_id, $application_id = false): ?array
     {
         $where = self::createFilterRestrictions([]);
 
@@ -695,6 +695,8 @@ class DataAnimals extends Model
         {
             $animal_data = (array)$animal_data[0];
             $animal_data['animal_registration_available'] = self::animalRegistrationAvailable($animal_data);
+        } else {
+            return null;
         }
 
         return $animal_data;
