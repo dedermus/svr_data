@@ -28,7 +28,12 @@ class SvrApiKeepingPurposesListResource extends JsonResource
         $items = $this->resource['keeping_purposes_list'] ?? $this->resource;
         foreach ($items as $value)
         {
-            $returned_data[$value->keeping_purpose_id] = new SvrApiKeepingPurposesResource(collect($value));
+            if (empty($this->resource['without_keys']))
+            {
+                $returned_data[$value->keeping_purpose_id] = new SvrApiKeepingPurposesResource(collect($value));
+            } else {
+                $returned_data[] = new SvrApiKeepingPurposesResource(collect($value));
+            }
         }
         return $returned_data;
     }

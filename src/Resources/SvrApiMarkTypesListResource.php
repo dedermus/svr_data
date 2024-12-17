@@ -28,7 +28,12 @@ class SvrApiMarkTypesListResource extends JsonResource
         $items = $this->resource['mark_types_list'] ?? $this->resource;
         foreach ($items as $value)
         {
-            $returned_data[$value->mark_type_id] = new SvrApiMarkTypesResource(collect($value));
+            if (empty($this->resource['without_keys']))
+            {
+                $returned_data[$value->mark_type_id] = new SvrApiMarkTypesResource(collect($value));
+            } else {
+                $returned_data[] = new SvrApiMarkTypesResource(collect($value));
+            }
         }
         return $returned_data;
     }

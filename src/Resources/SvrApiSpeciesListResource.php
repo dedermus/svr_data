@@ -16,6 +16,7 @@ class SvrApiSpeciesListResource extends JsonResource
      */
     public bool $preserveKeys = true;
 
+
     /**
      * Transform the resource collection into an array.
      *
@@ -28,7 +29,12 @@ class SvrApiSpeciesListResource extends JsonResource
         $items_list = $this->resource['species_list'] ?? $this->resource;
         foreach ($items_list as $value)
         {
-            $returned_data[$value->specie_id] = new SvrApiSpeciesResource(collect($value));
+            if (empty($this->resource['without_keys']))
+            {
+                $returned_data[$value->specie_id] = new SvrApiSpeciesResource(collect($value));
+            } else {
+                $returned_data[] = new SvrApiSpeciesResource(collect($value));
+            }
         }
         return $returned_data;
     }

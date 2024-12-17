@@ -28,7 +28,12 @@ class SvrApiOutBasisesListResource extends JsonResource
         $items = $this->resource['out_basises_list'] ?? $this->resource;
         foreach ($items as $value)
         {
-            $returned_data[$value->out_basis_id] = new SvrApiOutBasisesResource(collect($value));
+            if (empty($this->resource['without_keys']))
+            {
+                $returned_data[$value->out_basis_id] = new SvrApiOutBasisesResource(collect($value));
+            } else {
+                $returned_data[] = new SvrApiOutBasisesResource(collect($value));
+            }
         }
         return $returned_data;
     }

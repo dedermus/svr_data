@@ -28,7 +28,12 @@ class SvrApiCountriesListResource extends JsonResource
         $items_list = $this->resource['countries_list'] ?? $this->resource;
         foreach ($items_list as $value)
         {
-            $returned_data[$value->country_id] = new SvrApiCountriesResource(collect($value));
+            if (empty($this->resource['without_keys']))
+            {
+                $returned_data[$value->country_id] = new SvrApiCountriesResource(collect($value));
+            } else {
+                $returned_data[] = new SvrApiCountriesResource(collect($value));
+            }
         }
         return $returned_data;
     }

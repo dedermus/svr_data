@@ -28,7 +28,12 @@ class SvrApiToolsLocationsListResource extends JsonResource
         $items = $this->resource['tools_locations_list'] ?? $this->resource;
         foreach ($items as $value)
         {
-            $returned_data[$value->tool_location_id] = new SvrApiToolsLocationsResource(collect($value));
+            if (empty($this->resource['without_keys']))
+            {
+                $returned_data[$value->tool_location_id] = new SvrApiToolsLocationsResource(collect($value));
+            } else {
+                $returned_data[] = new SvrApiToolsLocationsResource(collect($value));
+            }
         }
         return $returned_data;
     }

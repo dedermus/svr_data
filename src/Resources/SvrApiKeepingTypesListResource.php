@@ -28,7 +28,12 @@ class SvrApiKeepingTypesListResource extends JsonResource
         $items = $this->resource['keeping_types_list'] ?? $this->resource;
         foreach ($items as $value)
         {
-            $returned_data[$value->keeping_type_id] = new SvrApiKeepingTypesResource(collect($value));
+            if (empty($this->resource['without_keys']))
+            {
+                $returned_data[$value->keeping_type_id] = new SvrApiKeepingTypesResource(collect($value));
+            } else {
+                $returned_data[] = new SvrApiKeepingTypesResource(collect($value));
+            }
         }
         return $returned_data;
     }

@@ -28,7 +28,12 @@ class SvrApiToolTypesListResource extends JsonResource
         $items = $this->resource['mark_tool_types_list'] ?? $this->resource;
         foreach ($items as $value)
         {
-            $returned_data[$value->mark_tool_type_id] = new SvrApiToolTypesResource(collect($value));
+            if (empty($this->resource['without_keys']))
+            {
+                $returned_data[$value->mark_tool_type_id] = new SvrApiToolTypesResource(collect($value));
+            } else {
+                $returned_data[] = new SvrApiToolTypesResource(collect($value));
+            }
         }
         return $returned_data;
     }

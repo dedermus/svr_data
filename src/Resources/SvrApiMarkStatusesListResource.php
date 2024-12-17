@@ -28,7 +28,12 @@ class SvrApiMarkStatusesListResource extends JsonResource
         $items = $this->resource['mark_statuses_list'] ?? $this->resource;
         foreach ($items as $value)
         {
-            $returned_data[$value->mark_status_id] = new SvrApiMarkStatusesResource(collect($value));
+            if (empty($this->resource['without_keys']))
+            {
+                $returned_data[$value->mark_status_id] = new SvrApiMarkStatusesResource(collect($value));
+            } else {
+                $returned_data[] = new SvrApiMarkStatusesResource(collect($value));
+            }
         }
         return $returned_data;
     }

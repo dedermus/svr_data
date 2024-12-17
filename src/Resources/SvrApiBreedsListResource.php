@@ -28,7 +28,13 @@ class SvrApiBreedsListResource extends JsonResource
         $items_list = $this->resource['breeds_list'] ?? $this->resource;
         foreach ($items_list as $value)
         {
-            $returned_data[$value->breed_id] = new SvrApiBreedsResource(collect($value));
+            if (empty($this->resource['without_keys']))
+            {
+                $returned_data[$value->breed_id] = new SvrApiBreedsResource(collect($value));
+            } else {
+                $returned_data[] = new SvrApiBreedsResource(collect($value));
+            }
+
         }
         return $returned_data;
     }

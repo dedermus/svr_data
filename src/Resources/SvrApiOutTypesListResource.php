@@ -28,7 +28,12 @@ class SvrApiOutTypesListResource extends JsonResource
         $items = $this->resource['out_types_list'] ?? $this->resource;
         foreach ($items as $value)
         {
-            $returned_data[$value->out_type_id] = new SvrApiOutTypesResource(collect($value));
+            if (empty($this->resource['without_keys']))
+            {
+                $returned_data[$value->out_type_id] = new SvrApiOutTypesResource(collect($value));
+            } else {
+                $returned_data[] = new SvrApiOutTypesResource(collect($value));
+            }
         }
         return $returned_data;
     }

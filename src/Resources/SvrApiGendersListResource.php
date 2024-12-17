@@ -28,7 +28,12 @@ class SvrApiGendersListResource extends JsonResource
         $items = $this->resource['genders_list'] ?? $this->resource;
         foreach ($items as $value)
         {
-            $returned_data[$value->gender_value_horriot] = new SvrApiGendersResource(collect($value));
+            if (empty($this->resource['without_keys']))
+            {
+                $returned_data[$value->gender_value_horriot] = new SvrApiGendersResource(collect($value));
+            } else {
+                $returned_data[] = new SvrApiGendersResource(collect($value));
+            }
         }
         return $returned_data;
     }
