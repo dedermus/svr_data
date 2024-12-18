@@ -11,18 +11,16 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Svr\Core\Exceptions\CustomException;
 use Svr\Core\Resources\SvrApiResponseResource;
-use Svr\Data\Models\DataAnimals;
-use Svr\Data\Models\DataAnimalsCodes;
 use Svr\Data\Models\DataCompanies;
 use Svr\Data\Models\DataCompaniesObjects;
 use Svr\Data\Resources\SvrApiCompaniesObjectsListDictionaryResource;
 use Svr\Data\Resources\SvrApiCompaniesObjectsListResource;
-use Svr\Data\Resources\SvrApiAnimalsDataResource;
 
 class ApiCompaniesController extends Controller
 {
     /**
-     * Информация по животному
+     * Список поднадзорных объектов компании
+	 *
      * @param Request $request
      * @return JsonResponse|SvrApiResponseResource
      * @throws Exception
@@ -33,8 +31,7 @@ class ApiCompaniesController extends Controller
 
         $validator = Validator::make($request->all(), [
             'company_id' => ['required', 'integer', Rule::exists('Svr\Data\Models\DataCompanies', 'company_id')]
-        ],
-        [
+        ],[
             'company_id' => trans('svr-core-lang::validation')
         ]);
 
@@ -50,13 +47,10 @@ class ApiCompaniesController extends Controller
         }
 
 		Config::set('total_records', count($objects_list));
-
 		$companies_list		= DataCompanies::find($objects_list->pluck('company_id'));
 
-//		dd($companies_list);
-
         //складываем все в коллекцию
-        $data = collect([
+        $data 				= collect([
             'user_id' => $user['user_id'],
             'objects_list' => $objects_list,
 			'without_keys' => true,
