@@ -4,6 +4,7 @@ use Svr\Core\Middleware\ApiValidationErrors;
 use Illuminate\Support\Facades\Route;
 use Svr\Data\Controllers\Api\ApiAnimalsController;
 use Svr\Data\Controllers\Api\ApiApplicationsController;
+use Svr\Data\Controllers\Api\ApiCompaniesController;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,6 +19,8 @@ Route::prefix(config('svr.api_prefix'))->group(function(){
     Route::post('applications/animal_add', [ApiApplicationsController::class, 'applicationsAnimalAdd'])->middleware(['auth:svr_api', 'api']);
     Route::post('applications/animal_delete', [ApiApplicationsController::class, 'applicationsAnimalDelete'])->middleware(['auth:svr_api', 'api']);
     Route::post('applications/status', [ApiApplicationsController::class, 'applicationsStatus'])->middleware(['auth:svr_api', 'api']);
+
+	Route::get('companies/company_objects_list/{company_id}', [ApiCompaniesController::class, 'companyObjectList'])->middleware(['auth:svr_api', 'api']);
 
     Route::get('animals/data', [ApiAnimalsController::class, 'animalsData'])->middleware(['auth:svr_api', 'api']);
     Route::get('animals/list', [ApiAnimalsController::class, 'animalsList'])->middleware(['auth:svr_api', 'api']);

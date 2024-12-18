@@ -25,10 +25,15 @@ class SvrApiCompaniesListResource extends JsonResource
     public function toArray(Request|Collection $request): array
     {
         $returned_data = [];
-        foreach ($this->resource as $value)
-        {
-            $returned_data[$value->company_id] = new SvrApiCompaniesResource(collect($value));
-        }
+
+		if($this->resource && count($this->resource) > 0)
+		{
+			foreach ($this->resource as $value)
+			{
+				$returned_data[$value->company_id] = new SvrApiCompaniesResource(collect($value));
+			}
+		}
+
         return $returned_data;
     }
 }
