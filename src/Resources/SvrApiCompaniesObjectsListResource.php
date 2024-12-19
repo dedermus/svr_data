@@ -26,7 +26,7 @@ class SvrApiCompaniesObjectsListResource extends JsonResource
     {
         $returned_data = [];
 
-		if($this->resource['objects_list'] && count($this->resource['objects_list']) > 0)
+		if(isset($this->resource['objects_list']) && count($this->resource['objects_list']) > 0)
 		{
 			foreach ($this->resource['objects_list'] as $value)
 			{
