@@ -2,6 +2,8 @@
 
 namespace Svr\Data\Models;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Http\Request;
 use Svr\Core\Traits\GetTableName;
 use Svr\Directories\Models\DirectoryCountriesRegion;
@@ -102,8 +104,9 @@ class DataCompaniesLocations extends Model
 
 	/**
 	 * Реляция хозяйства
-	 */
-    public function company()
+     * @return BelongsTo
+     */
+    public function company(): BelongsTo
     {
         return $this->belongsTo(DataCompanies::class, 'company_id', 'company_id');
     }
@@ -112,7 +115,10 @@ class DataCompaniesLocations extends Model
 	/**
 	 * Реляция регион
 	 */
-    public function region()
+    /**\
+     * @return HasOne
+     */
+    public function region(): HasOne
     {
         return $this->hasOne(DirectoryCountriesRegion::class, 'region_id', 'region_id');
     }
@@ -120,8 +126,9 @@ class DataCompaniesLocations extends Model
 
 	/**
 	 * Реляция район
-	 */
-    public function district()
+     * @return HasOne
+     */
+    public function district(): HasOne
     {
         return $this->hasOne(DirectoryCountriesRegionsDistrict::class, 'district_id', 'district_id');
     }

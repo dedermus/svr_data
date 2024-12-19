@@ -4,6 +4,7 @@ namespace Svr\Data\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -86,6 +87,15 @@ class DataUsersParticipations extends Model
 	protected $hidden								= [
 		'created_at',
 	];
+
+    /**
+     * Отношение участника к локации
+     * @return BelongsTo
+     */
+    public function companyLocation(): BelongsTo
+    {
+        return $this->belongsTo(DataCompaniesLocations::class, 'participation_item_id', 'company_location_id');
+    }
 
     /**
      * Создать запись
