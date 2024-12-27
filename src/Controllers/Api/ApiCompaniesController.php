@@ -51,14 +51,14 @@ class ApiCompaniesController extends Controller
 
         //складываем все в коллекцию
         $data 				= collect([
-            'user_id' => $user['user_id'],
-            'objects_list' => $objects_list,
-			'without_keys' => true,
-			'companies_list' => $companies_list,
-            'status' => true,
-            'message' => '',
-            'response_resource_data' => SvrApiCompaniesObjectsListResource::class,
-            'response_resource_dictionary' => SvrApiCompaniesObjectsListDictionaryResource::class,
+            'user_id'						=> $user['user_id'],
+            'objects_list'					=> $objects_list,
+			'without_keys'					=> true,
+			'companies_list'				=> $companies_list,
+            'status'						=> true,
+            'message'						=> '',
+            'response_resource_data'		=> SvrApiCompaniesObjectsListResource::class,
+            'response_resource_dictionary'	=> SvrApiCompaniesObjectsListDictionaryResource::class,
         ]);
 
         //отдаем ресурс с ответом
