@@ -43,15 +43,6 @@ class DataCompaniesObjects extends Model
 
 
 	/**
-	 * Значения полей по умолчанию
-	 * @var array
-	 */
-	protected $attributes							= [
-		'code_status_delete'							=> 'active',
-	];
-
-
-	/**
 	 * Поля, которые можно менять сразу массивом
 	 * @var array
 	 */
