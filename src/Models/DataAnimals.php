@@ -30,6 +30,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\Rule;
 use Svr\Directories\Models\DirectoryToolsLocations;
 
+use Svr\Core\Extensions\System\SystemFilter;
+
 class DataAnimals extends Model
 {
     use GetTableName;
@@ -1001,13 +1003,13 @@ class DataAnimals extends Model
         switch ($user_role_data['role_slug'])
         {
             case 'admin':
-                if (isset($valid_data['company_location_id']) && system_Filter::is_num($valid_data['company_location_id'])) {
+                if (isset($valid_data['company_location_id']) && SystemFilter::is_num($valid_data['company_location_id'])) {
                     $where_view .= ' AND t_animal.company_location_id = ' . (int)$valid_data['company_location_id'];
                 }
-                if (isset($valid_data['company_region_id']) && system_Filter::is_num($valid_data['company_region_id'])) {
+                if (isset($valid_data['company_region_id']) && SystemFilter::is_num($valid_data['company_region_id'])) {
                     $where_view .= ' AND t_animal_owner_company.region_id = ' . (int)$valid_data['company_region_id'];
                 }
-                if (isset($valid_data['company_district_id']) && system_Filter::is_num($valid_data['company_district_id'])) {
+                if (isset($valid_data['company_district_id']) && SystemFilter::is_num($valid_data['company_district_id'])) {
                     $where_view .= ' AND t_animal_owner_company.district_id = ' . (int)$valid_data['company_district_id'];
                 }
                 break;
