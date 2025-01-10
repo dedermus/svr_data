@@ -575,11 +575,11 @@ class DataAnimals extends Model
     {
         $where = self::createFilterRestrictions([]);
 
-        if ($application_id !== false && count($application_id) > 0) {
+        if ($application_id !== false && (int)$application_id > 0) {
             $application_left_join =
                 ' LEFT JOIN ' .DataApplicationsAnimals::getTableName(). ' t_application_animal ON
                     t_application_animal.animal_id = t_animal.animal_id AND
-                    t_application_animal.application_id IN (' . implode(',', $application_id) . ')';
+                    t_application_animal.application_id = '.$application_id;
         }
         else
         {
@@ -603,6 +603,7 @@ class DataAnimals extends Model
     				t_application_animal.application_animal_date_response,
 					t_application_animal.application_herriot_send_text_error,
 					t_application_animal.application_herriot_check_text_error,
+					t_application.doctor_id,
 					t_animal_breed.breed_name as animal_breed_name,
 					t_animal_breed.breed_id as animal_breed_id,
 					t_animal_breed.breed_guid_horriot as animal_breed_guid_horriot,
@@ -666,6 +667,7 @@ class DataAnimals extends Model
 					LEFT JOIN ' . DirectoryAnimalsBreeds::getTableName() . ' 	t_animal_breed ON t_animal_breed.breed_id = t_animal.breed_id
 					LEFT JOIN ' . DirectoryAnimalsSpecies::getTableName() . ' 	t_animal_specie ON t_animal_specie.specie_id = t_animal_breed.specie_id
 					'.$application_left_join.'
+					LEFT JOIN ' . DataApplications::getTableName() . '          t_application ON t_application.application_id = t_application_animal.application_id
 					LEFT JOIN ' . DataAnimalsCodes::getTableName() . ' 			t_animal_chip ON t_animal_chip.code_id = t_animal.animal_code_chip_id AND t_animal.animal_code_chip_id IS NOT NULL
 					LEFT JOIN ' . DataAnimalsCodes::getTableName() . ' 			t_animal_left ON t_animal_left.code_id = t_animal.animal_code_left_id AND t_animal.animal_code_left_id IS NOT NULL
 					LEFT JOIN ' . DataAnimalsCodes::getTableName() . ' 			t_animal_right ON t_animal_right.code_id = t_animal.animal_code_right_id AND t_animal.animal_code_right_id IS NOT NULL

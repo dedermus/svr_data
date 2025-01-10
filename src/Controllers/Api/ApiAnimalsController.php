@@ -47,7 +47,7 @@ class ApiAnimalsController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'animal_id' => ['required', 'integer', Rule::exists('Svr\Data\Models\DataAnimals', 'animal_id')],
-            'application_id' => ['array'],
+            'application_id' => ['int'],
             'data_sections' => ['array', Rule::in(['main','gen','base','mark','genealogy','vib','registration','history'])]
         ],
         [

@@ -22,8 +22,8 @@ Route::prefix(config('svr.api_prefix'))->group(function(){
 
 	Route::get('companies/company_objects_list/{company_id}', [ApiCompaniesController::class, 'companyObjectList'])->middleware(['auth:svr_api', 'api']);
 
-    Route::get('animals/data', [ApiAnimalsController::class, 'animalsData'])->middleware(['auth:svr_api', 'api']);
-    Route::get('animals/list', [ApiAnimalsController::class, 'animalsList'])->middleware(['auth:svr_api', 'api']);
+    Route::post('animals/data', [ApiAnimalsController::class, 'animalsData'])->middleware(['auth:svr_api', 'api']);
+    Route::post('animals/list', [ApiAnimalsController::class, 'animalsList'])->middleware(['auth:svr_api', 'api']);
     Route::post('animals/mark_edit', [ApiAnimalsController::class, 'animalsMarkEdit'])->middleware(['auth:svr_api', 'api']);
     Route::post('animals/mark_edit_group', [ApiAnimalsController::class, 'animalsMarkEditGroup'])->middleware(['auth:svr_api', 'api']);
     Route::post('animals/mark_photo_edit', [ApiAnimalsController::class, 'animalsMarkPhotoEdit'])->middleware(['auth:svr_api', 'api']);
