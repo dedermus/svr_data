@@ -14,12 +14,20 @@ use Svr\Core\Models\SystemUsers;
 use Svr\Core\Models\SystemUsersToken;
 use Svr\Core\Traits\GetTableName;
 use Svr\Core\Traits\GetValidationRules;
+use Svr\Directories\Models\DirectoryAnimalsBreeds;
+use Svr\Directories\Models\DirectoryAnimalsSpecies;
+use Svr\Directories\Models\DirectoryCountries;
 use Svr\Directories\Models\DirectoryCountriesRegion;
 use Svr\Directories\Models\DirectoryCountriesRegionsDistrict;
 
 use Illuminate\Support\Facades\Config;
 
 use Svr\Core\Exceptions\CustomException;
+use Svr\Directories\Models\DirectoryGenders;
+use Svr\Directories\Models\DirectoryKeepingPurposes;
+use Svr\Directories\Models\DirectoryKeepingTypes;
+use Svr\Directories\Models\DirectoryOutBasises;
+use Svr\Directories\Models\DirectoryOutTypes;
 
 class DataApplications extends Model
 {
@@ -356,6 +364,153 @@ class DataApplications extends Model
 		]);
 
 		return true;
+	}
+
+
+	/**
+	 * Получение списка животных по статусу животного и статусу заявки
+	 * @return array
+	 */
+	public function getAnimalByApplicationStatusAndAnimalStatus($application_status, $animal_status, $limit = 100)
+	{
+		$animals_list	= DB::table(DataApplications::GetTableName().' as t_application')
+			->select(
+				't_animal.*',
+    			't_application_animal.application_animal_status',
+    			't_application_animal.application_id',
+    			't_application_animal.application_animal_id',
+    			't_application_animal.application_animal_date_add',
+    			't_application_animal.application_animal_date_horriot',
+    			't_application_animal.application_animal_date_response',
+				't_application_animal.application_herriot_send_text_error',
+				't_application_animal.application_herriot_check_text_error',
+				't_application_animal.application_herriot_application_id',
+				't_application_doctor.user_herriot_login',
+    			't_application_doctor.user_herriot_password',
+    			't_application_doctor.user_herriot_web_login',
+    			't_application_doctor.user_herriot_apikey',
+    			't_application_doctor.user_herriot_issuerid',
+    			't_application_doctor.user_herriot_serviceid',
+				't_animal_breed.breed_name as animal_breed_name',
+				't_animal_breed.breed_id as animal_breed_id',
+				't_animal_breed.breed_guid_horriot as animal_breed_guid_horriot',
+				't_animal_specie.specie_name as animal_specie_name',
+				't_animal_specie.specie_id as animal_specie_id',
+				't_animal_specie.specie_guid_horriot as animal_specie_guid_horriot',
+				't_animal_chip.code_value as animal_chip_value',
+				't_animal_chip.code_tool_type_id as animal_chip_tool_type',
+				't_animal_chip.code_tool_date_set as animal_chip_tool_date',
+				't_animal_left.code_value as animal_left_value',
+				't_animal_left.code_tool_type_id as animal_left_tool_type',
+				't_animal_left.code_tool_date_set as animal_left_tool_date',
+				't_animal_right.code_value as animal_right_value',
+				't_animal_right.code_tool_type_id as animal_right_tool_type',
+				't_animal_right.code_tool_date_set as animal_right_tool_date',
+				't_animal_rshn.code_value as animal_rshn_value',
+				't_animal_rshn.code_tool_type_id as animal_rshn_tool_type',
+				't_animal_rshn.code_tool_date_set as animal_rshn_tool_date',
+				't_animal_inv.code_value as animal_inv_value',
+				't_animal_inv.code_tool_type_id as animal_inv_tool_type',
+				't_animal_inv.code_tool_date_set as animal_inv_tool_date',
+				't_animal_device.code_value as animal_device_value',
+				't_animal_device.code_tool_type_id as animal_device_tool_type',
+				't_animal_device.code_tool_date_set as animal_device_tool_date',
+				't_animal_tattoo.code_value as animal_tattoo_value',
+				't_animal_tattoo.code_tool_type_id as animal_tattoo_tool_type',
+				't_animal_tattoo.code_tool_date_set as animal_tattoo_tool_date',
+				't_animal_import.code_value as animal_import_value',
+				't_animal_import.code_tool_type_id as animal_import_tool_type',
+				't_animal_import.code_tool_date_set as animal_import_tool_date',
+				't_animal_name.code_value as animal_name_value',
+				't_gender.gender_name as animal_gender_name',
+				't_gender.gender_id as animal_gender_id',
+				't_gender.gender_value_horriot as animal_gender_value_horriot',
+				't_animal_owner_company_info.company_name_short as animal_owner_company_name_short',
+				't_animal_owner_company_info.company_id as animal_owner_company_id',
+				't_animal_owner_company_info.company_guid_vetis as animal_owner_company_guid_vetis',
+				't_animal_owner_company.region_id as animal_owner_region_id',
+				't_animal_owner_company.district_id as animal_owner_district_id',
+				't_animal_keeping_company_info.company_name_short as animal_keeping_company_name_short',
+				't_animal_keeping_company_info.company_id as animal_keeping_company_id',
+				't_animal_keeping_company_info.company_guid_vetis as animal_keeping_company_guid_vetis',
+				't_animal_birth_company_info.company_name_short as animal_birth_company_name_short',
+				't_animal_birth_company_info.company_id as animal_birth_company_id',
+				't_animal_birth_company_info.company_guid_vetis as animal_birth_company_guid_vetis',
+				't_animal_keeping_type.keeping_type_name as animal_keeping_type_name',
+				't_animal_keeping_type.keeping_type_id as animal_keeping_type_id',
+				't_animal_keeping_type.keeping_type_guid_horriot as animal_keeping_type_guid_horriot',
+				't_animal_keeping_purpose.keeping_purpose_name as animal_keeping_purpose_name',
+				't_animal_keeping_purpose.keeping_purpose_id as animal_keeping_purpose_id',
+				't_animal_keeping_purpose.keeping_purpose_guid_horriot as animal_keeping_purpose_guid_horriot',
+				't_animal_country_import.country_name as animal_country_import_name',
+				't_animal_country_import.country_id as animal_country_import_id',
+				't_animal_out_type.out_type_name as animal_out_type_name',
+				't_animal_out_basis.out_basis_name as animal_out_basis_name',
+				't_mother_breed.breed_name as animal_mother_breed_name',
+				't_father_breed.breed_name as animal_father_breed_name',
+				't_birth_company_object.company_object_guid_horriot as birth_object_guid_horriot',
+				't_keeping_company_object.company_object_guid_horriot as keeping_object_guid_horriot'
+			)
+			->leftJoin(DataApplicationsAnimals::GetTableName().' as t_application_animal', function (JoinClause $join) use ($animal_status) {
+				$join->on('t_application_animal.application_id', '=', 't_application.application_id')
+					->whereIn('t_application_animal.application_animal_status', $animal_status);
+			})
+			->leftJoin(DataAnimals::GetTableName().' as t_animal', 't_animal.animal_id', '=', 't_application_animal.animal_id')
+			->leftJoin(SystemUsers::GetTableName().' as t_application_doctor', 't_application_doctor.user_id', '=', 't_application.doctor_id')
+			->leftJoin(DirectoryAnimalsBreeds::GetTableName().' as t_animal_breed', 't_animal_breed.breed_id', '=', 't_animal.breed_id')
+			->leftJoin(DirectoryAnimalsSpecies::GetTableName().' as t_animal_specie', 't_animal_specie.specie_id', '=', 't_animal_breed.specie_id')
+			->leftJoin(DataAnimalsCodes::GetTableName().' as t_animal_chip', function (JoinClause $join) use ($animal_status) {
+				$join->on('t_animal_chip.code_id', '=', 't_animal.animal_code_chip_id')->whereNotNull('t_animal.animal_code_chip_id');
+			})
+			->leftJoin(DataAnimalsCodes::GetTableName().' as t_animal_left', function (JoinClause $join) {
+				$join->on('t_animal_left.code_id', '=', 't_animal.animal_code_left_id')->whereNotNull('t_animal.animal_code_left_id');
+			})
+			->leftJoin(DataAnimalsCodes::GetTableName().' as t_animal_right', function (JoinClause $join) {
+				$join->on('t_animal_right.code_id', '=', 't_animal.animal_code_right_id')->whereNotNull('t_animal.animal_code_right_id');
+			})
+			->leftJoin(DataAnimalsCodes::GetTableName().' as t_animal_rshn', function (JoinClause $join) {
+				$join->on('t_animal_rshn.code_id', '=', 't_animal.animal_code_rshn_id')->whereNotNull('t_animal.animal_code_rshn_id');
+			})
+			->leftJoin(DataAnimalsCodes::GetTableName().' as t_animal_inv', function (JoinClause $join) {
+				$join->on('t_animal_inv.code_id', '=', 't_animal.animal_code_inv_id')->whereNotNull('t_animal.animal_code_inv_id');
+			})
+			->leftJoin(DataAnimalsCodes::GetTableName().' as t_animal_device', function (JoinClause $join) {
+				$join->on('t_animal_device.code_id', '=', 't_animal.animal_code_device_id')->whereNotNull('t_animal.animal_code_device_id');
+			})
+			->leftJoin(DataAnimalsCodes::GetTableName().' as t_animal_tattoo', function (JoinClause $join) {
+				$join->on('t_animal_tattoo.code_id', '=', 't_animal.animal_code_tattoo_id')->whereNotNull('t_animal.animal_code_tattoo_id');
+			})
+			->leftJoin(DataAnimalsCodes::GetTableName().' as t_animal_import', function (JoinClause $join) {
+				$join->on('t_animal_import.code_id', '=', 't_animal.animal_code_import_id')->whereNotNull('t_animal.animal_code_import_id');
+			})
+			->leftJoin(DataAnimalsCodes::GetTableName().' as t_animal_name', function (JoinClause $join) {
+				$join->on('t_animal_name.code_id', '=', 't_animal.animal_code_name_id')->whereNotNull('t_animal.animal_code_name_id');
+			})
+			->leftJoin(DirectoryGenders::GetTableName().' as t_gender', 't_gender.gender_id', '=', 't_animal.animal_sex_id')
+			->leftJoin(DataCompaniesLocations::GetTableName().' as t_animal_owner_company', 't_animal_owner_company.company_location_id', '=', 't_animal.company_location_id')
+			->leftJoin(DataCompanies::GetTableName().' as t_animal_owner_company_info', 't_animal_owner_company_info.company_id', '=', 't_animal_owner_company.company_id')
+			->leftJoin(DataCompanies::GetTableName().' as t_animal_keeping_company_info', 't_animal_keeping_company_info.company_id', '=', 't_animal.animal_place_of_keeping_id')
+			->leftJoin(DataCompanies::GetTableName().' as t_animal_birth_company_info', 't_animal_birth_company_info.company_id', '=', 't_animal.animal_place_of_birth_id')
+			->leftJoin(DirectoryKeepingTypes::GetTableName().' as t_animal_keeping_type', 't_animal_keeping_type.keeping_type_id', '=', 't_animal.animal_type_of_keeping_id')
+			->leftJoin(DirectoryKeepingPurposes::GetTableName().' as t_animal_keeping_purpose', 't_animal_keeping_purpose.keeping_purpose_id', '=', 't_animal.animal_purpose_of_keeping_id')
+			->leftJoin(DirectoryCountries::GetTableName().' as t_animal_country_import', 't_animal_country_import.country_id', '=', 't_animal.animal_country_nameport_id')
+			->leftJoin(DirectoryOutTypes::GetTableName().' as t_animal_out_type', 't_animal_out_type.out_type_id', '=', 't_animal.animal_out_type_id')
+			->leftJoin(DirectoryOutBasises::GetTableName().' as t_animal_out_basis', 't_animal_out_basis.out_basis_id', '=', 't_animal.animal_out_basis_id')
+			->leftJoin(DirectoryAnimalsBreeds::GetTableName().' as t_mother_breed', 't_mother_breed.breed_id', '=', 't_animal.animal_mother_breed_id')
+			->leftJoin(DirectoryAnimalsBreeds::GetTableName().' as t_father_breed', 't_father_breed.breed_id', '=', 't_animal.animal_father_breed_id')
+			->leftJoin(DataCompaniesObjects::GetTableName().' as t_birth_company_object', 't_birth_company_object.company_object_id', '=', 't_animal.animal_object_of_birth_id')
+			->leftJoin(DataCompaniesObjects::GetTableName().' as t_keeping_company_object', 't_keeping_company_object.company_object_id', '=', 't_animal.animal_object_of_keeping_id')
+			->whereRaw('t_application_animal.application_animal_status IN (\''.implode('\',\'', $animal_status).'\')')
+			->whereRaw('t_application.application_status IN (\''.implode('\',\'', $application_status).'\')')
+			->limit($limit)
+			->get();
+
+		if($animals_list && !is_null($animals_list))
+		{
+			return $animals_list->toArray();
+		}else{
+			return null;
+		}
 	}
 
 
