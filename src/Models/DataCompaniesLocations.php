@@ -137,18 +137,44 @@ class DataCompaniesLocations extends Model
 	/**
 	 * Данные компании-локации
 	 *
-	 * @param $company_location_id
-	 * @return array
-	 */
-    public static function companyLocationData($company_location_id)
+     * @param $company_location_id    - ID локации компании
+     * @param $company_id             - ID компании
+     * @param $region_id              - ID региона
+     * @param $district_id            - ID района
+     * @param $nhoz                   - базовый индекс хозяйства
+     *
+     * @return array
+     */
+    public static function companyLocationData($company_location_id = false, $company_id = false, $region_id = false, $district_id = false, $nhoz = false): array
     {
-        $company_location_data = DB::table('data.data_companies_locations')
-            ->join('data.data_companies', 'data.data_companies_locations.company_id', '=', 'data.data_companies.company_id')
-            ->join('directories.countries_regions', 'directories.countries_regions.region_id', '=', 'data.data_companies_locations.region_id')
-            ->join('directories.countries_regions_districts', 'directories.countries_regions_districts.district_id', '=', 'data.data_companies_locations.district_id')
-            ->where('company_location_id', $company_location_id)
-            ->first();
-        return (array)$company_location_data;
+        $query = DB::table('data.data_companies_locations as cl')
+            ->select('cl.*', 'c.*')
+            ->join('data.data_companies as c', 'cl.company_id', '=', 'c.company_id')
+            ->join('directories.countries_regions as cr', 'cr.region_id', '=', 'cl.region_id')
+            ->join('directories.countries_regions_districts as crd', 'crd.district_id', '=', 'cl.district_id');
+        if ($company_location_id) {
+            $query->where('cl.company_location_id', $company_location_id);
+        } else {
+            if($company_id) {
+                $query->where('cl.company_id', $company_id);
+            }
+            if ($region_id) {
+                $query->where('cl.region_id', $region_id);
+            }
+            if ($district_id) {
+                $query->where('cl.district_id', $district_id);
+            }
+            if ($nhoz) {
+                $query->where('c.company_base_index', $nhoz);
+            }
+        }
+
+        $result = $query->first();
+        if ($result === null) {
+            return [];
+        }
+
+        return $result->toArray();
     }
 
     /**
