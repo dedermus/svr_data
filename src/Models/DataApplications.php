@@ -5,6 +5,7 @@ namespace Svr\Data\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Query\JoinClause;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -371,11 +372,12 @@ class DataApplications extends Model
 	 * Получение списка животных по статусу животного и статусу заявки
 	 * @return array
 	 */
-	public function getAnimalByApplicationStatusAndAnimalStatus($application_status, $animal_status, $limit = 100)
+	public static function getAnimalByApplicationStatusAndAnimalStatus($application_status, $animal_status, $limit = 100)
 	{
 		$animals_list	= DB::table(DataApplications::GetTableName().' as t_application')
 			->select(
 				't_animal.*',
+    			't_application.doctor_id',
     			't_application_animal.application_animal_status',
     			't_application_animal.application_id',
     			't_application_animal.application_animal_id',
