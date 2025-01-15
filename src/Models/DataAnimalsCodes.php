@@ -6,13 +6,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Svr\Core\Enums\SystemStatusDeleteEnum;
-use Svr\Core\Models\SystemUsers;
+use Svr\Core\Traits\GetEnums;
 use Svr\Core\Traits\GetTableName;
+use Svr\Core\Traits\GetValidationRules;
 use Svr\Directories\Models\DirectoryMarkStatuses;
 use Svr\Directories\Models\DirectoryMarkToolTypes;
 use Svr\Directories\Models\DirectoryMarkTypes;
@@ -22,7 +22,9 @@ use Zebra_Image;
 class DataAnimalsCodes extends Model
 {
     use GetTableName;
+    use GetEnums;
     use HasFactory;
+    use GetValidationRules;
 
 
 	/**
@@ -58,30 +60,28 @@ class DataAnimalsCodes extends Model
 	 * @var array
 	 */
 	protected $attributes							= [
-		'code_status_delete'							=> 'active',
+		'code_status_delete'							=> SystemStatusDeleteEnum::ACTIVE->value,
 	];
-
 
 	/**
 	 * Поля, которые можно менять сразу массивом
 	 * @var array
 	 */
 	protected $fillable								= [
-		'animal_id',								//* ID животного */
-		'code_type_id',								//* вид номера */
-		'code_value',								//* значение */
-		'code_description',							//* Описание */
-		'code_status_id',							//* вид маркировки животного */
-		'code_tool_type_id',						//* тип средства маркировки животного */
-		'code_tool_location_id',					//* id места нанесения маркировки животного */
-		'code_tool_date_set',						//* дата нанесения маркировки животного */
-		'code_tool_date_out',						//* дата выбытия маркировки животного */
-		'code_tool_photo',							//* фото средства маркирования */
-		'code_status_delete',						//* статус удаления
-		'created_at',							//* дата создания в СВР
-        'updated_at',								//* дата последнего изменения строки записи */
+		'animal_id',								// ID животного
+		'code_type_id',								// вид номера
+		'code_value',								// значение
+		'code_description',							// Описание
+		'code_status_id',							// вид маркировки животного
+		'code_tool_type_id',						// тип средства маркировки животного
+		'code_tool_location_id',					// id места нанесения маркировки животного
+		'code_tool_date_set',						// дата нанесения маркировки животного
+		'code_tool_date_out',						// дата выбытия маркировки животного
+		'code_tool_photo',							// фото средства маркирования
+		'code_status_delete',						// статус удален
+		'created_at',							    // дата создания в С
+        'updated_at',								// дата последнего изменения строки записи
 	];
-
 
 	/**
 	 * Поля, которые нельзя менять сразу массивом
@@ -132,16 +132,16 @@ class DataAnimalsCodes extends Model
     /**
      * Создать запись
      *
-     * @param $request
+     * @param Request $request
      *
-     * @return void
      */
-    public function animalCodeCreate($request): void
+    public function animalCodeCreate(Request $request)
     {
         $this->validateRequest($request);
         $this->fill($request->all())->save();
+        $animalCode = $this->find($this->getKey());
+        return $animalCode->code_id;
     }
-
 
     /**
      * Обновить запись
@@ -163,19 +163,6 @@ class DataAnimalsCodes extends Model
         }
     }
 
-
-    /**
-     * Валидация запроса
-     * @param Request $request
-     */
-    private function validateRequest(Request $request)
-    {
-        $rules = $this->getValidationRules($request);
-        $messages = $this->getValidationMessages();
-        $request->validate($rules, $messages);
-    }
-
-
     /**
      * Получить правила валидации
      * @param Request $request
@@ -184,27 +171,27 @@ class DataAnimalsCodes extends Model
      */
     private function getValidationRules(Request $request): array
     {
-        $id = $request->input($this->primaryKey);
-
         return [
             $this->primaryKey => [
                 $request->isMethod('put') ? 'required' : '',
                 Rule::exists('.'.$this->getTable(), $this->primaryKey),
             ],
             'animal_id' => 'required|int|exists:.data.data_animals,animal_id',
-            'code_type_id' => 'int|exist:.directories.mark_types',
-            'code_value' => 'string|max:64',
-            'code_description' => 'string|max:255',
-            'code_status_id' => 'int|exist:.directories.mark_statuses',
-            'code_tool_type_id' => 'int|exist:.directories.mark_tool_types',
-            'code_tool_location_id' => 'int|exist:.directories.tools_locations',
-            'code_tool_date_set' => 'date',
-            'code_tool_date_out' => 'date',
-            'code_tool_photo' => 'string|max:255',
-            'code_status_delete' => ['required', Rule::in(SystemStatusDeleteEnum::get_option_list())],
+            'code_type_id' => 'nullable|int|exists:.directories.mark_types,mark_type_id',
+            'code_value' => 'nullable|string|max:64',
+            'code_description' => 'nullable|string|max:255',
+            'code_status_id' => 'nullable|int|exists:.directories.mark_statuses,mark_status_id',
+            'code_tool_type_id' => 'nullable|int|exists:.directories.mark_tool_types,mark_tool_type_id',
+            'code_tool_location_id' => 'nullable|int|exists:.directories.tools_locations,tool_location_id',
+            'code_tool_date_set' => 'nullable|date',
+            'code_tool_date_out' => 'nullable|date',
+            'code_tool_photo' => 'nullable|string|max:255',
+            'code_status_delete' => [
+                'required',
+                Rule::enum(SystemStatusDeleteEnum::class)
+            ],
         ];
     }
-
 
     /**
      * Получить сообщения об ошибках валидации
@@ -256,7 +243,6 @@ class DataAnimalsCodes extends Model
             ->where('t_animal_codes.animal_id', '=', $animal_id)
             ->get()->toArray();
     }
-
 
     /**
      * Получаем данные о средстве маркирования
@@ -386,7 +372,7 @@ class DataAnimalsCodes extends Model
      * @param $request
      * @return array|string|string[]
      */
-    public function addFileMarkPhoto($request)
+    public function addFileMarkPhoto($request): array|string
     {
         $this->deleteMarkPhoto($request);
 

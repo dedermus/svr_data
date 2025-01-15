@@ -4,6 +4,9 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Svr\Core\Enums\SystemBreedingValueEnum;
+use Svr\Core\Enums\SystemStatusDeleteEnum;
+use Svr\Core\Enums\SystemStatusEnum;
 use Svr\Core\Traits\PostgresGrammar;
 
 return new class extends Migration
@@ -54,31 +57,31 @@ return new class extends Migration
                     ->comment('Значение инвентарного номера животного');
                 $table->string('animal_code_rshn_value', 32)->index()->nullable(true)->default(null)
                     ->comment('Значение РСХН (УНСМ) номера животного');
-                $table->integer('animal_code_chip_id')->index()->nullable(true)->default(true)->comment(
+                $table->integer('animal_code_chip_id')->index()->nullable(true)->default(null)->comment(
                     'CODE_ID чипа животного  в таблице DATA.DATA_ANIMALS_CODES'
                 );
-                $table->integer('animal_code_left_id')->index()->nullable(true)->default(true)->comment(
+                $table->integer('animal_code_left_id')->index()->nullable(true)->default(null)->comment(
                     'CODE_ID левого номера животного в таблице DATA.DATA_ANIMALS_CODES'
                 );
-                $table->integer('animal_code_right_id')->index()->nullable(true)->default(true)->comment(
+                $table->integer('animal_code_right_id')->index()->nullable(true)->default(null)->comment(
                     'CODE_ID правого номера животного в таблице DATA.DATA_ANIMALS_CODES'
                 );
-                $table->integer('animal_code_rshn_id')->index()->nullable(true)->default(true)->comment(
+                $table->integer('animal_code_rshn_id')->index()->nullable(true)->default(null)->comment(
                     'CODE_ID номера РСХН в таблице DATA.DATA_ANIMALS_CODES'
                 );
-                $table->integer('animal_code_inv_id')->index()->nullable(true)->default(true)->comment(
+                $table->integer('animal_code_inv_id')->index()->nullable(true)->default(null)->comment(
                     'CODE_ID инвентарного номера животного в таблице DATA.DATA_ANIMALS_CODES'
                 );
-                $table->integer('animal_code_device_id')->index()->nullable(true)->default(true)->comment(
+                $table->integer('animal_code_device_id')->index()->nullable(true)->default(null)->comment(
                     'CODE_ID номера в оборудовании животного в таблице DATA.DATA_ANIMALS_CODES'
                 );
-                $table->integer('animal_code_tattoo_id')->index()->nullable(true)->default(true)->comment(
+                $table->integer('animal_code_tattoo_id')->index()->nullable(true)->default(null)->comment(
                     'CODE_ID тату животного в таблице DATA.DATA_ANIMALS_CODES'
                 );
-                $table->integer('animal_code_import_id')->index()->nullable(true)->default(true)->comment(
+                $table->integer('animal_code_import_id')->index()->nullable(true)->default(null)->comment(
                     'CODE_ID импортного номера животного в таблице DATA.DATA_ANIMALS_CODES'
                 );
-                $table->integer('animal_code_name_id')->index()->nullable(true)->default(true)->comment(
+                $table->integer('animal_code_name_id')->index()->nullable(true)->default(null)->comment(
                     'CODE_ID клички животного в таблице DATA.DATA_ANIMALS_CODES'
                 );
                 $table->timestamp('animal_date_create_record')->nullable(true)->default(null)->comment(
@@ -100,7 +103,7 @@ return new class extends Migration
                     'пол животного enum'
                 );
                 $table->addColumn('system.system_breeding_value', 'animal_breeding_value')->nullable(false)->default(
-                    'UNDEFINED'
+                    SystemBreedingValueEnum::UNDEFINED->value
                 )->comment('племенная ценность животного');
                 $table->string('animal_colour', 100)->nullable(true)->default(null)->comment('масть (окрас) животного');
                 $table->integer('animal_place_of_keeping_id')->index()->nullable(true)->default(null)->comment(
@@ -172,13 +175,14 @@ return new class extends Migration
                 $table->integer('animal_father_breed_id')->index()->nullable(true)->default(null)
                     ->comment('BREED_ID породы отца в таблице DIRECTORIES.ANIMALS_BREEDS'
                 );
-                $table->addColumn('system.system_status', 'animal_status')->nullable(false)->default('enabled')
+                $table->addColumn('system.system_status', 'animal_status')->nullable(false)->default(SystemStatusEnum::ENABLED->value)
                     ->comment('статус животного'
                 );
-                $table->addColumn('system.system_status_delete', 'animal_status_delete')->nullable(false)->default('active')
+                $table->addColumn('system.system_status_delete', 'animal_status_delete')->nullable(false)->default(
+                    SystemStatusDeleteEnum::ACTIVE->value)
                     ->comment('статус удаления животного'
                 );
-                $table->addColumn('system.system_status', 'animal_repair_status')->nullable(false)->default('disabled')
+                $table->addColumn('system.system_status', 'animal_repair_status')->nullable(false)->default(SystemStatusEnum::DISABLED->value)
                     ->comment('Флаг починки животного'
                 );
                 $table->timestamp('created_at')->nullable(false)->default(DB::raw('CURRENT_TIMESTAMP'))

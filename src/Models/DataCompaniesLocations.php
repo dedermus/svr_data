@@ -174,7 +174,8 @@ class DataCompaniesLocations extends Model
             return [];
         }
 
-        return $result->toArray();
+        // Преобразование stdClass в массив
+        return (array) $result;
     }
 
     /**

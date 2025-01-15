@@ -233,6 +233,14 @@ class DataAnimals extends Model
 		'created_at',
 	];
 
+    /**
+     * Получить первичный ключ
+     * @return string
+     */
+    public function getPrimaryKey(): string
+    {
+        return $this->primaryKey;
+    }
 
 	/**
 	 * Обновление данных из запроса
@@ -1298,5 +1306,22 @@ class DataAnimals extends Model
         }
 
         return $list_directories;
+    }
+
+    /**
+     * Создать запись
+     *
+     * @param Request $request
+     *
+     * @return mixed
+     */
+    public function animalCreate(Request $request): mixed
+    {
+        DB::statement("SET session_replication_role = 'replica';");
+        $this->validateRequest($request);
+        $this->fill($request->all())->save();
+        DB::statement("SET session_replication_role = 'origin';");
+        $animal = $this->find($this->getKey());
+        return $animal->animal_id;
     }
 }
