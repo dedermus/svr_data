@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Svr\Core\Enums\ApplicationStatusEnum;
 use Svr\Core\Models\SystemRoles;
@@ -714,15 +715,14 @@ class DataApplications extends Model
 
 	/**
 	 * Получить данных заявки по статусу
-	 * @return array
 	 */
-	public function getApplicationDataByStatus($status)
+	public static function getApplicationDataByStatus($status)
 	{
 		if (is_array($status))
 		{
-			$where = ' WHERE a.application_status IN (\''.implode('\',\'', $status).'\')';
+			$where = 'a.application_status IN (\''.implode('\',\'', $status).'\')';
 		}else {
-			$where = ' WHERE a.application_status = \''.$status.'\'';
+			$where = 'a.application_status = \''.$status.'\'';
 		}
 
 		return DB::table(DataApplications::GetTableName().' as a')
@@ -736,10 +736,10 @@ class DataApplications extends Model
 				'd.user_herriot_issuerid',
 				'd.user_herriot_serviceid'
 			)
-			->leftJoin(DataCompaniesLocations::GetTableName().' as cl', 'cl.company_location_id = a.company_location_id')
+			->leftJoin(DataCompaniesLocations::GetTableName().' as cl', 'cl.company_location_id', '=', 'a.company_location_id')
 			->leftJoin(systemUsers::GetTableName().' as d', 'a.doctor_id', '=', 'd.user_id')
 			->whereRaw($where)
-			->orderByRaw('a.update_at', 'asc')
+			->orderBy('a.updated_at', 'asc')
 			->first();
 	}
 }
