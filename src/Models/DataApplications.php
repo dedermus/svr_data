@@ -504,6 +504,7 @@ class DataApplications extends Model
 			->leftJoin(DataCompaniesObjects::GetTableName().' as t_keeping_company_object', 't_keeping_company_object.company_object_id', '=', 't_animal.animal_object_of_keeping_id')
 			->whereRaw('t_application_animal.application_animal_status IN (\''.implode('\',\'', $animal_status).'\')')
 			->whereRaw('t_application.application_status IN (\''.implode('\',\'', $application_status).'\')')
+			->orderBy('t_application_animal.application_animal_date_last_update', 'asc')
 			->limit($limit)
 			->get();
 
@@ -708,5 +709,37 @@ class DataApplications extends Model
 		if(empty($query)) $query = " 1=1 ";
 
 		return trim($query, ' AND ');
+	}
+
+
+	/**
+	 * Получить данных заявки по статусу
+	 * @return array
+	 */
+	public function getApplicationDataByStatus($status)
+	{
+		if (is_array($status))
+		{
+			$where = ' WHERE a.application_status IN (\''.implode('\',\'', $status).'\')';
+		}else {
+			$where = ' WHERE a.application_status = \''.$status.'\'';
+		}
+
+		return DB::table(DataApplications::GetTableName().' as a')
+			->select(
+				'a.*',
+				'cl.company_id',
+				'd.user_herriot_login',
+				'd.user_herriot_password',
+				'd.user_herriot_web_login',
+				'd.user_herriot_apikey',
+				'd.user_herriot_issuerid',
+				'd.user_herriot_serviceid'
+			)
+			->leftJoin(DataCompaniesLocations::GetTableName().' as cl', 'cl.company_location_id = a.company_location_id')
+			->leftJoin(systemUsers::GetTableName().' as d', 'a.doctor_id', '=', 'd.user_id')
+			->whereRaw($where)
+			->orderByRaw('a.update_at', 'asc')
+			->first();
 	}
 }
